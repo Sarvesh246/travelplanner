@@ -140,8 +140,8 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
                   onClick={toggleMine}
                   className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
                     myShare.hasPaid
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-200"
+                      ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] dark:bg-[hsl(var(--success)/0.15)]"
+                      : "bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))] dark:bg-[hsl(var(--accent)/0.15)] hover:bg-[hsl(var(--accent)/0.15)]"
                   }`}
                 >
                   {myShare.hasPaid ? "Paid" : "Unpaid"}
@@ -170,8 +170,8 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                         share.hasPaid
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                          ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] dark:bg-[hsl(var(--success)/0.15)]"
+                          : "bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))] dark:bg-[hsl(var(--accent)/0.15)]"
                       }`}
                     >
                       {share.hasPaid ? "Paid" : "Owes"}

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SplitEditor, type SplitEditorRow } from "./SplitEditor";
 import type { SplitMode } from "@/lib/expense-splits";
 import { toast } from "sonner";
+import { useLoading } from "@/hooks/useLoading";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface AddExpenseDialogProps {
 }
 
 export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddExpenseDialogProps) {
+  const { startLoading, stopLoading } = useLoading();
   const { members, currentUser } = useTripContext();
 
   const defaultRows = useMemo<SplitEditorRow[]>(
@@ -88,6 +90,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
       return;
     }
     setLoading(true);
+    startLoading("Adding expense...");
     try {
       const receiptUrl = receipt ? await uploadReceipt(receipt) : undefined;
 
@@ -113,6 +116,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
       setLoading(false);
+      stopLoading();
     }
   }
 

@@ -14,7 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { ROUTES } from "@/lib/constants";
 
-export const metadata = { title: "Groovy – Plan trips together" };
+export const metadata = { title: "Beacon – Plan trips together, split costs fairly" };
 
 const FEATURES = [
   {
@@ -22,7 +22,7 @@ const FEATURES = [
     title: "Multi-stop itinerary",
     description:
       "Plan every stop, stay, and activity on a collaborative timeline that stays in sync.",
-    color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+    color: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400",
   },
   {
     icon: Package,
@@ -74,10 +74,20 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-background">
       <header className="h-14 flex items-center justify-between px-6 max-w-6xl mx-auto">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Plane className="w-4 h-4 text-white rotate-45" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">Groovy</span>
+          <svg viewBox="0 0 64 64" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="beaconGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: 'hsl(var(--secondary))', stopOpacity: 0.8}} />
+              </radialGradient>
+            </defs>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.3" />
+            <circle cx="32" cy="32" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.6" />
+            <circle cx="32" cy="32" r="12" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" opacity="0.9" />
+            <circle cx="32" cy="32" r="4" fill="hsl(var(--primary))" />
+            <circle cx="32" cy="32" r="2.5" fill="hsl(var(--primary))" opacity="0.6" />
+          </svg>
+          <span className="font-semibold text-lg font-sans tracking-tight">Beacon</span>
         </Link>
         <nav className="flex items-center gap-3">
           <Link
@@ -102,7 +112,7 @@ export default async function LandingPage() {
             <Sparkles className="w-3 h-3 text-primary" />
             One workspace for the whole crew
           </div>
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-balance">
+          <h1 className="text-4xl sm:text-6xl font-semibold font-sans tracking-normal sm:tracking-tight text-balance text-foreground">
             Plan trips <span className="gradient-text">together</span>,
             <br />
             not in 10 different apps.
@@ -147,7 +157,7 @@ export default async function LandingPage() {
 
         {/* Perks */}
         <section className="max-w-3xl mx-auto px-6 pb-24">
-          <div className="bg-gradient-to-br from-primary/10 via-violet-500/10 to-accent/10 border border-primary/20 rounded-3xl p-8 sm:p-12">
+          <div className="bg-gradient-to-br from-primary/10 via-secondary/15 to-accent/30 border border-primary/20 rounded-3xl p-8 sm:p-12">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm mb-4">
               <Users className="w-4 h-4" /> Built for groups
             </div>
@@ -178,7 +188,7 @@ export default async function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Groovy Trip Planner</p>
+          <p>© {new Date().getFullYear()} Beacon</p>
           <div className="flex items-center gap-4">
             <Link href={ROUTES.login} className="hover:text-foreground transition-colors">Log in</Link>
             <Link href={ROUTES.signup} className="hover:text-foreground transition-colors">Sign up</Link>

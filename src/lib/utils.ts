@@ -80,12 +80,12 @@ export function tripDuration(
 
 export function gradientForId(id: string): string {
   const gradients = [
-    "from-sky-400 to-indigo-500",
-    "from-orange-400 to-pink-500",
-    "from-emerald-400 to-sky-500",
-    "from-violet-400 to-pink-500",
-    "from-amber-400 to-lime-400",
-    "from-slate-600 to-slate-800",
+    "from-amber-500 to-orange-600",
+    "from-sky-500 to-slate-700",
+    "from-orange-400 to-rose-500",
+    "from-slate-500 to-blue-700",
+    "from-rose-500 to-fuchsia-700",
+    "from-amber-400 to-yellow-600",
   ];
   let hash = 0;
   for (let i = 0; i < id.length; i++) {

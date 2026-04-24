@@ -19,15 +19,15 @@ export function SupplySummaryBar({ stats, currency }: SupplySummaryBarProps) {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-4 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Cell icon={<Package className="w-4 h-4" />} label="Total items" value={stats.total.toString()} iconClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" />
-      <Cell icon={<CheckCircle2 className="w-4 h-4" />} label="Packed" value={`${stats.covered} / ${stats.total}`} iconClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" />
-      <Cell icon={<DollarSign className="w-4 h-4" />} label="Estimated" value={formatCurrency(stats.estimated, currency)} iconClass="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" />
+      <Cell icon={<Package className="w-4 h-4" />} label="Total items" value={stats.total.toString()} iconClass="bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))] dark:bg-[hsl(var(--secondary)/0.15)]" />
+      <Cell icon={<CheckCircle2 className="w-4 h-4" />} label="Packed" value={`${stats.covered} / ${stats.total}`} iconClass="bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] dark:bg-[hsl(var(--success)/0.15)]" />
+      <Cell icon={<DollarSign className="w-4 h-4" />} label="Estimated" value={formatCurrency(stats.estimated, currency)} iconClass="bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))] dark:bg-[hsl(var(--accent)/0.15)]" />
       <div>
         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Progress</p>
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-emerald-500"
+              className="h-full bg-[hsl(var(--success))]"
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

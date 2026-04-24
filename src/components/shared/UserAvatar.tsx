@@ -17,12 +17,12 @@ const sizes = {
 };
 
 const colors = [
-  "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-  "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-  "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] dark:bg-[hsl(var(--primary)/0.2)]",
+  "bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))] dark:bg-[hsl(var(--secondary)/0.2)]",
+  "bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))] dark:bg-[hsl(var(--accent)/0.2)]",
+  "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] dark:bg-[hsl(var(--success)/0.2)]",
+  "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] dark:bg-[hsl(var(--destructive)/0.2)]",
+  "bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))] dark:bg-[hsl(var(--warning)/0.2)]",
 ];
 
 function colorForName(name: string) {

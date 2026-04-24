@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 async function getAuthUser() {
   const supabase = await createClient();
@@ -26,7 +25,16 @@ async function assertTripMember(tripId: string, userId: string) {
 
 export async function createStop(
   tripId: string,
-  data: { name: string; country?: string; description?: string; arrivalDate?: string; departureDate?: string }
+  data: {
+    name: string;
+    country?: string;
+    description?: string;
+    arrivalDate?: string;
+    departureDate?: string;
+    latitude?: number;
+    longitude?: number;
+    placeId?: string;
+  }
 ) {
   const user = await getAuthUser();
   await assertTripMember(tripId, user.id);
@@ -42,6 +50,9 @@ export async function createStop(
       name: data.name,
       country: data.country,
       description: data.description,
+      latitude: Number.isFinite(data.latitude) ? data.latitude : undefined,
+      longitude: Number.isFinite(data.longitude) ? data.longitude : undefined,
+      placeId: data.placeId,
       arrivalDate: data.arrivalDate ? new Date(data.arrivalDate) : undefined,
       departureDate: data.departureDate ? new Date(data.departureDate) : undefined,
       sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,

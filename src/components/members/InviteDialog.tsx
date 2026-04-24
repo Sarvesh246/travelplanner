@@ -5,6 +5,7 @@ import { inviteMember } from "@/actions/members";
 import { toast } from "sonner";
 import { X, Copy, Mail, Check, Loader2 } from "lucide-react";
 import { MemberRole } from "@prisma/client";
+import { useLoading } from "@/hooks/useLoading";
 
 interface InviteDialogProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface InviteDialogProps {
 }
 
 export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) {
+  const { startLoading, stopLoading } = useLoading();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("MEMBER");
   const [loading, setLoading] = useState(false);
@@ -23,6 +25,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
+    startLoading("Sending invite...");
     try {
       const result = await inviteMember(tripId, email.trim(), role);
       setInviteLink(result.inviteLink);
@@ -32,6 +35,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
       toast.error(err instanceof Error ? err.message : "Failed to send invite");
     } finally {
       setLoading(false);
+      stopLoading();
     }
   }
 

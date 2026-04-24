@@ -16,9 +16,9 @@ interface StopCardProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  CONFIRMED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  CANCELLED: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+  DRAFT: "bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))] dark:bg-[hsl(var(--secondary)/0.15)]",
+  CONFIRMED: "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] dark:bg-[hsl(var(--primary)/0.15)]",
+  CANCELLED: "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] dark:bg-[hsl(var(--destructive)/0.15)]",
 };
 
 export function StopCard({ stop, index, onSelect, dragHandleProps }: StopCardProps) {

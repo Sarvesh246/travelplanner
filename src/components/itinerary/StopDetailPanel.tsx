@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { X, Bed, CalendarDays, Plus, MapPin, Trash2, Loader2 } from "lucide-react";
 import { formatDateRange } from "@/lib/utils";
 import { StayCard } from "./StayCard";
@@ -23,39 +23,36 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
   const [tab, setTab] = useState<"stays" | "activities">("stays");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  useEffect(() => {
-    if (open) setTab("stays");
-  }, [open, stop?.id]);
+  function closePanel() {
+    setConfirmDelete(false);
+    onOpenChange(false);
+  }
 
   async function handleDelete() {
     if (!stop) return;
     try {
       await deleteStop(stop.id);
       toast.success("Stop deleted");
-      onOpenChange(false);
+      closePanel();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete");
     }
   }
 
+  if (!open || !stop) return null;
+
   return (
-    <AnimatePresence>
-      {open && stop && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-            onClick={() => onOpenChange(false)}
-          />
-          <motion.aside
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 32 }}
-            className="fixed right-0 top-0 bottom-0 w-full sm:w-[440px] bg-card border-l border-border shadow-2xl z-50 flex flex-col"
-          >
+    <>
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+        onClick={closePanel}
+      />
+      <motion.aside
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 32 }}
+        className="fixed right-0 top-0 bottom-0 w-full sm:w-[440px] bg-card border-l border-border shadow-2xl z-50 flex flex-col"
+      >
             <header className="p-5 border-b border-border flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <h2 className="font-semibold text-lg truncate">{stop.name}</h2>
@@ -82,8 +79,9 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
                   </button>
                 )}
                 <button
-                  onClick={() => onOpenChange(false)}
+                  onClick={closePanel}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  aria-label="Close stop details"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -103,19 +101,17 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
               {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} />}
               {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} />}
             </div>
-          </motion.aside>
+      </motion.aside>
 
-          <ConfirmDialog
-            open={confirmDelete}
-            onOpenChange={setConfirmDelete}
-            title={`Delete ${stop.name}?`}
-            description="This will remove the stop and all its stays and activities."
-            confirmLabel="Delete"
-            onConfirm={handleDelete}
-          />
-        </>
-      )}
-    </AnimatePresence>
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={`Delete ${stop.name}?`}
+        description="This will remove the stop and all its stays and activities."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }
 
@@ -189,6 +185,7 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
   const [checkOut, setCheckOut] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [loading, setLoading] = useState(false);
+  const fieldPrefix = `stay-${stopId}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -214,6 +211,9 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
   return (
     <form onSubmit={handleSubmit} className="bg-muted/40 rounded-xl p-4 space-y-3 border border-border">
       <input
+        id={`${fieldPrefix}-name`}
+        name="stay-name"
+        aria-label="Stay name"
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -221,6 +221,9 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <input
+        id={`${fieldPrefix}-address`}
+        name="stay-address"
+        aria-label="Stay address"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
         placeholder="Address (optional)"
@@ -228,12 +231,18 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
       />
       <div className="grid grid-cols-2 gap-2">
         <input
+          id={`${fieldPrefix}-check-in`}
+          name="stay-check-in"
+          aria-label="Check-in date"
           type="date"
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <input
+          id={`${fieldPrefix}-check-out`}
+          name="stay-check-out"
+          aria-label="Check-out date"
           type="date"
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
@@ -242,6 +251,9 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         />
       </div>
       <input
+        id={`${fieldPrefix}-total-price`}
+        name="stay-total-price"
+        aria-label="Stay total price"
         type="number"
         value={totalPrice}
         onChange={(e) => setTotalPrice(e.target.value)}
@@ -276,6 +288,7 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
   const [scheduledTime, setScheduledTime] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
   const [loading, setLoading] = useState(false);
+  const fieldPrefix = `activity-${stopId}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -300,6 +313,9 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
   return (
     <form onSubmit={handleSubmit} className="bg-muted/40 rounded-xl p-4 space-y-3 border border-border">
       <input
+        id={`${fieldPrefix}-name`}
+        name="activity-name"
+        aria-label="Activity name"
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -308,12 +324,18 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
       />
       <div className="grid grid-cols-2 gap-2">
         <input
+          id={`${fieldPrefix}-scheduled-date`}
+          name="activity-scheduled-date"
+          aria-label="Activity date"
           type="date"
           value={scheduledDate}
           onChange={(e) => setScheduledDate(e.target.value)}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <input
+          id={`${fieldPrefix}-scheduled-time`}
+          name="activity-scheduled-time"
+          aria-label="Activity time"
           type="time"
           value={scheduledTime}
           onChange={(e) => setScheduledTime(e.target.value)}
@@ -321,6 +343,9 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
         />
       </div>
       <input
+        id={`${fieldPrefix}-estimated-cost`}
+        name="activity-estimated-cost"
+        aria-label="Activity estimated cost"
         type="number"
         value={estimatedCost}
         onChange={(e) => setEstimatedCost(e.target.value)}

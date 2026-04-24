@@ -1,0 +1,24 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle (subtle) -->
+  <defs>
+    <radialGradient id="beaconGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFA600;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3D7FFF;stop-opacity:0.8" />
+    </radialGradient>
+  </defs>
+
+  <!-- Outer ring (faint, blue) -->
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#3D7FFF" stroke-width="2" opacity="0.3" />
+
+  <!-- Third ring (medium, blue-amber blend) -->
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#7A8FCC" stroke-width="2" opacity="0.6" />
+
+  <!-- Second ring (amber-leaning) -->
+  <circle cx="32" cy="32" r="12" fill="none" stroke="#FFB84D" stroke-width="2.5" opacity="0.9" />
+
+  <!-- Center beacon dot (bright amber) -->
+  <circle cx="32" cy="32" r="4" fill="#FFA600" />
+
+  <!-- Inner glow -->
+  <circle cx="32" cy="32" r="2.5" fill="#FFCC99" opacity="0.8" />
+</svg>

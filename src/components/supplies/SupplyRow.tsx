@@ -60,7 +60,7 @@ export function SupplyRow({ item, currency }: SupplyRowProps) {
     <>
       <div className="px-4 py-3 md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center flex flex-col md:flex-row">
         <div className="min-w-0 flex items-center gap-3 flex-1 w-full">
-          <span className={cn("w-2 h-2 rounded-full shrink-0", SUPPLY_STATUS_COLORS[item.status] === "text-success" ? "bg-emerald-500" : SUPPLY_STATUS_COLORS[item.status] === "text-warning" ? "bg-amber-500" : SUPPLY_STATUS_COLORS[item.status] === "text-destructive" ? "bg-red-500" : "bg-muted-foreground")} />
+          <span className={cn("w-2 h-2 rounded-full shrink-0", SUPPLY_STATUS_COLORS[item.status] === "text-success" ? "[background-color:hsl(var(--success))]" : SUPPLY_STATUS_COLORS[item.status] === "text-warning" ? "[background-color:hsl(var(--warning))]" : SUPPLY_STATUS_COLORS[item.status] === "text-destructive" ? "[background-color:hsl(var(--destructive))]" : "bg-muted-foreground")} />
           <div className="min-w-0">
             <p className="font-medium text-sm truncate">{item.name}</p>
             <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>{item.status.replace("_", " ")}</p>

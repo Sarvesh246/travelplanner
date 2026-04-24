@@ -58,7 +58,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
     <div>
       {/* Countdown banner */}
       {days !== null && days >= 0 && (
-        <div className="mb-6 rounded-2xl bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/20 p-5 flex items-center gap-4">
+        <div className="mb-6 rounded-2xl bg-gradient-to-r from-primary/10 to-secondary/15 border border-primary/20 p-5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
             <Plane className="w-6 h-6 text-primary rotate-45" />
           </div>

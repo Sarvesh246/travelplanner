@@ -88,7 +88,15 @@ export default async function DashboardPage() {
           {trips.map((trip) => (
             <TripCard
               key={trip.id}
-              trip={trip}
+              trip={{
+                id: trip.id,
+                name: trip.name,
+                description: trip.description,
+                coverImageUrl: trip.coverImageUrl,
+                startDate: trip.startDate?.toISOString() ?? null,
+                endDate: trip.endDate?.toISOString() ?? null,
+                status: trip.status,
+              }}
               memberCount={trip.members.length}
               members={trip.members.map((m) => m.user)}
               stopCount={trip.stops.length}

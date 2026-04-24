@@ -3,17 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plane, ArrowLeft, ArrowRight, Check, Loader2, MapPin, Calendar, DollarSign } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Calendar, DollarSign } from "lucide-react";
 import { createTrip } from "@/actions/trips";
 import { toast } from "sonner";
 import { ROUTES, CURRENCIES } from "@/lib/constants";
 import { fadeUp, slideRight } from "@/lib/motion";
 import Link from "next/link";
+import { useLoading } from "@/hooks/useLoading";
 
 const STEPS = ["Details", "Dates & Budget", "Done"];
 
 export default function NewTripPage() {
   const router = useRouter();
+  const { startLoading, stopLoading } = useLoading();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +32,7 @@ export default function NewTripPage() {
       return;
     }
     setLoading(true);
+    startLoading("Creating your trip...");
     try {
       const { trip } = await createTrip({
         name: name.trim(),
@@ -44,6 +47,7 @@ export default function NewTripPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create trip");
       setLoading(false);
+      stopLoading();
     }
   }
 
@@ -54,10 +58,20 @@ export default function NewTripPage() {
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-            <Plane className="w-3.5 h-3.5 text-white rotate-45" />
-          </div>
-          <span className="font-bold">Groovy</span>
+          <svg viewBox="0 0 64 64" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="beaconGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: 'hsl(var(--secondary))', stopOpacity: 0.8}} />
+              </radialGradient>
+            </defs>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.3" />
+            <circle cx="32" cy="32" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.6" />
+            <circle cx="32" cy="32" r="12" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" opacity="0.9" />
+            <circle cx="32" cy="32" r="4" fill="hsl(var(--primary))" />
+            <circle cx="32" cy="32" r="2.5" fill="hsl(var(--primary))" opacity="0.6" />
+          </svg>
+          <span className="font-bold">Beacon</span>
         </div>
       </header>
 
@@ -68,7 +82,7 @@ export default function NewTripPage() {
             {STEPS.map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-                  i < step ? "bg-primary text-white" :
+                  i < step ? "bg-primary text-primary-foreground" :
                   i === step ? "bg-primary/20 text-primary border-2 border-primary" :
                   "bg-muted text-muted-foreground"
                 }`}>

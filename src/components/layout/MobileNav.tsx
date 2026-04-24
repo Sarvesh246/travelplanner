@@ -33,6 +33,7 @@ export function MobileNav({ tripId }: MobileNavProps) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               className={cn(
                 "flex-1 flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] font-medium transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"

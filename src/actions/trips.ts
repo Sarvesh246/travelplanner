@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { tripToClientJson } from "@/lib/serialize/prisma-json";
 
 async function getAuthUser() {
   const supabase = await createClient();
@@ -43,7 +44,7 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
   });
 
   revalidatePath("/dashboard");
-  return { trip };
+  return { trip: tripToClientJson(trip) };
 }
 
 export async function updateTrip(
@@ -74,7 +75,7 @@ export async function updateTrip(
   });
 
   revalidatePath(`/trips/${tripId}`);
-  return { trip };
+  return { trip: tripToClientJson(trip) };
 }
 
 export async function deleteTrip(tripId: string) {
@@ -111,5 +112,27 @@ export async function getTripWithMembers(tripId: string) {
   const isMember = trip.members.some((m) => m.userId === user.id);
   if (!isMember) throw new Error("Not a member of this trip");
 
-  return trip;
+  return {
+    ...tripToClientJson(trip),
+    members: trip.members.map((m) => ({
+      id: m.id,
+      tripId: m.tripId,
+      userId: m.userId,
+      role: m.role,
+      status: m.status,
+      joinedAt: m.joinedAt.toISOString(),
+      updatedAt: m.updatedAt.toISOString(),
+      user: {
+        id: m.user.id,
+        externalId: m.user.externalId,
+        email: m.user.email,
+        name: m.user.name,
+        avatarUrl: m.user.avatarUrl,
+        timezone: m.user.timezone,
+        createdAt: m.user.createdAt.toISOString(),
+        updatedAt: m.user.updatedAt.toISOString(),
+        deletedAt: m.user.deletedAt ? m.user.deletedAt.toISOString() : null,
+      },
+    })),
+  };
 }

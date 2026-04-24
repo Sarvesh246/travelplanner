@@ -1,6 +1,6 @@
 "use client";
 
-import { Plane, Search, Bell } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { UserAvatar } from "@/components/shared/UserAvatar";
@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useLoading } from "@/hooks/useLoading";
 
 interface TopNavProps {
   user: { name: string; email: string; avatarUrl?: string | null };
@@ -17,6 +18,7 @@ interface TopNavProps {
 }
 
 export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
+  const { startLoading, stopLoading } = useLoading();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -35,18 +37,33 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
   }, []);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/login");
-    toast.success("Signed out");
+    startLoading("Signing out...");
+    try {
+      await supabase.auth.signOut();
+      router.push("/login");
+      toast.success("Signed out");
+    } finally {
+      stopLoading();
+    }
   }
 
   return (
     <header className="h-14 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40 flex items-center px-4 gap-4">
       <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-          <Plane className="w-3.5 h-3.5 text-white rotate-45" />
-        </div>
-        <span className="font-bold text-base tracking-tight hidden sm:block">Groovy</span>
+        <svg viewBox="0 0 64 64" className="w-10 h-10" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="beaconGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+              <stop offset="100%" style={{stopColor: 'hsl(var(--secondary))', stopOpacity: 0.8}} />
+            </radialGradient>
+          </defs>
+          <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.3" />
+          <circle cx="32" cy="32" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.6" />
+          <circle cx="32" cy="32" r="12" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" opacity="0.9" />
+          <circle cx="32" cy="32" r="4" fill="hsl(var(--primary))" />
+          <circle cx="32" cy="32" r="2.5" fill="hsl(var(--primary))" opacity="0.6" />
+        </svg>
+        <span className="font-bold text-base tracking-tight hidden sm:block">Beacon</span>
       </Link>
 
       <div className="flex-1" />

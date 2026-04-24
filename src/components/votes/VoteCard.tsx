@@ -184,7 +184,7 @@ export function VoteCard({ vote }: VoteCardProps) {
                     className={cn(
                       "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
                       option.myVote
-                        ? "border-primary bg-primary text-white"
+                        ? "border-primary bg-primary text-primary-foreground"
                         : "border-muted-foreground/30"
                     )}
                   >

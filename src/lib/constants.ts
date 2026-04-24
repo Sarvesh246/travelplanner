@@ -49,12 +49,12 @@ export const ACTIVITY_CATEGORIES = [
 ] as const;
 
 export const TRIP_GRADIENTS = [
-  { from: "from-sky-400", to: "to-indigo-500", name: "Ocean" },
-  { from: "from-orange-400", to: "to-pink-500", name: "Sunset" },
-  { from: "from-emerald-400", to: "to-sky-500", name: "Forest" },
-  { from: "from-violet-400", to: "to-pink-500", name: "Dusk" },
-  { from: "from-amber-400", to: "to-lime-400", name: "Sand" },
-  { from: "from-slate-600", to: "to-slate-800", name: "Night" },
+  { from: "from-[hsl(38,90%,56%)]", to: "to-[hsl(24,90%,52%)]", name: "Sunrise pass" },
+  { from: "from-[hsl(215,45%,48%)]", to: "to-[hsl(222,35%,35%)]", name: "High ridge" },
+  { from: "from-[hsl(16,58%,52%)]", to: "to-[hsl(38,85%,48%)]", name: "Canyon" },
+  { from: "from-[hsl(222,28%,28%)]", to: "to-[hsl(38,90%,56%)]", name: "Twilight trail" },
+  { from: "from-[hsl(200,55%,45%)]", to: "to-[hsl(215,40%,38%)]", name: "Alpine lake" },
+  { from: "from-[hsl(32,85%,48%)]", to: "to-[hsl(16,55%,48%)]", name: "Desert bloom" },
 ] as const;
 
 export const CURRENCIES = [
@@ -68,9 +68,9 @@ export const CURRENCIES = [
 ] as const;
 
 export const MEMBER_ROLES = {
-  OWNER: { label: "Owner", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
-  ADMIN: { label: "Admin", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
-  MEMBER: { label: "Member", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+  OWNER: { label: "Owner", color: "role-owner" },
+  ADMIN: { label: "Admin", color: "role-admin" },
+  MEMBER: { label: "Member", color: "role-member" },
 } as const;
 
 export const SUPPLY_STATUS_COLORS = {
@@ -81,15 +81,15 @@ export const SUPPLY_STATUS_COLORS = {
 } as const;
 
 export const ACTIVITY_STATUS_COLORS = {
-  IDEA: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  PLANNED: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  CONFIRMED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  COMPLETED: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
-  CANCELLED: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+  IDEA: "status-idea",
+  PLANNED: "status-planned",
+  CONFIRMED: "status-confirmed",
+  COMPLETED: "status-completed",
+  CANCELLED: "status-cancelled",
 } as const;
 
 export const STAY_STATUS_COLORS = {
-  OPTION: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  BOOKED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  CANCELLED: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+  OPTION: "status-idea",
+  BOOKED: "status-planned",
+  CANCELLED: "status-cancelled",
 } as const;

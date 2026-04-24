@@ -14,8 +14,9 @@ interface TripCardProps {
     name: string;
     description?: string | null;
     coverImageUrl?: string | null;
-    startDate?: Date | null;
-    endDate?: Date | null;
+    /** ISO strings from the server; Date also supported when created client-side */
+    startDate?: string | Date | null;
+    endDate?: string | Date | null;
     status: string;
   };
   memberCount: number;

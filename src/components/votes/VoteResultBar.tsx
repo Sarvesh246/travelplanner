@@ -19,7 +19,7 @@ export function VoteResultBar({ percentage, isWinner, myVote }: VoteResultBarPro
         className={cn(
           "h-full",
           isWinner
-            ? "bg-emerald-500/20 dark:bg-emerald-500/20"
+            ? "[background-color:hsl(var(--success)/0.2)]"
             : myVote
               ? "bg-primary/15"
               : "bg-muted-foreground/10"

@@ -13,7 +13,6 @@ import {
   Plane,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import { ROUTES } from "@/lib/constants";
 
 interface TripSidebarProps {
@@ -36,7 +35,7 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
 
   return (
     <aside
-      className="w-56 shrink-0 hidden md:flex flex-col border-r border-sidebar-border h-full overflow-y-auto"
+      className="hidden w-56 min-h-0 shrink-0 flex-col self-stretch overflow-y-auto border-r border-sidebar-border md:flex"
       style={{ background: "hsl(var(--sidebar-bg))" }}
     >
       {/* Back to dashboard */}
@@ -76,8 +75,9 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               className={cn(
-                "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-100",
                 isActive
                   ? "text-white"
                   : "hover:bg-white/5"
@@ -87,11 +87,9 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
               }}
             >
               {isActive && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-lg"
-                  style={{ background: "hsl(var(--sidebar-accent) / 0.25)" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                <div
+                  className="absolute inset-0 rounded-lg bg-[hsl(var(--sidebar-accent)/0.25)]"
+                  aria-hidden
                 />
               )}
               <Icon className="w-4 h-4 shrink-0 relative z-10" />

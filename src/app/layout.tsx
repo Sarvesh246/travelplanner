@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { RootProvider } from "@/components/layout/RootProvider";
 
-const geistSans = Geist({
+const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
+const jetBrainsMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: { default: "Groovy – Group Trip Planner", template: "%s | Groovy" },
+  title: { default: "Beacon – Plan trips together, split costs fairly", template: "%s | Beacon" },
   description:
     "Plan group trips together. Itinerary, supplies, expenses, and votes — all in one place.",
   keywords: ["trip planner", "group travel", "expense splitting", "itinerary"],
@@ -26,9 +27,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen`}
+        className={`${inter.variable} ${jetBrainsMono.variable} font-sans min-h-screen`}
       >
         <RootProvider>{children}</RootProvider>
       </body>

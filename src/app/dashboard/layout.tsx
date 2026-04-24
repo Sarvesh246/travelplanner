@@ -20,7 +20,8 @@ export default async function DashboardLayout({
       select: { name: true, email: true, avatarUrl: true },
     });
   } catch (e) {
-    console.error("[dashboard/layout] Prisma user lookup failed:", e);
+    // Avoid console.error here: in dev it is forwarded to the browser overlay even though we recover below.
+    console.warn("[dashboard/layout] Prisma user lookup failed:", e);
   }
 
   const profile = dbUser ?? {
