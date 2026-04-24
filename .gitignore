@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Env (keep secrets local)
+.env
+.env*.local
+
+# Debug / OS
+npm-debug.log*
+.DS_Store
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma (keep migrations; ignore generated if any local-only)
+prisma/*.db
+prisma/*.db-journal
+
+# IDE
+.idea/
