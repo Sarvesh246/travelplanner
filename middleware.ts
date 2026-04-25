@@ -33,7 +33,11 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  /** Stale or missing refresh token — treat as signed out; avoid redirect loops as logged-in */
+  const userOrNull = authError ? null : user;
 
   const { pathname } = request.nextUrl;
 
@@ -41,14 +45,14 @@ export async function middleware(request: NextRequest) {
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
-  if (isProtected && !user) {
+  if (isProtected && !userOrNull) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && userOrNull) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

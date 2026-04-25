@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { Suspense, useEffect, useState } from "react";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecovery";
 import { KeyboardShortcuts } from "@/components/layout/KeyboardShortcuts";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
@@ -60,6 +61,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     >
       <QueryClientProvider client={queryClient}>
         {children}
+        <InvalidSessionRecovery />
         <KeyboardShortcuts />
         <LoadingScreen />
         <CommandPalette />

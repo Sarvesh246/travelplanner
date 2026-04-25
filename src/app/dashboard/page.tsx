@@ -75,19 +75,19 @@ export default async function DashboardPage({
 
   return (
     <div>
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-8 flex flex-col gap-4 min-[480px]:flex-row min-[480px]:items-end min-[480px]:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold">Your Trips</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {trips.length === 0 ? "Plan your first adventure" : `${trips.length} trip${trips.length !== 1 ? "s" : ""} planned`}
           </p>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-3 sm:ml-auto sm:w-auto sm:shrink-0 sm:flex-row sm:items-center sm:justify-end sm:gap-3 lg:gap-4">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-3 min-[480px]:w-auto min-[480px]:shrink-0 min-[480px]:justify-end">
           {trips.length > 0 ? (
             <Suspense
               fallback={
                 <div
-                  className="h-9 w-full min-w-0 rounded-lg border border-border bg-muted/30 sm:min-w-[16.5rem] sm:max-w-none animate-pulse"
+                  className="h-9 min-w-[12.5rem] max-w-full flex-1 min-[480px]:flex-none min-[480px]:w-44 rounded-lg border border-border bg-muted/30 animate-pulse"
                   aria-hidden
                 />
               }
@@ -97,7 +97,7 @@ export default async function DashboardPage({
           ) : null}
           <Link
             href="/trips/new"
-            className="inline-flex shrink-0 items-center justify-center gap-2 self-end bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm sm:self-center"
+            className="inline-flex shrink-0 items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             New Trip

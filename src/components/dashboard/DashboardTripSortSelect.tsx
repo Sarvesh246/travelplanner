@@ -33,26 +33,24 @@ export function DashboardTripSortSelect() {
   }
 
   return (
-    <div className="inline-flex w-full min-w-0 sm:w-auto sm:shrink-0 sm:max-w-none">
-      <div className="flex w-full min-w-0 flex-1 sm:w-auto sm:shrink-0 sm:min-w-0 sm:max-w-none sm:flex-initial items-center gap-2 rounded-lg text-sm text-muted-foreground">
-        <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden />
-        <span className="shrink-0">Sort by</span>
-        <Select value={current} onValueChange={onValueChange}>
-          <SelectTrigger
-            className="min-w-0 w-full flex-1 sm:w-[min(100%,12rem)] sm:min-w-[12rem] sm:max-w-none sm:shrink-0 sm:flex-none [&>span]:line-clamp-none"
-            aria-label="Sort trips"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DASHBOARD_TRIP_SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex min-w-0 max-w-full shrink-0 items-center gap-2 text-sm text-muted-foreground">
+      <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden />
+      <span className="shrink-0">Sort by</span>
+      <Select value={current} onValueChange={onValueChange}>
+        <SelectTrigger
+          className="h-9 w-full min-w-[7.5rem] min-[480px]:w-44 min-[480px]:max-w-[min(12rem,100%)] min-[480px]:shrink-0 sm:min-w-[12rem] [&>span]:line-clamp-none"
+          aria-label="Sort trips"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {DASHBOARD_TRIP_SORT_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
