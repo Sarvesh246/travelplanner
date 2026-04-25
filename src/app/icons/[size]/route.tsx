@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { BeaconPwaIconImage } from "@/lib/beacon-pwa-icon";
 
-export const runtime = "edge";
+/** Node.js — Edge bundle for `ImageResponse` + Satori exceeds Vercel's 1 MB Edge limit. */
+export const runtime = "nodejs";
 
 const SIZES = [32, 180, 192, 512] as const;
 
