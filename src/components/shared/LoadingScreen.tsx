@@ -1,46 +1,60 @@
 "use client";
 
 import { useLoadingStore } from "@/lib/store/loading";
+import { BeaconLogo } from "@/components/shared/BeaconLogo";
 
+/**
+ * Sitewide loading overlay — concentric beacon rings pulsing outward over a
+ * blurred backdrop. Driven by the loading store, which itself is fed by:
+ *  - explicit `startLoading()` calls (e.g. signing out, uploading)
+ *  - the global `NavigationProgress` watcher (route changes)
+ *
+ * The backdrop blur paints immediately (no fade) so the page snaps behind the
+ * loader. Only the inner content fades in for a small bit of delight.
+ */
 export function LoadingScreen() {
-  const { isLoading, message } = useLoadingStore();
+  const isLoading = useLoadingStore((s) => s.isLoading);
+  const message = useLoadingStore((s) => s.message);
+  const source = useLoadingStore((s) => s.source);
 
   if (!isLoading) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
-      <div className="flex flex-col items-center gap-4">
-        {/* Pulsing Beacon Logo */}
-        <div className="relative w-24 h-24">
-          <svg
-            viewBox="0 0 64 64"
-            className="w-full h-full animate-pulse"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <radialGradient id="beaconLoadingGradient" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))", stopOpacity: 0.8 }} />
-              </radialGradient>
-            </defs>
-            <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.3" />
-            <circle cx="32" cy="32" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.6" />
-            <circle cx="32" cy="32" r="12" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" opacity="0.9" />
-            <circle cx="32" cy="32" r="4" fill="hsl(var(--primary))" />
-            <circle cx="32" cy="32" r="2.5" fill="hsl(var(--primary))" opacity="0.6" />
-          </svg>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      data-source={source ?? undefined}
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+    >
+      {/* Instant blur backdrop — does NOT animate in */}
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-md" aria-hidden />
+
+      <div className="relative flex flex-col items-center gap-5 animate-in fade-in zoom-in-95 duration-150 ease-out">
+        <div className="relative flex h-28 w-28 items-center justify-center">
+          <span
+            className="absolute inset-0 rounded-full bg-primary/15 animate-beacon-ping-slow motion-reduce:hidden"
+            aria-hidden
+          />
+          <span
+            className="absolute inset-3 rounded-full bg-primary/20 animate-beacon-ping motion-reduce:hidden"
+            aria-hidden
+          />
+          <span
+            className="absolute inset-5 rounded-full bg-primary/25 motion-reduce:hidden"
+            aria-hidden
+          />
+          <BeaconLogo
+            ariaLabel="Beacon"
+            className="relative h-16 w-16 animate-beacon-pulse motion-reduce:animate-pulse"
+          />
         </div>
 
-        {/* Loading Text */}
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-foreground font-semibold text-lg">
-            {message || "Loading..."}
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-sm font-medium text-foreground">
+            {message || "Loading…"}
           </p>
-          <div className="flex gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0s" }} />
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.2s" }} />
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.4s" }} />
-          </div>
+          <span className="sr-only">Please wait while we load this view.</span>
         </div>
       </div>
     </div>

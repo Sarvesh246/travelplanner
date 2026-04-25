@@ -1,25 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { CommentableType } from "@prisma/client";
-
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
-
-async function assertTripMember(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || member.status !== "ACTIVE") throw new Error("Not a member");
-}
+import {
+  assertCanContribute,
+  assertCanManage,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
 
 interface CreateCommentInput {
   entityType: CommentableType;
@@ -89,12 +77,22 @@ function revalidateForEntity(tripId: string, entityType: CommentableType) {
   revalidatePath(byEntity[entityType]);
 }
 
+async function tripIdForComment(comment: {
+  tripId: string | null;
+  entityType: CommentableType;
+  entityId: string;
+}): Promise<string> {
+  if (comment.tripId) return comment.tripId;
+  const { tripId } = await resolveEntity(comment.entityType, comment.entityId);
+  return tripId;
+}
+
 export async function createComment(input: CreateCommentInput) {
   const user = await getAuthUser();
   if (!input.body?.trim()) throw new Error("Comment body is required");
 
   const { tripId, fk } = await resolveEntity(input.entityType, input.entityId);
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   const comment = await prisma.comment.create({
     data: {
@@ -120,6 +118,9 @@ export async function updateComment(commentId: string, body: string) {
   if (!comment) throw new Error("Comment not found");
   if (comment.authorId !== user.id) throw new Error("You can only edit your own comments");
 
+  const tripId = await tripIdForComment(comment);
+  await assertCanContribute(tripId, user.id);
+
   await prisma.comment.update({
     where: { id: commentId },
     data: { body: body.trim(), editedAt: new Date() },
@@ -133,14 +134,11 @@ export async function deleteComment(commentId: string) {
   const comment = await prisma.comment.findUnique({ where: { id: commentId } });
   if (!comment) throw new Error("Comment not found");
 
-  if (comment.authorId !== user.id) {
-    if (!comment.tripId) throw new Error("Not authorized");
-    const member = await prisma.tripMember.findUnique({
-      where: { tripId_userId: { tripId: comment.tripId, userId: user.id } },
-    });
-    if (!member || !["OWNER", "ADMIN"].includes(member.role)) {
-      throw new Error("You can only delete your own comments");
-    }
+  const tripId = await tripIdForComment(comment);
+  if (comment.authorId === user.id) {
+    await assertCanContribute(tripId, user.id);
+  } else {
+    await assertCanManage(tripId, user.id);
   }
 
   await prisma.comment.update({

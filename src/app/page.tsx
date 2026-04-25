@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  Plane,
   Map,
   Package,
   Receipt,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ROUTES } from "@/lib/constants";
+import { BeaconLogo } from "@/components/shared/BeaconLogo";
 
 export const metadata = { title: "Beacon – Plan trips together, split costs fairly" };
 
@@ -22,28 +22,32 @@ const FEATURES = [
     title: "Multi-stop itinerary",
     description:
       "Plan every stop, stay, and activity on a collaborative timeline that stays in sync.",
-    color: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400",
+    color:
+      "bg-[hsl(110,25%,90%)] text-[hsl(124,32%,28%)] dark:bg-[hsl(124,28%,18%)] dark:text-[hsl(110,32%,60%)]",
   },
   {
     icon: Package,
     title: "Supply tracker",
     description:
       "Assign who brings what. Track quantities, costs, and packing progress in real time.",
-    color: "bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400",
+    color:
+      "bg-[hsl(112,30%,90%)] text-[hsl(120,30%,30%)] dark:bg-[hsl(112,28%,20%)] dark:text-[hsl(112,30%,70%)]",
   },
   {
     icon: Receipt,
     title: "Smart expense splits",
     description:
       "Equal, weighted, or custom splits. Balance summary simplifies who owes whom.",
-    color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    color:
+      "bg-[hsl(51,45%,88%)] text-[hsl(128,32%,28%)] dark:bg-[hsl(50,25%,18%)] dark:text-[hsl(51,45%,78%)]",
   },
   {
     icon: Vote,
     title: "Group voting",
     description:
       "Poll your crew on dates, destinations, and activities. Watch decisions animate in.",
-    color: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
+    color:
+      "bg-[hsl(124,22%,88%)] text-[hsl(124,35%,26%)] dark:bg-[hsl(128,30%,16%)] dark:text-[hsl(110,28%,58%)]",
   },
 ];
 
@@ -72,33 +76,21 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="h-14 flex items-center justify-between px-6 max-w-6xl mx-auto">
-        <Link href="/" className="flex items-center gap-2">
-          <svg viewBox="0 0 64 64" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <radialGradient id="beaconGradient" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
-                <stop offset="100%" style={{stopColor: 'hsl(var(--secondary))', stopOpacity: 0.8}} />
-              </radialGradient>
-            </defs>
-            <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.3" />
-            <circle cx="32" cy="32" r="20" fill="none" stroke="hsl(var(--secondary))" strokeWidth="2" opacity="0.6" />
-            <circle cx="32" cy="32" r="12" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" opacity="0.9" />
-            <circle cx="32" cy="32" r="4" fill="hsl(var(--primary))" />
-            <circle cx="32" cy="32" r="2.5" fill="hsl(var(--primary))" opacity="0.6" />
-          </svg>
-          <span className="font-semibold text-lg font-sans tracking-tight">Beacon</span>
+      <header className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
+          <BeaconLogo className="h-8 w-8 shrink-0" gradientId="beaconGradient-landing" />
+          <span className="truncate font-sans text-base font-semibold tracking-tight sm:text-lg">Beacon</span>
         </Link>
-        <nav className="flex items-center gap-3">
+        <nav className="flex shrink-0 items-center gap-1.5 min-[400px]:gap-3">
           <Link
             href={ROUTES.login}
-            className="text-sm font-medium px-4 py-2 rounded-lg hover:bg-muted transition-colors"
+            className="min-h-10 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors hover:bg-muted min-[400px]:px-4"
           >
             Log in
           </Link>
           <Link
             href={ROUTES.signup}
-            className="text-sm font-semibold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="min-h-10 rounded-lg bg-primary px-2.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 min-[400px]:px-4"
           >
             Sign up
           </Link>
@@ -107,12 +99,12 @@ export default async function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="max-w-4xl mx-auto px-6 pt-16 pb-24 text-center">
+        <section className="mx-auto max-w-4xl px-4 pb-20 pt-12 text-center min-[400px]:px-6 min-[400px]:pb-24 min-[400px]:pt-16 sm:px-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground mb-6">
             <Sparkles className="w-3 h-3 text-primary" />
             One workspace for the whole crew
           </div>
-          <h1 className="text-4xl sm:text-6xl font-semibold font-sans tracking-normal sm:tracking-tight text-balance text-foreground">
+          <h1 className="text-balance font-sans text-3xl font-semibold tracking-tight text-foreground min-[400px]:text-4xl sm:text-6xl">
             Plan trips <span className="gradient-text">together</span>,
             <br />
             not in 10 different apps.
@@ -121,16 +113,16 @@ export default async function LandingPage() {
             Itinerary, supplies, expenses, and votes — collaborative from day one. Stop
             juggling docs, spreadsheets, and group chats.
           </p>
-          <div className="flex items-center justify-center gap-3 mt-8">
+          <div className="mt-8 flex w-full max-w-md flex-col items-stretch justify-center gap-3 min-[480px]:max-w-none min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-center">
             <Link
               href={ROUTES.signup}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Start planning free <ArrowRight className="w-4 h-4" />
+              Start planning free <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
             <Link
               href={ROUTES.login}
-              className="inline-flex items-center gap-2 border border-border rounded-xl px-5 py-3 text-sm font-semibold hover:bg-muted transition-colors"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-center text-sm font-semibold transition-colors hover:bg-muted min-[480px]:px-5"
             >
               I already have an account
             </Link>
@@ -138,7 +130,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Feature grid */}
-        <section className="max-w-5xl mx-auto px-6 pb-24">
+        <section className="mx-auto max-w-5xl px-4 pb-20 min-[400px]:px-6 min-[400px]:pb-24 sm:px-6">
           <div className="grid md:grid-cols-2 gap-5">
             {FEATURES.map((f) => (
               <div
@@ -156,7 +148,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Perks */}
-        <section className="max-w-3xl mx-auto px-6 pb-24">
+        <section className="mx-auto max-w-3xl px-4 pb-20 min-[400px]:px-6 min-[400px]:pb-24 sm:px-6">
           <div className="bg-gradient-to-br from-primary/10 via-secondary/15 to-accent/30 border border-primary/20 rounded-3xl p-8 sm:p-12">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm mb-4">
               <Users className="w-4 h-4" /> Built for groups
@@ -187,11 +179,15 @@ export default async function LandingPage() {
       </main>
 
       <footer className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-xs text-muted-foreground min-[400px]:flex-row min-[400px]:px-6 min-[400px]:text-left">
           <p>© {new Date().getFullYear()} Beacon</p>
-          <div className="flex items-center gap-4">
-            <Link href={ROUTES.login} className="hover:text-foreground transition-colors">Log in</Link>
-            <Link href={ROUTES.signup} className="hover:text-foreground transition-colors">Sign up</Link>
+          <div className="flex min-h-10 items-center gap-6">
+            <Link href={ROUTES.login} className="transition-colors hover:text-foreground">
+              Log in
+            </Link>
+            <Link href={ROUTES.signup} className="transition-colors hover:text-foreground">
+              Sign up
+            </Link>
           </div>
         </div>
       </footer>

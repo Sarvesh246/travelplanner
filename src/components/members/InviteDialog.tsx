@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { inviteMember } from "@/actions/members";
 import { toast } from "sonner";
-import { X, Copy, Mail, Check, Loader2 } from "lucide-react";
+import { X, Copy, Mail, Check, Loader2, AlertTriangle } from "lucide-react";
 import { MemberRole } from "@prisma/client";
 import { useLoading } from "@/hooks/useLoading";
 
@@ -19,17 +19,34 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   const [role, setRole] = useState<MemberRole>("MEMBER");
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
+
+  function closeDialog() {
+    setEmailSent(null);
+    setInviteLink(null);
+    setCopied(false);
+    setLoading(false);
+    onOpenChange(false);
+  }
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
     startLoading("Sending invite...");
+    const to = email.trim();
     try {
-      const result = await inviteMember(tripId, email.trim(), role);
+      const result = await inviteMember(tripId, to, role);
       setInviteLink(result.inviteLink);
-      toast.success(`Invite sent to ${email}`);
+      setEmailSent(result.emailSent);
+      if (result.emailSent) {
+        toast.success(`Invite emailed to ${to}`);
+      } else {
+        toast.message("Invite created", {
+          description: "Copy the link below to share, or check Resend and EMAIL_FROM in .env.local.",
+        });
+      }
       setEmail("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send invite");
@@ -51,12 +68,12 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeDialog} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="font-semibold text-base">Invite members</h2>
           <button
-            onClick={() => onOpenChange(false)}
+            onClick={closeDialog}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
           >
             <X className="w-4 h-4" />
@@ -84,7 +101,8 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
                 className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="MEMBER">Member — can view and contribute</option>
-                <option value="ADMIN">Admin — can edit everything</option>
+                <option value="VIEWER">Viewer — read-only access</option>
+                <option value="ADMIN">Admin — can manage members and settings</option>
               </select>
             </div>
 
@@ -98,9 +116,19 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
             </button>
           </form>
 
+          {inviteLink && emailSent === false && (
+            <div
+              className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100"
+              role="status"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>Email could not be sent. Copy the invite link below to share it manually.</span>
+            </div>
+          )}
+
           {inviteLink && (
             <div className="pt-4 border-t border-border">
-              <p className="text-sm font-medium mb-2">Or share invite link</p>
+              <p className="text-sm font-medium mb-2">Share invite link</p>
               <div className="flex gap-2">
                 <input
                   readOnly

@@ -26,7 +26,7 @@ interface CommentThreadProps {
 }
 
 export function CommentThread({ entityType, entityId, comments, compact }: CommentThreadProps) {
-  const { currentUser, canEdit } = useTripContext();
+  const { currentUser, canEdit, canManage } = useTripContext();
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
                 </div>
                 <p className="text-xs mt-0.5 whitespace-pre-wrap break-words">{c.body}</p>
               </div>
-              {(c.authorId === currentUser.id || canEdit) && (
+              {(c.authorId === currentUser.id || canManage) && (
                 <button
                   onClick={() => handleDelete(c.id)}
                   disabled={pendingDelete === c.id}
@@ -92,26 +92,28 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-start gap-2">
-        <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size="xs" />
-        <div className="flex-1 flex items-center gap-2 bg-muted/40 rounded-xl pl-3 pr-1.5 py-1">
-          <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
-          <input
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Add a comment…"
-            className="flex-1 bg-transparent text-xs focus:outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="submit"
-            disabled={submitting || !body.trim()}
-            className="w-6 h-6 rounded-md flex items-center justify-center text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
-            aria-label="Post comment"
-          >
-            {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-          </button>
-        </div>
-      </form>
+      {canEdit && (
+        <form onSubmit={handleSubmit} className="flex items-start gap-2">
+          <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size="xs" />
+          <div className="flex-1 flex items-center gap-2 bg-muted/40 rounded-xl pl-3 pr-1.5 py-1">
+            <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
+            <input
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Add a comment…"
+              className="flex-1 bg-transparent text-xs focus:outline-none placeholder:text-muted-foreground"
+            />
+            <button
+              type="submit"
+              disabled={submitting || !body.trim()}
+              className="w-6 h-6 rounded-md flex items-center justify-center text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
+              aria-label="Post comment"
+            >
+              {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

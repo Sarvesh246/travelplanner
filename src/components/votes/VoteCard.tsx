@@ -25,7 +25,7 @@ const TOPIC_LABELS: Record<string, string> = {
 };
 
 export function VoteCard({ vote }: VoteCardProps) {
-  const { canEdit } = useTripContext();
+  const { canManage, canEdit } = useTripContext();
   const [pending, setPending] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -53,7 +53,7 @@ export function VoteCard({ vote }: VoteCardProps) {
   const locked = isClosed || isExpired;
 
   async function toggleOption(optionId: string) {
-    if (locked || pending) return;
+    if (locked || pending || !canEdit) return;
     setPending(true);
 
     const currentlyVoted = vote.options
@@ -130,7 +130,7 @@ export function VoteCard({ vote }: VoteCardProps) {
               </p>
             )}
           </div>
-          {canEdit && (
+          {canManage && (
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
@@ -168,7 +168,7 @@ export function VoteCard({ vote }: VoteCardProps) {
               <button
                 key={option.id}
                 onClick={() => toggleOption(option.id)}
-                disabled={locked || pending}
+                disabled={locked || pending || !canEdit}
                 className={cn(
                   "relative w-full text-left px-3 py-2.5 rounded-xl border transition-all",
                   option.myVote

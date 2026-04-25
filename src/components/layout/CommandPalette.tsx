@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Command } from "cmdk";
 import { useTheme } from "next-themes";
@@ -18,62 +18,78 @@ import {
   Plane,
 } from "lucide-react";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useIsMac } from "@/hooks/useIsMac";
+import { useLoadingStore } from "@/lib/store/loading";
 import { ROUTES } from "@/lib/constants";
+import { Kbd } from "@/components/shared/Kbd";
 
+/**
+ * Renders only when the palette is open. Mount/unmount on open transition
+ * naturally resets the local search state and lets us keep the input fully
+ * controlled without a side-effect to clear it.
+ */
 export function CommandPalette() {
-  const { open, setOpen, toggle } = useCommandPalette();
+  const open = useCommandPalette((s) => s.open);
+  if (!open) return null;
+  return <CommandPaletteInner />;
+}
+
+function CommandPaletteInner() {
+  const setOpen = useCommandPalette((s) => s.setOpen);
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-
-  // Cmd/Ctrl+K opens the palette
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        toggle();
-      }
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [toggle]);
+  const [search, setSearch] = useState("");
+  const isMac = useIsMac();
 
   function run(action: () => void) {
     setOpen(false);
     action();
   }
 
-  // Extract tripId from path if we're inside a trip workspace
+  /** Navigate via router.push and arm the global navigation loader. */
+  function go(href: string) {
+    setOpen(false);
+    if (typeof window !== "undefined" && window.location.pathname === href) return;
+    useLoadingStore.getState().startNavigation();
+    router.push(href);
+  }
+
   const tripMatch = pathname.match(/^\/trips\/([^/]+)/);
   const tripId = tripMatch?.[1];
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] p-4">
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center p-3 pt-8 min-[500px]:p-4 min-[500px]:pt-[14vh]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
+    >
+      {/* Backdrop — full blur applied instantly so the page snaps behind */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-foreground/30 backdrop-blur-md"
         onClick={() => setOpen(false)}
+        aria-hidden
       />
 
       <Command
         label="Command menu"
-        className="relative w-full max-w-lg bg-popover border border-border rounded-2xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-popover shadow-2xl animate-in fade-in zoom-in-95 duration-150 ease-out"
         loop
       >
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <Search className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <Command.Input
             autoFocus
-            placeholder="Type a command or search…"
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search commands or type to jump…"
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
           />
-          <kbd className="text-[10px] font-mono text-muted-foreground bg-muted border border-border rounded px-1.5 py-0.5">
-            ESC
-          </kbd>
+          <Kbd keys="Esc" />
         </div>
 
-        <Command.List className="max-h-[360px] overflow-y-auto p-2">
+        <Command.List className="max-h-[min(52dvh,380px)] overflow-y-auto p-2">
           <Command.Empty className="py-8 text-center text-sm text-muted-foreground">
             No results found.
           </Command.Empty>
@@ -82,46 +98,53 @@ export function CommandPalette() {
             <CommandItem
               icon={<LayoutDashboard className="w-4 h-4" />}
               label="Dashboard"
-              onSelect={() => run(() => router.push(ROUTES.dashboard))}
+              onSelect={() => go(ROUTES.dashboard)}
               shortcut="G D"
+              chord
             />
             {tripId && (
               <>
                 <CommandItem
                   icon={<Plane className="w-4 h-4" />}
                   label="Trip overview"
-                  onSelect={() => run(() => router.push(ROUTES.tripOverview(tripId)))}
+                  onSelect={() => go(ROUTES.tripOverview(tripId))}
                   shortcut="G O"
+                  chord
                 />
                 <CommandItem
                   icon={<Map className="w-4 h-4" />}
                   label="Itinerary"
-                  onSelect={() => run(() => router.push(ROUTES.tripItinerary(tripId)))}
+                  onSelect={() => go(ROUTES.tripItinerary(tripId))}
                   shortcut="G I"
+                  chord
                 />
                 <CommandItem
                   icon={<Package className="w-4 h-4" />}
                   label="Supplies"
-                  onSelect={() => run(() => router.push(ROUTES.tripSupplies(tripId)))}
+                  onSelect={() => go(ROUTES.tripSupplies(tripId))}
                   shortcut="G S"
+                  chord
                 />
                 <CommandItem
                   icon={<Receipt className="w-4 h-4" />}
                   label="Expenses"
-                  onSelect={() => run(() => router.push(ROUTES.tripExpenses(tripId)))}
+                  onSelect={() => go(ROUTES.tripExpenses(tripId))}
                   shortcut="G E"
+                  chord
                 />
                 <CommandItem
                   icon={<Vote className="w-4 h-4" />}
                   label="Votes"
-                  onSelect={() => run(() => router.push(ROUTES.tripVotes(tripId)))}
+                  onSelect={() => go(ROUTES.tripVotes(tripId))}
                   shortcut="G V"
+                  chord
                 />
                 <CommandItem
                   icon={<Users className="w-4 h-4" />}
                   label="Members"
-                  onSelect={() => run(() => router.push(ROUTES.tripMembers(tripId)))}
+                  onSelect={() => go(ROUTES.tripMembers(tripId))}
                   shortcut="G M"
+                  chord
                 />
               </>
             )}
@@ -131,21 +154,48 @@ export function CommandPalette() {
             <CommandItem
               icon={<Plus className="w-4 h-4" />}
               label="Create new trip"
-              onSelect={() => run(() => router.push(ROUTES.newTrip))}
+              onSelect={() => go(ROUTES.newTrip)}
               shortcut="N"
             />
           </Command.Group>
 
           <Command.Group heading="Appearance">
             <CommandItem
-              icon={theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              icon={
+                theme === "dark" ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )
+              }
+              label={
+                theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+              }
               onSelect={() =>
                 run(() => setTheme(theme === "dark" ? "light" : "dark"))
               }
+              shortcut="T"
             />
           </Command.Group>
         </Command.List>
+
+        <div className="flex flex-col gap-2 border-t border-border bg-muted/40 px-3 py-2.5 text-[10px] text-muted-foreground min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between min-[500px]:gap-4 min-[500px]:px-4 min-[500px]:text-[11px]">
+          <div className="flex flex-wrap items-center gap-2 min-[500px]:gap-3">
+            <span className="flex items-center gap-1.5">
+              <Kbd keys="↑" />
+              <Kbd keys="↓" />
+              <span>navigate</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Kbd keys="↵" />
+              <span>select</span>
+            </span>
+          </div>
+          <span className="flex items-center gap-1.5">
+            <Kbd keys={isMac ? "⌘ K" : "Ctrl K"} />
+            <span>toggle</span>
+          </span>
+        </div>
       </Command>
     </div>
   );
@@ -156,24 +206,22 @@ function CommandItem({
   label,
   onSelect,
   shortcut,
+  chord = false,
 }: {
   icon: React.ReactNode;
   label: string;
   onSelect: () => void;
   shortcut?: string;
+  chord?: boolean;
 }) {
   return (
     <Command.Item
       onSelect={onSelect}
-      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer aria-selected:bg-muted transition-colors"
+      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer aria-selected:bg-muted aria-selected:text-foreground text-foreground transition-colors"
     >
       <span className="text-muted-foreground">{icon}</span>
       <span className="flex-1">{label}</span>
-      {shortcut && (
-        <kbd className="text-[10px] font-mono text-muted-foreground bg-muted border border-border rounded px-1.5 py-0.5">
-          {shortcut}
-        </kbd>
-      )}
+      {shortcut && <Kbd keys={shortcut} asChord={chord} />}
     </Command.Item>
   );
 }

@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
-import { acceptInvite } from "@/actions/members";
 import { ROUTES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { AcceptInviteButton } from "@/components/members/AcceptInviteButton";
 
 export const metadata = { title: "Accept invite" };
 
@@ -25,7 +25,13 @@ export default async function InvitePage({
   });
 
   if (!invite) {
-    return <InviteMessage tone="error" title="Invite not found" description="This invite link isn't valid. It may have been removed." />;
+    return (
+      <InviteMessage
+        tone="error"
+        title="Invite not found"
+        description="This invite link isn't valid. It may have been removed."
+      />
+    );
   }
 
   if (invite.status !== "PENDING") {
@@ -36,7 +42,8 @@ export default async function InvitePage({
         description={
           invite.status === "ACCEPTED"
             ? "This invite has already been accepted."
-            : invite.status === "EXPIRED" || (invite.expiresAt && invite.expiresAt < new Date())
+            : invite.status === "EXPIRED" ||
+              (invite.expiresAt && invite.expiresAt < new Date())
               ? "This invite has expired."
               : invite.status === "REVOKED"
                 ? "This invite has been revoked by the trip owner."
@@ -63,27 +70,66 @@ export default async function InvitePage({
     redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
   }
 
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
+  const dbUser = await prisma.user.findUnique({
+    where: { externalId: user.id },
+  });
   if (!dbUser) {
     redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
   }
 
-  // Accept and redirect
-  try {
-    const result = await acceptInvite(token);
-    redirect(ROUTES.tripOverview(result.tripId));
-  } catch (err) {
-    // Re-throw Next.js redirect signals so routing proceeds.
-    const digest = (err as { digest?: string } | null)?.digest;
-    if (digest?.startsWith("NEXT_REDIRECT")) throw err;
+  // Pre-flight identity check so users see a helpful error instead of an opaque
+  // server-action failure when accepting. acceptInvite() re-checks server-side.
+  const inviteEmail = invite.email?.trim().toLowerCase();
+  const userEmail = (user.email ?? "").trim().toLowerCase();
+  const recipientMismatch = invite.recipientId && invite.recipientId !== dbUser.id;
+  const emailMismatch = inviteEmail && userEmail && inviteEmail !== userEmail;
+
+  if (recipientMismatch || emailMismatch) {
     return (
       <InviteMessage
         tone="error"
-        title="Couldn't accept invite"
-        description={err instanceof Error ? err.message : "An unexpected error occurred."}
+        title="Wrong account"
+        description={
+          inviteEmail
+            ? `This invite was sent to ${inviteEmail}. Sign in with that account to accept it.`
+            : "This invite is linked to a different account."
+        }
       />
     );
   }
+
+  // Already a member — go straight to the trip.
+  const existingMembership = await prisma.tripMember.findUnique({
+    where: { tripId_userId: { tripId: invite.tripId, userId: dbUser.id } },
+  });
+  if (existingMembership && existingMembership.status === "ACTIVE") {
+    redirect(ROUTES.tripOverview(invite.tripId));
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+      <div className="flex flex-col items-center text-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <UserPlus className="w-6 h-6" />
+        </div>
+        <h2 className="font-semibold text-lg">Join {invite.trip.name}</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          <span className="font-medium text-foreground">{invite.sender.name}</span> invited
+          you to collaborate as <span className="font-medium text-foreground">{invite.role.toLowerCase()}</span>.
+          {invite.expiresAt ? (
+            <> This invite expires on {formatDate(invite.expiresAt)}.</>
+          ) : null}
+        </p>
+        <AcceptInviteButton token={token} tripId={invite.tripId} />
+        <Link
+          href={ROUTES.dashboard}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Not now
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 function InviteMessage({

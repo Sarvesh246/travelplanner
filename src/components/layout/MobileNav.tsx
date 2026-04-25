@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Map, Package, Receipt, Vote, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { isTripItinerarySection } from "@/lib/nav/trip-sections";
 
 interface MobileNavProps {
   tripId: string;
@@ -24,10 +25,17 @@ export function MobileNav({ tripId }: MobileNavProps) {
   const items = navItems(tripId);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-safe">
-      <div className="flex">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 pb-safe backdrop-blur-md md:hidden"
+      aria-label="Trip sections"
+    >
+      <div className="flex px-[max(0.25rem,env(safe-area-inset-left,0px))] pr-[max(0.25rem,env(safe-area-inset-right,0px))]">
         {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const itineraryHref = ROUTES.tripItinerary(tripId);
+          const isActive =
+            item.href === itineraryHref
+              ? isTripItinerarySection(pathname, tripId)
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
             <Link

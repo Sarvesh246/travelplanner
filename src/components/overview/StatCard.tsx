@@ -19,7 +19,7 @@ export function StatCard({ label, value, icon, iconColor, href, className }: Sta
     <motion.div
       variants={scaleIn}
       className={cn(
-        "bg-card border border-border rounded-2xl p-5 hover:border-border/80 hover:shadow-sm transition-all",
+        "min-w-0 bg-card border border-border rounded-2xl p-4 min-[24rem]:p-5 hover:border-border/80 hover:shadow-sm transition-all",
         href && "cursor-pointer hover:-translate-y-0.5",
         className
       )}

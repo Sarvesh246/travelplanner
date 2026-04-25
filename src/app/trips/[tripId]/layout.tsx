@@ -4,6 +4,7 @@ import { TripSidebar } from "@/components/layout/TripSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { TopNav } from "@/components/layout/TopNav";
 import { TripProvider } from "@/components/trip/TripContext";
+import { ViewerReadOnlyBanner } from "@/components/trip/ViewerReadOnlyBanner";
 import { getTripLayoutData } from "@/lib/trip-layout-data";
 
 function toIsoString(value: Date | string | null | undefined): string | null {
@@ -64,7 +65,8 @@ export default async function TripLayout({
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <TripSidebar tripId={tripId} tripName={trip.name} />
           <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
+            <div className="mx-auto max-w-5xl px-3 py-6 pb-28 min-[400px]:px-4 sm:px-6 md:pb-6">
+              <ViewerReadOnlyBanner />
               {children}
             </div>
           </main>

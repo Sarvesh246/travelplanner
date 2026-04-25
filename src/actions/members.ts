@@ -1,36 +1,31 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { MemberRole } from "@prisma/client";
+import {
+  assertCanManage,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
+import { sendInviteEmail } from "@/lib/email/send-invite";
 
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
-
-async function assertCanManage(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || !["OWNER", "ADMIN"].includes(member.role)) {
-    throw new Error("Insufficient permissions");
-  }
-  return member;
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
 export async function inviteMember(tripId: string, email: string, role: MemberRole = "MEMBER") {
   const user = await getAuthUser();
-  await assertCanManage(tripId, user.id);
+  const myMembership = await assertCanManage(tripId, user.id);
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) throw new Error("Email is required");
+  if (!normalizedEmail.includes("@")) throw new Error("Enter a valid email address");
+  if (role === "OWNER" && myMembership.role !== "OWNER") {
+    throw new Error("Only owners can invite another owner");
+  }
 
   // Check if user with this email exists
-  const targetUser = await prisma.user.findUnique({ where: { email } });
+  const targetUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
   // Check if already a member
   if (targetUser) {
@@ -42,7 +37,7 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
 
   // Check for existing pending invite
   const existingInvite = await prisma.tripInvite.findFirst({
-    where: { tripId, email, status: "PENDING" },
+    where: { tripId, email: normalizedEmail, status: "PENDING" },
   });
   if (existingInvite) throw new Error("Invite already sent to this email");
 
@@ -54,14 +49,43 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
       tripId,
       senderId: user.id,
       recipientId: targetUser?.id ?? null,
-      email,
+      email: normalizedEmail,
       role,
       expiresAt,
     },
   });
 
   revalidatePath(`/trips/${tripId}/members`);
-  return { invite, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/invite/${invite.token}` };
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.APP_URL ??
+    "http://localhost:3000";
+  const inviteLink = `${appUrl}/invite/${invite.token}`;
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { name: true },
+  });
+  const tripName = trip?.name ?? "a trip";
+
+  let emailSent = false;
+  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
+    try {
+      await sendInviteEmail({
+        to: normalizedEmail,
+        inviteLink,
+        tripName,
+        senderName: user.name,
+        role,
+        expiresAt: expiresAt,
+      });
+      emailSent = true;
+    } catch (err) {
+      console.error("[inviteMember] email send failed:", err);
+    }
+  }
+
+  return { invite, inviteLink, emailSent };
 }
 
 export async function acceptInvite(token: string) {
@@ -71,6 +95,16 @@ export async function acceptInvite(token: string) {
   if (!invite) throw new Error("Invite not found");
   if (invite.status !== "PENDING") throw new Error("Invite is no longer valid");
   if (invite.expiresAt && invite.expiresAt < new Date()) throw new Error("Invite has expired");
+  if (invite.recipientId && invite.recipientId !== user.id) {
+    throw new Error("This invite is linked to a different account");
+  }
+  if (invite.email) {
+    const invitedEmail = normalizeEmail(invite.email);
+    const currentEmail = normalizeEmail(user.email);
+    if (invitedEmail !== currentEmail) {
+      throw new Error("This invite was sent to a different email address");
+    }
+  }
 
   // Check not already a member
   const existing = await prisma.tripMember.findUnique({
@@ -102,9 +136,26 @@ export async function acceptInvite(token: string) {
 export async function updateMemberRole(tripId: string, targetUserId: string, role: MemberRole) {
   const user = await getAuthUser();
   const myMembership = await assertCanManage(tripId, user.id);
+  const targetMembership = await prisma.tripMember.findUnique({
+    where: { tripId_userId: { tripId, userId: targetUserId } },
+  });
+  if (!targetMembership || targetMembership.status !== "ACTIVE") {
+    throw new Error("Member not found");
+  }
 
   if (myMembership.role !== "OWNER" && role === "OWNER") {
     throw new Error("Only owners can assign owner role");
+  }
+  if (targetMembership.role === "OWNER" && myMembership.role !== "OWNER") {
+    throw new Error("Only owners can change an owner's role");
+  }
+  if (targetMembership.role === "OWNER" && role !== "OWNER") {
+    const ownerCount = await prisma.tripMember.count({
+      where: { tripId, status: "ACTIVE", role: "OWNER" },
+    });
+    if (ownerCount <= 1) {
+      throw new Error("Trip must have at least one owner");
+    }
   }
 
   await prisma.tripMember.update({

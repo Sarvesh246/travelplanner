@@ -25,3 +25,8 @@ prisma/*.db-journal
 
 # IDE
 .idea/
+
+# Local agent/editor state
+.agents/
+.claude/
+.cursor/

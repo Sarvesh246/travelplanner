@@ -8,6 +8,7 @@ import { Vote as VoteIcon, Plus } from "lucide-react";
 import { VoteList } from "./VoteList";
 import { CreateVoteDialog } from "./CreateVoteDialog";
 import type { VoteSerialized } from "./types";
+import { useTripContext } from "@/components/trip/TripContext";
 
 interface VotesClientProps {
   tripId: string;
@@ -15,6 +16,7 @@ interface VotesClientProps {
 }
 
 export function VotesClient({ tripId, votes }: VotesClientProps) {
+  const { canEdit } = useTripContext();
   const [tab, setTab] = useState<"open" | "closed">("open");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -28,22 +30,25 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
         title="Votes"
         description="Gather opinions and reach decisions as a group"
         actions={
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Poll
-          </button>
+          canEdit && (
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Poll
+            </button>
+          )
         }
       />
 
-      <div className="flex gap-1 p-1 bg-muted/60 rounded-xl w-fit mb-5">
+      <div className="mb-5 flex w-full max-w-md gap-1 rounded-xl bg-muted/60 p-1 min-[480px]:w-fit min-[480px]:max-w-none">
         {(["open", "closed"] as const).map((t) => (
           <button
             key={t}
+            type="button"
             onClick={() => setTab(t)}
-            className={`relative px-4 py-1.5 text-sm rounded-lg font-medium transition-colors ${
+            className={`relative min-h-10 flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-[480px]:min-h-0 min-[480px]:flex-none min-[480px]:px-4 min-[480px]:py-1.5 ${
               tab === t ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >

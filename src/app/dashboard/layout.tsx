@@ -33,7 +33,9 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <TopNav user={profile} />
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-3 py-6 min-[400px]:px-4 min-[400px]:py-8 sm:px-6">
+        {children}
+      </main>
     </div>
   );
 }

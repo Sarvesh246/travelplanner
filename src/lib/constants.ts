@@ -7,6 +7,8 @@ export const ROUTES = {
   trip: (id: string) => `/trips/${id}`,
   tripOverview: (id: string) => `/trips/${id}/overview`,
   tripItinerary: (id: string) => `/trips/${id}/itinerary`,
+  /** Full-page view for a single stop (map + same stays/activities UI). */
+  tripStop: (tripId: string, stopId: string) => `/trips/${tripId}/stops/${stopId}`,
   tripSupplies: (id: string) => `/trips/${id}/supplies`,
   tripExpenses: (id: string) => `/trips/${id}/expenses`,
   tripVotes: (id: string) => `/trips/${id}/votes`,
@@ -49,12 +51,12 @@ export const ACTIVITY_CATEGORIES = [
 ] as const;
 
 export const TRIP_GRADIENTS = [
-  { from: "from-[hsl(38,90%,56%)]", to: "to-[hsl(24,90%,52%)]", name: "Sunrise pass" },
-  { from: "from-[hsl(215,45%,48%)]", to: "to-[hsl(222,35%,35%)]", name: "High ridge" },
-  { from: "from-[hsl(16,58%,52%)]", to: "to-[hsl(38,85%,48%)]", name: "Canyon" },
-  { from: "from-[hsl(222,28%,28%)]", to: "to-[hsl(38,90%,56%)]", name: "Twilight trail" },
-  { from: "from-[hsl(200,55%,45%)]", to: "to-[hsl(215,40%,38%)]", name: "Alpine lake" },
-  { from: "from-[hsl(32,85%,48%)]", to: "to-[hsl(16,55%,48%)]", name: "Desert bloom" },
+  { from: "from-[hsl(126,38%,22%)]", to: "to-[hsl(110,28%,56%)]", name: "Forest trail" },
+  { from: "from-[hsl(110,28%,48%)]", to: "to-[hsl(112,32%,70%)]", name: "Sage basin" },
+  { from: "from-[hsl(112,28%,64%)]", to: "to-[hsl(50,38%,88%)]", name: "Mist ridge" },
+  { from: "from-[hsl(126,34%,16%)]", to: "to-[hsl(110,30%,46%)]", name: "Deep timber" },
+  { from: "from-[hsl(76,18%,84%)]", to: "to-[hsl(126,32%,28%)]", name: "Moss path" },
+  { from: "from-[hsl(50,45%,82%)]", to: "to-[hsl(110,28%,52%)]", name: "Meadow light" },
 ] as const;
 
 export const CURRENCIES = [
@@ -71,6 +73,7 @@ export const MEMBER_ROLES = {
   OWNER: { label: "Owner", color: "role-owner" },
   ADMIN: { label: "Admin", color: "role-admin" },
   MEMBER: { label: "Member", color: "role-member" },
+  VIEWER: { label: "Viewer", color: "role-viewer" },
 } as const;
 
 export const SUPPLY_STATUS_COLORS = {
@@ -93,3 +96,13 @@ export const STAY_STATUS_COLORS = {
   BOOKED: "status-planned",
   CANCELLED: "status-cancelled",
 } as const;
+
+/** Trip workflow status; matches Prisma `TripStatus` enum. */
+export const TRIP_STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "PLANNING", label: "Planning" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "IN_PROGRESS", label: "In progress" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+];

@@ -1,26 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { SupplyItemStatus } from "@prisma/client";
-
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
-
-async function assertTripMember(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || member.status !== "ACTIVE") throw new Error("Not a member");
-  return member;
-}
+import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
 
 function computeStatus(needed: number, owned: number): SupplyItemStatus {
   if (needed <= 0) return "NOT_NEEDED";
@@ -41,7 +24,7 @@ interface CreateSupplyInput {
 
 export async function createSupplyItem(tripId: string, input: CreateSupplyInput) {
   const user = await getAuthUser();
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   if (!input.name?.trim()) throw new Error("Name is required");
 
@@ -88,7 +71,7 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
   const user = await getAuthUser();
   const existing = await prisma.supplyItem.findUnique({ where: { id: itemId } });
   if (!existing) throw new Error("Item not found");
-  await assertTripMember(existing.tripId, user.id);
+  await assertCanContribute(existing.tripId, user.id);
 
   const needed = input.quantityNeeded ?? existing.quantityNeeded;
   const owned = input.quantityOwned ?? existing.quantityOwned;
@@ -121,7 +104,7 @@ export async function deleteSupplyItem(itemId: string) {
   const user = await getAuthUser();
   const existing = await prisma.supplyItem.findUnique({ where: { id: itemId } });
   if (!existing) throw new Error("Item not found");
-  await assertTripMember(existing.tripId, user.id);
+  await assertCanContribute(existing.tripId, user.id);
 
   await prisma.supplyItem.update({
     where: { id: itemId },
@@ -138,7 +121,7 @@ export async function markBought(itemId: string, actualCost?: number | null) {
   const user = await getAuthUser();
   const existing = await prisma.supplyItem.findUnique({ where: { id: itemId } });
   if (!existing) throw new Error("Item not found");
-  await assertTripMember(existing.tripId, user.id);
+  await assertCanContribute(existing.tripId, user.id);
 
   const needed = existing.quantityNeeded;
 

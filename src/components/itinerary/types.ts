@@ -33,6 +33,10 @@ export interface StopSerialized {
   name: string;
   country: string | null;
   description: string | null;
+  /** From DB — plain numbers for RSC / client */
+  latitude: number | null;
+  longitude: number | null;
+  placeId: string | null;
   sortOrder: number;
   arrivalDate: string | null;
   departureDate: string | null;

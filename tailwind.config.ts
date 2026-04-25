@@ -103,6 +103,18 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "beacon-pulse": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.06)", opacity: "0.85" },
+        },
+        "beacon-ping": {
+          "0%": { transform: "scale(0.85)", opacity: "0.7" },
+          "75%, 100%": { transform: "scale(1.6)", opacity: "0" },
+        },
+        "beacon-ping-slow": {
+          "0%": { transform: "scale(0.85)", opacity: "0.55" },
+          "85%, 100%": { transform: "scale(2)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,11 +122,18 @@ const config: Config = {
         "fade-in": "fade-in 0.2s ease-out",
         "slide-up": "slide-up 0.22s ease-out",
         shimmer: "shimmer 2s linear infinite",
+        "beacon-pulse": "beacon-pulse 1.6s ease-in-out infinite",
+        "beacon-ping": "beacon-ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite",
+        "beacon-ping-slow": "beacon-ping-slow 2.2s cubic-bezier(0, 0, 0.2, 1) infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         shimmer:
           "linear-gradient(90deg, transparent 0%, hsl(var(--muted)) 50%, transparent 100%)",
+      },
+      /** `pb-safe` — home indicator; pair fixed bottom bars with this */
+      padding: {
+        safe: "max(0.5rem, env(safe-area-inset-bottom, 0px))",
       },
     },
   },

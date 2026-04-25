@@ -34,8 +34,12 @@ interface TripContextValue {
   trip: TripInfo;
   currentUser: CurrentUser;
   members: TripMemberInfo[];
+  /** Can create or edit trip content (stops, expenses, comments, votes, etc.). Not viewers. */
   canEdit: boolean;
+  /** Can manage members, invites, and close/delete structural items that require admin. */
+  canManage: boolean;
   isOwner: boolean;
+  isViewer: boolean;
 }
 
 const TripContext = createContext<TripContextValue | null>(null);
@@ -57,11 +61,15 @@ export function TripProvider({
   currentUser: CurrentUser;
   members: TripMemberInfo[];
 }) {
-  const canEdit = ["OWNER", "ADMIN"].includes(currentUser.role);
+  const canEdit = ["OWNER", "ADMIN", "MEMBER"].includes(currentUser.role);
+  const canManage = ["OWNER", "ADMIN"].includes(currentUser.role);
   const isOwner = currentUser.role === "OWNER";
+  const isViewer = currentUser.role === "VIEWER";
 
   return (
-    <TripContext.Provider value={{ trip, currentUser, members, canEdit, isOwner }}>
+    <TripContext.Provider
+      value={{ trip, currentUser, members, canEdit, canManage, isOwner, isViewer }}
+    >
       {children}
     </TripContext.Provider>
   );

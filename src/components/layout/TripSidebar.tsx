@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { isTripItinerarySection } from "@/lib/nav/trip-sections";
 
 interface TripSidebarProps {
   tripId: string;
@@ -68,7 +69,11 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
       {/* Nav items */}
       <nav className="flex-1 p-3 space-y-0.5">
         {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const itineraryHref = ROUTES.tripItinerary(tripId);
+          const isActive =
+            item.href === itineraryHref
+              ? isTripItinerarySection(pathname, tripId)
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
 
           return (
@@ -79,16 +84,13 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-100",
                 isActive
-                  ? "text-white"
-                  : "hover:bg-white/5"
+                  ? "text-[hsl(var(--sidebar-accent-fg))]"
+                  : "text-[hsl(var(--sidebar-fg))] hover:bg-[hsl(var(--sidebar-fg)/0.08)]"
               )}
-              style={{
-                color: isActive ? "white" : "hsl(var(--sidebar-fg))",
-              }}
             >
               {isActive && (
                 <div
-                  className="absolute inset-0 rounded-lg bg-[hsl(var(--sidebar-accent)/0.25)]"
+                  className="absolute inset-0 rounded-lg bg-[hsl(var(--sidebar-accent))]"
                   aria-hidden
                 />
               )}

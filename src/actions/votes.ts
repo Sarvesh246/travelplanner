@@ -1,34 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { VoteTopicType } from "@prisma/client";
-
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
-
-async function assertTripMember(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || member.status !== "ACTIVE") throw new Error("Not a member");
-  return member;
-}
-
-async function assertCanManage(tripId: string, userId: string) {
-  const member = await assertTripMember(tripId, userId);
-  if (!["OWNER", "ADMIN"].includes(member.role)) {
-    throw new Error("Insufficient permissions");
-  }
-  return member;
-}
+import {
+  assertCanContribute,
+  assertCanManage,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
 
 interface VoteOptionInput {
   label: string;
@@ -48,7 +27,7 @@ interface CreateVoteInput {
 
 export async function createVote(tripId: string, input: CreateVoteInput) {
   const user = await getAuthUser();
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   if (!input.title?.trim()) throw new Error("Title is required");
   if (input.options.length < 2) throw new Error("At least two options required");
@@ -91,7 +70,7 @@ export async function castVote(voteId: string, optionIds: string[]) {
     include: { options: { select: { id: true } } },
   });
   if (!vote) throw new Error("Vote not found");
-  await assertTripMember(vote.tripId, user.id);
+  await assertCanContribute(vote.tripId, user.id);
 
   if (vote.status !== "OPEN") throw new Error("Vote is closed");
   if (vote.deadline && vote.deadline < new Date()) throw new Error("Vote has ended");

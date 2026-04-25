@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Calendar, DollarSign } f
 import { createTrip } from "@/actions/trips";
 import { toast } from "sonner";
 import { ROUTES, CURRENCIES } from "@/lib/constants";
-import { fadeUp, slideRight } from "@/lib/motion";
+import { slideRight } from "@/lib/motion";
 import Link from "next/link";
 import { useLoading } from "@/hooks/useLoading";
 
@@ -53,9 +53,13 @@ export default function NewTripPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="h-14 border-b border-border flex items-center px-4 gap-3">
-        <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />
+      <header className="flex min-h-14 h-14 min-w-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-4">
+        <Link
+          href="/dashboard"
+          className="inline-flex min-h-10 min-w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Back to dashboard"
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 64 64" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">

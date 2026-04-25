@@ -1,27 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ExpenseSplitMode } from "@prisma/client";
-import { computeShares, validateCustomSplit, SplitParticipant } from "@/lib/expense-splits";
-
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
-
-async function assertTripMember(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || member.status !== "ACTIVE") throw new Error("Not a member");
-  return member;
-}
+import { validateCustomSplit, SplitParticipant } from "@/lib/expense-splits";
+import { expenseToClientJson } from "@/lib/serialize/prisma-json";
+import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
 
 interface ShareInput {
   userId: string;
@@ -43,7 +27,7 @@ interface CreateExpenseInput {
 
 export async function createExpense(tripId: string, input: CreateExpenseInput) {
   const user = await getAuthUser();
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   if (!input.title?.trim()) throw new Error("Title is required");
   if (input.totalAmount <= 0) throw new Error("Amount must be greater than 0");
@@ -102,7 +86,7 @@ export async function createExpense(tripId: string, input: CreateExpenseInput) {
   });
 
   revalidatePath(`/trips/${tripId}/expenses`);
-  return { expense };
+  return { expense: expenseToClientJson(expense) };
 }
 
 interface UpdateExpenseInput {
@@ -122,7 +106,7 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
   const user = await getAuthUser();
   const existing = await prisma.expense.findUnique({ where: { id: expenseId } });
   if (!existing) throw new Error("Expense not found");
-  await assertTripMember(existing.tripId, user.id);
+  await assertCanContribute(existing.tripId, user.id);
 
   const nextSplitMode = input.splitMode ?? existing.splitMode;
   const nextTotal = input.totalAmount ?? Number(existing.totalAmount);
@@ -173,7 +157,7 @@ export async function deleteExpense(expenseId: string) {
   const user = await getAuthUser();
   const existing = await prisma.expense.findUnique({ where: { id: expenseId } });
   if (!existing) throw new Error("Expense not found");
-  await assertTripMember(existing.tripId, user.id);
+  await assertCanContribute(existing.tripId, user.id);
 
   await prisma.expense.update({
     where: { id: expenseId },
@@ -189,7 +173,7 @@ export async function markSharePaid(shareId: string, hasPaid: boolean) {
     include: { expense: true },
   });
   if (!share) throw new Error("Share not found");
-  await assertTripMember(share.expense.tripId, user.id);
+  await assertCanContribute(share.expense.tripId, user.id);
 
   await prisma.expenseShare.update({
     where: { id: shareId },

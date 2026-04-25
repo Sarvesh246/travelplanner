@@ -29,12 +29,11 @@ interface MembersClientProps {
     role: MemberRole;
     expiresAt: string | null;
     senderName: string;
-    token: string;
   }[];
 }
 
 export function MembersClient({ tripId, members, pendingInvites }: MembersClientProps) {
-  const { canEdit } = useTripContext();
+  const { canManage } = useTripContext();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   async function handleRevoke(inviteId: string) {
@@ -52,7 +51,7 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
         title="Members"
         description={`${members.length} member${members.length !== 1 ? "s" : ""} in this trip`}
         actions={
-          canEdit && (
+          canManage && (
             <button
               onClick={() => setInviteOpen(true)}
               className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
@@ -99,7 +98,7 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
                   </p>
                 </div>
                 <RoleBadge role={invite.role} />
-                {canEdit && (
+                {canManage && (
                   <button
                     onClick={() => handleRevoke(invite.id)}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"

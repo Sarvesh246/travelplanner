@@ -1,20 +1,17 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { tripToClientJson } from "@/lib/serialize/prisma-json";
-
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
-}
+import {
+  assertCanManage,
+  assertCanView,
+  assertOwner,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
 
 const createTripSchema = z.object({
   name: z.string().min(1).max(100),
@@ -44,6 +41,7 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
   });
 
   revalidatePath("/dashboard");
+  revalidateTag(`trip-${trip.id}`, "max");
   return { trip: tripToClientJson(trip) };
 }
 
@@ -52,13 +50,7 @@ export async function updateTrip(
   input: Partial<z.infer<typeof createTripSchema>> & { status?: string; coverImageUrl?: string }
 ) {
   const user = await getAuthUser();
-
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId: user.id } },
-  });
-  if (!member || !["OWNER", "ADMIN"].includes(member.role)) {
-    throw new Error("Insufficient permissions");
-  }
+  await assertCanManage(tripId, user.id);
 
   const trip = await prisma.trip.update({
     where: { id: tripId },
@@ -74,24 +66,148 @@ export async function updateTrip(
     },
   });
 
+  revalidatePath("/dashboard");
   revalidatePath(`/trips/${tripId}`);
+  revalidateTag(`trip-${tripId}`, "max");
   return { trip: tripToClientJson(trip) };
 }
 
-export async function deleteTrip(tripId: string) {
-  const user = await getAuthUser();
+const TRIP_COVERS_BUCKET = "trip-covers";
 
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId: user.id } },
-  });
-  if (!member || member.role !== "OWNER") throw new Error("Only owners can delete trips");
+/**
+ * The cover URL is stored once on the Trip row — every member reads the same
+ * `coverImageUrl` from the DB. Browsers then load the image from Supabase
+ * using that URL, so the bucket must allow unauthenticated GETs (public bucket
+ * or equivalent read policy), or other members will see a broken image.
+ */
+async function assertCoverUrlIsWorldReadable(publicUrl: string) {
+  let res = await fetch(publicUrl, { method: "HEAD", cache: "no-store" });
+  if (res.status === 405) {
+    res = await fetch(publicUrl, { headers: { Range: "bytes=0-0" }, cache: "no-store" });
+  }
+  if (!res.ok) {
+    throw new Error(
+      `The file uploaded, but the image URL is not publicly readable (HTTP ${res.status}). In Supabase: Storage → "${TRIP_COVERS_BUCKET}" → set the bucket to Public, or add a policy so unauthenticated reads are allowed for that bucket, so all trip members can load the same cover URL.`
+    );
+  }
+}
+
+/** Upload a trip cover image to Supabase Storage and save the public URL on the trip. Buckets that back `getPublicUrl` must be publicly readable so every member (and `next/image`) can load the image. */
+export async function uploadTripCover(tripId: string, formData: FormData) {
+  const user = await getAuthUser();
+  await assertCanManage(tripId, user.id);
+
+  const raw = formData.get("file");
+  if (!(raw instanceof File) || raw.size === 0) {
+    throw new Error("No file selected");
+  }
+  if (!raw.type.startsWith("image/")) {
+    throw new Error("Please choose an image file");
+  }
+  if (raw.size > 4 * 1024 * 1024) {
+    throw new Error("Image must be 4MB or smaller");
+  }
+
+  const ext =
+    raw.type === "image/png"
+      ? "png"
+      : raw.type === "image/webp"
+        ? "webp"
+        : raw.type === "image/gif"
+          ? "gif"
+          : "jpg";
+  const path = `${user.id}/${tripId}/cover-${Date.now()}.${ext}`;
+
+  const supabase = await createClient();
+  const bytes = await raw.arrayBuffer();
+  const { error: upErr } = await supabase.storage
+    .from(TRIP_COVERS_BUCKET)
+    .upload(path, bytes, { contentType: raw.type, upsert: true });
+
+  if (upErr) {
+    const hint =
+      /not found|does not exist/i.test(upErr.message)
+        ? ` Create a public storage bucket named "${TRIP_COVERS_BUCKET}" in the Supabase dashboard and add a policy so authenticated users can upload.`
+        : "";
+    throw new Error(`${upErr.message}${hint}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(TRIP_COVERS_BUCKET).getPublicUrl(path);
+
+  await assertCoverUrlIsWorldReadable(publicUrl);
 
   await prisma.trip.update({
     where: { id: tripId },
-    data: { deletedAt: new Date() },
+    data: { coverImageUrl: publicUrl },
   });
 
   revalidatePath("/dashboard");
+  revalidatePath(`/trips/${tripId}`);
+  revalidateTag(`trip-${tripId}`, "max");
+  return { coverImageUrl: publicUrl };
+}
+
+/**
+ * Permanently delete a trip and every row that belongs to it. The Prisma
+ * schema declares `onDelete: Cascade` from Trip to members, invites, stops,
+ * stays, activities, expenses, shares, supplies, votes, options, responses,
+ * and comments, so a single `trip.delete` cleans up all DB rows.
+ *
+ * Also removes every uploaded cover image under `trip-covers/{userId}/{tripId}/…`
+ * for every member that may have uploaded one. Storage cleanup is best-effort:
+ * if it fails the DB delete is still kept, and orphaned objects can be swept
+ * later.
+ */
+export async function deleteTrip(tripId: string) {
+  const user = await getAuthUser();
+  await assertOwner(tripId, user.id);
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { id: true },
+  });
+  if (!trip) {
+    throw new Error("Trip not found");
+  }
+
+  const uploaderIds = (
+    await prisma.tripMember.findMany({
+      where: { tripId },
+      select: { userId: true },
+    })
+  ).map((m) => m.userId);
+
+  await prisma.trip.delete({ where: { id: tripId } });
+
+  try {
+    const admin = getSupabaseAdminClient();
+    const storage = admin ?? (await createClient());
+    const pathsToRemove: string[] = [];
+    const seen = new Set<string>();
+    for (const uid of uploaderIds) {
+      if (seen.has(uid)) continue;
+      seen.add(uid);
+      const folder = `${uid}/${tripId}`;
+      const { data } = await storage.storage
+        .from(TRIP_COVERS_BUCKET)
+        .list(folder, { limit: 1000 });
+      if (data) {
+        for (const f of data) pathsToRemove.push(`${folder}/${f.name}`);
+      }
+    }
+    if (pathsToRemove.length > 0) {
+      await storage.storage.from(TRIP_COVERS_BUCKET).remove(pathsToRemove);
+    }
+  } catch (err) {
+    // Best-effort: the trip DB row is already gone, don't fail the action.
+    console.error("[deleteTrip] cover image cleanup failed:", err);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/trips/${tripId}`);
+  revalidateTag(`trip-${tripId}`, "max");
 }
 
 export async function getTripWithMembers(tripId: string) {
@@ -109,8 +225,7 @@ export async function getTripWithMembers(tripId: string) {
 
   if (!trip) throw new Error("Trip not found");
 
-  const isMember = trip.members.some((m) => m.userId === user.id);
-  if (!isMember) throw new Error("Not a member of this trip");
+  await assertCanView(tripId, user.id);
 
   return {
     ...tripToClientJson(trip),

@@ -1,24 +1,21 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { activityToClientJson, stayToClientJson, stopToClientJson } from "@/lib/serialize/prisma-json";
+import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
 
-async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
-  if (!dbUser) throw new Error("User not found");
-  return dbUser;
+function revalidateItinerary(tripId: string) {
+  revalidatePath(`/trips/${tripId}/itinerary`);
 }
 
-async function assertTripMember(tripId: string, userId: string) {
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId } },
-  });
-  if (!member || member.status !== "ACTIVE") throw new Error("Not a member");
-  return member;
+function revalidateStopPage(tripId: string, stopId: string) {
+  revalidatePath(`/trips/${tripId}/stops/${stopId}`);
+}
+
+function revalidateItineraryAndStop(tripId: string, stopId: string) {
+  revalidateItinerary(tripId);
+  revalidateStopPage(tripId, stopId);
 }
 
 // ── Stops ────────────────────────────────────────────────────────────────────
@@ -37,7 +34,7 @@ export async function createStop(
   }
 ) {
   const user = await getAuthUser();
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   const maxOrder = await prisma.stop.aggregate({
     where: { tripId, deletedAt: null },
@@ -59,8 +56,8 @@ export async function createStop(
     },
   });
 
-  revalidatePath(`/trips/${tripId}/itinerary`);
-  return { stop };
+  revalidateItineraryAndStop(tripId, stop.id);
+  return { stop: stopToClientJson(stop) };
 }
 
 export async function updateStop(
@@ -70,7 +67,7 @@ export async function updateStop(
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
-  await assertTripMember(stop.tripId, user.id);
+  await assertCanContribute(stop.tripId, user.id);
 
   const updated = await prisma.stop.update({
     where: { id: stopId },
@@ -84,23 +81,24 @@ export async function updateStop(
     },
   });
 
-  revalidatePath(`/trips/${stop.tripId}/itinerary`);
-  return { stop: updated };
+  revalidateItineraryAndStop(stop.tripId, stopId);
+  return { stop: stopToClientJson(updated) };
 }
 
 export async function deleteStop(stopId: string) {
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
-  await assertTripMember(stop.tripId, user.id);
+  await assertCanContribute(stop.tripId, user.id);
 
   await prisma.stop.update({ where: { id: stopId }, data: { deletedAt: new Date() } });
-  revalidatePath(`/trips/${stop.tripId}/itinerary`);
+  revalidateItinerary(stop.tripId);
+  revalidateStopPage(stop.tripId, stopId);
 }
 
 export async function reorderStops(tripId: string, orderedIds: string[]) {
   const user = await getAuthUser();
-  await assertTripMember(tripId, user.id);
+  await assertCanContribute(tripId, user.id);
 
   await Promise.all(
     orderedIds.map((id, idx) =>
@@ -120,7 +118,7 @@ export async function createStay(
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
-  await assertTripMember(stop.tripId, user.id);
+  await assertCanContribute(stop.tripId, user.id);
 
   const stay = await prisma.stay.create({
     data: {
@@ -137,8 +135,8 @@ export async function createStay(
     },
   });
 
-  revalidatePath(`/trips/${stop.tripId}/itinerary`);
-  return { stay };
+  revalidateItineraryAndStop(stop.tripId, stopId);
+  return { stay: stayToClientJson(stay) };
 }
 
 export async function updateStay(
@@ -148,7 +146,7 @@ export async function updateStay(
   const user = await getAuthUser();
   const stay = await prisma.stay.findUnique({ where: { id: stayId }, include: { stop: true } });
   if (!stay) throw new Error("Stay not found");
-  await assertTripMember(stay.stop.tripId, user.id);
+  await assertCanContribute(stay.stop.tripId, user.id);
 
   const updated = await prisma.stay.update({
     where: { id: stayId },
@@ -166,18 +164,18 @@ export async function updateStay(
     },
   });
 
-  revalidatePath(`/trips/${stay.stop.tripId}/itinerary`);
-  return { stay: updated };
+  revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
+  return { stay: stayToClientJson(updated) };
 }
 
 export async function deleteStay(stayId: string) {
   const user = await getAuthUser();
   const stay = await prisma.stay.findUnique({ where: { id: stayId }, include: { stop: true } });
   if (!stay) throw new Error("Stay not found");
-  await assertTripMember(stay.stop.tripId, user.id);
+  await assertCanContribute(stay.stop.tripId, user.id);
 
   await prisma.stay.update({ where: { id: stayId }, data: { deletedAt: new Date() } });
-  revalidatePath(`/trips/${stay.stop.tripId}/itinerary`);
+  revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
 }
 
 // ── Activities ───────────────────────────────────────────────────────────────
@@ -189,7 +187,7 @@ export async function createActivity(
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
-  await assertTripMember(stop.tripId, user.id);
+  await assertCanContribute(stop.tripId, user.id);
 
   const activity = await prisma.activity.create({
     data: {
@@ -205,8 +203,8 @@ export async function createActivity(
     },
   });
 
-  revalidatePath(`/trips/${stop.tripId}/itinerary`);
-  return { activity };
+  revalidateItineraryAndStop(stop.tripId, stopId);
+  return { activity: activityToClientJson(activity) };
 }
 
 export async function updateActivity(
@@ -216,7 +214,7 @@ export async function updateActivity(
   const user = await getAuthUser();
   const activity = await prisma.activity.findUnique({ where: { id: activityId }, include: { stop: true } });
   if (!activity) throw new Error("Activity not found");
-  await assertTripMember(activity.stop.tripId, user.id);
+  await assertCanContribute(activity.stop.tripId, user.id);
 
   const updated = await prisma.activity.update({
     where: { id: activityId },
@@ -233,16 +231,16 @@ export async function updateActivity(
     },
   });
 
-  revalidatePath(`/trips/${activity.stop.tripId}/itinerary`);
-  return { activity: updated };
+  revalidateItineraryAndStop(activity.stop.tripId, activity.stopId);
+  return { activity: activityToClientJson(updated) };
 }
 
 export async function deleteActivity(activityId: string) {
   const user = await getAuthUser();
   const activity = await prisma.activity.findUnique({ where: { id: activityId }, include: { stop: true } });
   if (!activity) throw new Error("Activity not found");
-  await assertTripMember(activity.stop.tripId, user.id);
+  await assertCanContribute(activity.stop.tripId, user.id);
 
   await prisma.activity.update({ where: { id: activityId }, data: { deletedAt: new Date() } });
-  revalidatePath(`/trips/${activity.stop.tripId}/itinerary`);
+  revalidateItineraryAndStop(activity.stop.tripId, activity.stopId);
 }

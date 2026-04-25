@@ -4,12 +4,11 @@ import { useState } from "react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { RoleBadge } from "./RoleBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { MoreHorizontal, UserMinus, Shield, User } from "lucide-react";
+import { MoreHorizontal, UserMinus, Shield, User, Eye } from "lucide-react";
 import { removeMember, updateMemberRole } from "@/actions/members";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
 import { MemberRole } from "@prisma/client";
-import { cn } from "@/lib/utils";
 
 interface MemberCardProps {
   member: {
@@ -22,7 +21,7 @@ interface MemberCardProps {
 }
 
 export function MemberCard({ member, tripId }: MemberCardProps) {
-  const { currentUser, isOwner, canEdit } = useTripContext();
+  const { currentUser, canManage } = useTripContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const isMe = member.userId === currentUser.id;
@@ -59,7 +58,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
           <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
         </div>
         <RoleBadge role={member.role} />
-        {canEdit && !isMe && !isOwnerMember && (
+        {canManage && !isMe && !isOwnerMember && (
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -68,8 +67,8 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
               <MoreHorizontal className="w-4 h-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
-                {isOwner && member.role !== "ADMIN" && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
+                {canManage && member.role !== "ADMIN" && (
                   <button
                     onClick={() => handleRoleChange("ADMIN")}
                     className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
@@ -77,12 +76,20 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
                     <Shield className="w-3.5 h-3.5" /> Make Admin
                   </button>
                 )}
-                {isOwner && member.role !== "MEMBER" && (
+                {canManage && member.role !== "MEMBER" && (
                   <button
                     onClick={() => handleRoleChange("MEMBER")}
                     className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
                   >
                     <User className="w-3.5 h-3.5" /> Make Member
+                  </button>
+                )}
+                {canManage && member.role !== "VIEWER" && (
+                  <button
+                    onClick={() => handleRoleChange("VIEWER")}
+                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> Make Viewer
                   </button>
                 )}
                 <button

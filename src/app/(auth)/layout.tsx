@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background p-4 py-8 sm:py-10">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-2">
           <Link href="/" className="flex items-center gap-2 group">

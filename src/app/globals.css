@@ -4,108 +4,106 @@
 
 @layer base {
   :root {
-    /* Adventure / trail — warm paper, amber trail markers, steel sky (not forest green) */
-    --background: 40 28% 97%;
-    --foreground: 222 35% 14%;
+    /* Outdoorsy product — neutral paper canvas, white cards, forest only as accent */
+    /* Surfaces: bg #F4F6F2, sidebar #E9EFE6, card #FFFFFF, border #E2E8E1 */
+    /* Accents: forest #2F5D50, hover/success #3E7C66, sage #A3BFA8, beige #D6CBB7 */
+    /* Text: primary #1F2933, secondary #6B7280 */
+    --background: 90 14% 96%;
+    --foreground: 210 24% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 35% 14%;
+    --card-foreground: 210 24% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 35% 14%;
+    --popover-foreground: 210 24% 16%;
 
-    --muted: 215 22% 94%;
-    --muted-foreground: 222 18% 42%;
+    --muted: 100 12% 91%;
+    --muted-foreground: 220 9% 46%;
 
-    --border: 215 18% 87%;
-    --input: 215 18% 87%;
-    --ring: 32 92% 45%;
+    --border: 100 9% 90%;
+    --input: 100 9% 88%;
+    --ring: 163 33% 27%;
 
-    /* Primary — golden hour / trail beacon */
-    --primary: 32 92% 44%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 163 33% 27%;
+    --primary-foreground: 90 16% 97%;
 
-    /* Secondary — distant ridge (cool blue-gray) */
-    --secondary: 215 28% 91%;
-    --secondary-foreground: 222 35% 22%;
+    --secondary: 131 19% 69%;
+    --secondary-foreground: 163 33% 22%;
 
-    /* Accent — canyon clay */
-    --accent: 18 42% 93%;
-    --accent-foreground: 18 45% 28%;
+    --accent: 105 18% 96%;
+    --accent-foreground: 163 33% 27%;
 
-    --destructive: 0 84% 58%;
+    --destructive: 0 70% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success — sage (semantic only; kept subtle) */
-    --success: 152 42% 38%;
+    --success: 158 33% 37%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 88% 48%;
-    --warning-foreground: 222 47% 11%;
+    --warning: 39 70% 50%;
+    --warning-foreground: 210 24% 14%;
 
-    /* Sidebar — soft slate strip */
-    --sidebar-bg: 222 24% 96%;
-    --sidebar-fg: 222 30% 22%;
-    --sidebar-border: 215 18% 88%;
-    --sidebar-accent: 32 92% 44%;
-    --sidebar-accent-fg: 222 47% 11%;
+    --sidebar-bg: 99 22% 92%;
+    --sidebar-fg: 220 12% 38%;
+    --sidebar-border: 100 9% 86%;
+    --sidebar-accent: 120 19% 89%;
+    --sidebar-accent-fg: 163 33% 24%;
 
     --radius: 0.875rem;
 
-    --chart-1: 32 92% 44%;
-    --chart-2: 215 55% 48%;
-    --chart-3: 18 55% 52%;
-    --chart-4: 152 38% 42%;
-    --chart-5: 0 72% 52%;
+    --chart-1: 163 33% 27%;
+    --chart-2: 158 33% 37%;
+    --chart-3: 131 19% 69%;
+    --chart-4: 39 27% 78%;
+    --chart-5: 220 9% 46%;
   }
 
   .dark {
-    /* Twilight trail — deep slate sky, amber accents, minimal green */
-    --background: 222 28% 9%;
-    --foreground: 210 36% 95%;
+    /* Night trail — warm slate canvas, lifted neutral surfaces, sage-on-dark accent */
+    --background: 130 8% 8%;
+    --foreground: 90 14% 92%;
 
-    --card: 222 24% 13%;
-    --card-foreground: 210 36% 95%;
+    --card: 135 7% 13%;
+    --card-foreground: 90 14% 92%;
 
-    --popover: 222 24% 13%;
-    --popover-foreground: 210 36% 95%;
+    --popover: 135 7% 13%;
+    --popover-foreground: 90 14% 92%;
 
-    --muted: 222 20% 17%;
-    --muted-foreground: 215 16% 58%;
+    --muted: 130 6% 18%;
+    --muted-foreground: 130 6% 64%;
 
-    --border: 222 18% 20%;
-    --input: 222 18% 20%;
-    --ring: 38 90% 56%;
+    --border: 130 8% 22%;
+    --input: 130 8% 22%;
+    --ring: 158 30% 50%;
 
-    --primary: 38 90% 56%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 158 30% 50%;
+    --primary-foreground: 130 30% 8%;
 
-    --secondary: 215 22% 38%;
-    --secondary-foreground: 210 36% 95%;
+    --secondary: 135 12% 26%;
+    --secondary-foreground: 90 14% 92%;
 
-    --accent: 16 42% 22%;
-    --accent-foreground: 25 85% 78%;
+    --accent: 130 8% 18%;
+    --accent-foreground: 158 28% 64%;
 
-    --destructive: 0 84% 58%;
+    --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 38% 46%;
-    --success-foreground: 210 36% 98%;
+    --success: 160 28% 50%;
+    --success-foreground: 130 30% 8%;
 
-    --warning: 38 88% 56%;
-    --warning-foreground: 222 47% 11%;
+    --warning: 39 60% 52%;
+    --warning-foreground: 130 30% 8%;
 
-    --sidebar-bg: 222 32% 8%;
-    --sidebar-fg: 215 18% 72%;
-    --sidebar-border: 222 22% 17%;
-    --sidebar-accent: 38 90% 56%;
-    --sidebar-accent-fg: 222 47% 11%;
+    --sidebar-bg: 130 9% 6%;
+    --sidebar-fg: 130 6% 70%;
+    --sidebar-border: 130 8% 16%;
+    --sidebar-accent: 130 8% 14%;
+    --sidebar-accent-fg: 158 30% 65%;
 
-    --chart-1: 38 90% 56%;
-    --chart-2: 215 45% 58%;
-    --chart-3: 16 58% 58%;
-    --chart-4: 215 14% 68%;
-    --chart-5: 0 72% 58%;
+    --chart-1: 158 30% 50%;
+    --chart-2: 160 28% 40%;
+    --chart-3: 135 12% 56%;
+    --chart-4: 39 24% 60%;
+    --chart-5: 220 9% 64%;
   }
 }
 
@@ -114,10 +112,19 @@
     @apply border-border;
   }
 
+  html {
+    /* Avoid layout shift when modals open/close on platforms with classic scrollbars */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     line-height: 1.5;
+    /* Avoid rare horizontal scroll from full-bleed children on narrow / zoomed viewports */
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -146,6 +153,19 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/40;
   }
+
+  /* Honor user motion preferences globally — keeps animations from causing
+     vestibular discomfort and lowers paint cost on low-power devices. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer utilities {
@@ -161,21 +181,30 @@
     @apply bg-muted border border-border;
   }
 
-  /* Gradient text — end stop must stay dark in light mode (accent is very pale there) */
+  /* Gradient text — forest → sage in light, sage → cream in dark */
   .gradient-text {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(
       to right,
       hsl(var(--primary)),
-      hsl(222 38% 30%)
+      hsl(158 33% 40%)
     );
   }
   .dark .gradient-text {
     background-image: linear-gradient(
       to right,
       hsl(var(--primary)),
-      hsl(40 28% 88%)
+      hsl(90 14% 92%)
     );
+  }
+
+  /* cmdk palette — group headings */
+  [cmdk-group-heading] {
+    @apply select-none px-3 pt-2 pb-1 text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  [cmdk-group]:not(:first-child) [cmdk-group-heading] {
+    @apply mt-1 border-t border-border/80 pt-2;
   }
 
   /* Glass effect */
@@ -218,18 +247,14 @@
   }
 
   .sidebar-link.active {
-    background: hsl(var(--sidebar-accent) / 0.15);
+    background: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-accent-fg));
-  }
-
-  .dark .sidebar-link.active {
-    background: hsl(var(--sidebar-accent) / 0.25);
   }
 
   /* ── Status & Role Color Utilities ────────── */
   .status-idea {
     background-color: hsl(var(--secondary) / 0.1);
-    color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
   }
 
   .dark .status-idea {
@@ -283,19 +308,28 @@
 
   .role-admin {
     background-color: hsl(var(--accent) / 0.1);
-    color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
   }
 
   .dark .role-admin {
-    background-color: hsl(var(--accent) / 0.15);
+    background-color: hsl(var(--accent) / 0.2);
   }
 
   .role-member {
     background-color: hsl(var(--secondary) / 0.1);
-    color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
   }
 
   .dark .role-member {
     background-color: hsl(var(--secondary) / 0.15);
+  }
+
+  .role-viewer {
+    background-color: hsl(var(--muted) / 0.5);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .dark .role-viewer {
+    background-color: hsl(var(--muted) / 0.25);
   }
 }
