@@ -70,6 +70,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        {/* Apply persisted motion preference before paint to avoid an entrance-
+            animation flash for users who have opted into reduced motion. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('beacon-motion')==='reduced'){document.documentElement.setAttribute('data-motion','reduced');}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body
         className={`${inter.variable} ${jetBrainsMono.variable} min-h-dvh touch-manipulation font-sans`}
       >

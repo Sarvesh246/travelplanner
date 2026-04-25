@@ -29,6 +29,31 @@ function CommandPaletteScrollLock() {
   return null;
 }
 
+/**
+ * Previous local builds may leave a stale service worker/chunk cache behind.
+ * On localhost we proactively remove it to avoid loading incompatible runtime chunks.
+ */
+function LocalhostCacheReset() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hostname !== "localhost") return;
+
+    void (async () => {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    })();
+  }, []);
+
+  return null;
+}
+
 export function RootProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -56,6 +81,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     <AppThemeProvider>
       <QueryClientProvider client={queryClient}>
         {children}
+        <LocalhostCacheReset />
         <InvalidSessionRecovery />
         <KeyboardShortcuts />
         <LoadingScreen />

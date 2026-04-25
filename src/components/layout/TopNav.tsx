@@ -3,6 +3,7 @@
 import { Search, LogOut, LayoutDashboard, Plus } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { MotionToggle } from "@/components/shared/MotionToggle";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { BeaconLogo } from "@/components/shared/BeaconLogo";
 import { useState, useRef, useEffect } from "react";
@@ -99,6 +100,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           <Search className="h-4 w-4" />
         </button>
 
+        <MotionToggle className="h-10 w-10 shrink-0" />
         <ThemeToggle className="h-10 w-10 shrink-0" />
 
         <div className="relative shrink-0" ref={menuRef}>

@@ -4,10 +4,12 @@
  */
 export function BeaconPwaIconImage({ size }: { size: number }) {
   const t = (px: number) => Math.max(1, Math.round((px * size) / 64));
-  const bg = "hsl(130, 8%, 7%)";
-  const ring = "rgba(255, 166, 0, 0.4)";
-  const ringMid = "rgba(122, 143, 204, 0.5)";
-  const center = "hsl(158, 30%, 50%)";
+  // Dark mode tokens: bg #141a14, primary #4da882 (hsl 158 30% 50%), secondary #3a4a3c (hsl 135 12% 26%)
+  const bg = "hsl(130, 8%, 8%)";
+  const ringOuter = "rgba(58, 74, 60, 0.5)";   // secondary, low opacity (outermost)
+  const ringMid = "rgba(58, 74, 60, 0.75)";    // secondary, mid opacity
+  const ringInner = "rgba(77, 168, 130, 0.9)"; // primary
+  const center = "rgb(77, 168, 130)";           // primary solid
   const corner = Math.round(size * 0.22);
 
   return (
@@ -30,7 +32,7 @@ export function BeaconPwaIconImage({ size }: { size: number }) {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 9999,
-          border: `${t(2)}px solid ${ring}`,
+          border: `${t(2)}px solid ${ringOuter}`,
         }}
       >
         <div
@@ -52,7 +54,7 @@ export function BeaconPwaIconImage({ size }: { size: number }) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 9999,
-              border: `${t(1)}px solid rgba(255, 140, 40, 0.55)`,
+              border: `${t(1.5)}px solid ${ringInner}`,
             }}
           >
             <div
