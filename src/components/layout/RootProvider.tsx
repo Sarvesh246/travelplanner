@@ -1,9 +1,9 @@
 "use client";
 
-import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { Suspense, useEffect, useState } from "react";
+import { AppThemeProvider } from "@/components/layout/AppThemeProvider";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecovery";
 import { KeyboardShortcuts } from "@/components/layout/KeyboardShortcuts";
@@ -53,12 +53,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      disableTransitionOnChange={false}
-    >
+    <AppThemeProvider>
       <QueryClientProvider client={queryClient}>
         {children}
         <InvalidSessionRecovery />
@@ -91,6 +86,6 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
           richColors
         />
       </QueryClientProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   );
 }

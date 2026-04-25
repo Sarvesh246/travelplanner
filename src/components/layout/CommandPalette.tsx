@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Command } from "cmdk";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/layout/AppThemeProvider";
 import {
   LayoutDashboard,
   Map,

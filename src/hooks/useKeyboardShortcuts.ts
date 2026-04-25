@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/layout/AppThemeProvider";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { useLoadingStore } from "@/lib/store/loading";
 import { ROUTES } from "@/lib/constants";
