@@ -475,4 +475,146 @@
     background: hsl(var(--primary) / 0.35);
     animation: landing-pulse-ring 2.4s ease-out infinite;
   }
+
+  /* ── Tilt card (mouse-tracked perspective) ─────────────────────── */
+  .landing-tilt {
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .landing-tilt-inner {
+    transform: translateZ(40px);
+    transform-style: preserve-3d;
+  }
+
+  /* ── 3D Crate ──────────────────────────────────────────────────── */
+  .landing-crate-stage {
+    perspective: 1400px;
+    transform-style: preserve-3d;
+  }
+  .landing-crate {
+    transform-style: preserve-3d;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+  .landing-crate-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 1.25rem;
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--accent)) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 hsl(var(--foreground) / 0.04),
+      0 30px 60px -30px hsl(var(--primary) / 0.4);
+  }
+  .dark .landing-crate-face {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(135 8% 18%) 100%
+    );
+  }
+
+  /* ── Trail (dashed connector line) ─────────────────────────────── */
+  @keyframes landing-trail-flow {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -32; }
+  }
+  .landing-trail-path {
+    stroke-dasharray: 6 8;
+    animation: landing-trail-flow 2.4s linear infinite;
+  }
+
+  /* ── Vote Mountain — flag plant ────────────────────────────────── */
+  @keyframes landing-flag-plant {
+    0%   { transform: translateY(-26px) rotate(-18deg); opacity: 0; }
+    50%  { opacity: 1; }
+    100% { transform: translateY(0) rotate(0); opacity: 1; }
+  }
+  .landing-flag {
+    animation: landing-flag-plant 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: bottom center;
+  }
+
+  /* ── Beacon ripple ─────────────────────────────────────────────── */
+  @keyframes landing-beacon-ripple {
+    0%   { transform: scale(0.4); opacity: 0.7; }
+    100% { transform: scale(3.4); opacity: 0; }
+  }
+  .landing-beacon-ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--primary) / 0.6);
+    animation: landing-beacon-ripple 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: none;
+  }
+
+  /* ── Beacon tower glow ─────────────────────────────────────────── */
+  @keyframes landing-beacon-glow {
+    0%, 100% { filter: drop-shadow(0 0 14px hsl(var(--primary) / 0.5)); }
+    50%      { filter: drop-shadow(0 0 28px hsl(var(--primary) / 0.85)); }
+  }
+  .landing-beacon-light {
+    animation: landing-beacon-glow 3s ease-in-out infinite;
+  }
+
+  /* ── Constellation rotating frame ──────────────────────────────── */
+  .landing-constellation {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+
+  /* ── Section heading kicker ────────────────────────────────────── */
+  .landing-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--primary) / 0.25);
+    background: hsl(var(--card) / 0.7);
+    padding: 0.4rem 0.875rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    backdrop-filter: blur(6px);
+  }
+  .dark .landing-kicker {
+    background: hsl(var(--card) / 0.6);
+  }
+
+  /* ── Mountain sky gradient (light/dark aware) ──────────────────── */
+  .landing-sky {
+    background: linear-gradient(
+      to bottom,
+      hsl(200 60% 88%) 0%,
+      hsl(45 60% 92%) 40%,
+      hsl(var(--background)) 100%
+    );
+  }
+  .dark .landing-sky {
+    background: linear-gradient(
+      to bottom,
+      hsl(220 30% 8%) 0%,
+      hsl(220 20% 14%) 40%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  /* ── Glassmorphic card ─────────────────────────────────────────── */
+  .landing-glass {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.6);
+    box-shadow:
+      0 8px 32px -8px hsl(var(--primary) / 0.25),
+      inset 0 1px 0 hsl(var(--foreground) / 0.04);
+  }
 }
