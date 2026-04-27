@@ -14,7 +14,6 @@ import {
 import {
   buildSpineSamples,
   exactSpinePoint,
-  interpolateSpinePoint,
   progressForScreenY,
   SPINE_CLAMP,
 } from "./journey-spine-geometry";
@@ -42,7 +41,7 @@ import { TrailBuilder } from "./sections/TrailBuilder";
 import { SupplyCrate } from "./sections/SupplyCrate";
 import { ExpenseSplitter } from "./sections/ExpenseSplitter";
 import { VoteMountain } from "./sections/VoteMountain";
-import { Constellation } from "./sections/Constellation";
+import { CrewSignal } from "./sections/CrewSignal";
 import { FinalBeacon } from "./sections/FinalBeacon";
 
 const JOURNEY_SPINE_PATH =
@@ -79,14 +78,12 @@ function JourneySpine({
 }) {
   const motionEnabled = useMotionEnabled();
   const runtime = useLandingMotionRuntime();
+  const travelerMode = motionEnabled ? runtime.qualityTier : "static";
+  const showTraveler = travelerMode !== "static";
   const pathRef = useRef<SVGPathElement>(null);
   const travelerRef = useRef<HTMLDivElement>(null);
   const displayedProgressRef = useRef(0.015);
-  const travelerFrameRef = useRef<number | null>(null);
   const geometryFrameRef = useRef<number | null>(null);
-  const updateTravelerPointRef = useRef<((latest: number) => void) | null>(
-    null,
-  );
   const svgMetricsRef = useRef<{
     height: number;
     topDocument: number;
@@ -107,10 +104,11 @@ function JourneySpine({
   );
 
   useLayoutEffect(() => {
+    if (!showTraveler) return;
     const path = pathRef.current;
     if (!path) return;
     spineDataRef.current = buildSpineSamples(path);
-  }, []);
+  }, [showTraveler]);
 
   const measureSvgGeometry = useCallback(() => {
     geometryFrameRef.current = null;
@@ -146,7 +144,7 @@ function JourneySpine({
     );
   }, [measureSvgGeometry, runtime.scrollY]);
 
-  const updateTravelerPoint = useCallback((latest: number) => {
+  const updateTravelerPoint = useCallback(() => {
     const path = pathRef.current;
     const node = travelerRef.current;
     if (!path || !node) return;
@@ -160,82 +158,41 @@ function JourneySpine({
 
     const rect = getCachedSvgRect();
     if (!rect) return;
-    const svgRect: DOMRect = rect;
 
+    const scrollY = runtime.scrollY.get();
     const viewportHeight = runtime.viewportHeight.get();
-    const lowerBound = Math.min(viewportHeight - 84, viewportHeight * 0.78);
-    const upperBound = Math.max(84, viewportHeight * 0.2);
-    const desiredProgress = Math.max(SPINE_CLAMP.min, Math.min(SPINE_CLAMP.max, latest));
+    const viewportCenterY = viewportHeight / 2;
 
-    function visiblePoint(progress: number) {
-      const minVisibleProgress = progressForScreenY(samples, svgRect, upperBound);
-      const maxVisibleProgress = progressForScreenY(samples, svgRect, lowerBound);
-      const clampedProgress = Math.max(
-        minVisibleProgress,
-        Math.min(maxVisibleProgress, progress),
-      );
-      return interpolateSpinePoint(samples, clampedProgress, svgRect);
-    }
+    const centerProgress = progressForScreenY(samples, rect, viewportCenterY);
+    const desiredProgress = Math.max(
+      SPINE_CLAMP.min,
+      Math.min(SPINE_CLAMP.max, centerProgress),
+    );
 
-    const targetPoint = visiblePoint(desiredProgress);
-    const previousProgress = displayedProgressRef.current;
-    const previousPoint = interpolateSpinePoint(samples, previousProgress, svgRect);
-
-    function screenDistanceFromPrevious(progress: number) {
-      const nextPoint = interpolateSpinePoint(samples, progress, svgRect);
-      const dx = ((nextPoint.x - previousPoint.x) / 100) * svgRect.width;
-      const dy = nextPoint.screenY - previousPoint.screenY;
-      return Math.hypot(dx, dy);
-    }
-
-    let nextProgress = targetPoint.progress;
-    const maxScreenStep = Math.max(24, svgRect.width * 0.018);
-
-    if (screenDistanceFromPrevious(targetPoint.progress) > maxScreenStep) {
-      let low = previousProgress;
-      let high = targetPoint.progress;
-
-      for (let i = 0; i < 14; i += 1) {
-        const mid = (low + high) / 2;
-        if (screenDistanceFromPrevious(mid) <= maxScreenStep) {
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-
-      nextProgress = low;
-    }
-
-    const point = exactSpinePoint(path, totalLength, nextProgress, svgRect);
-
-    if (
-      Math.abs(point.progress - targetPoint.progress) > 0.001 &&
-      travelerFrameRef.current === null
-    ) {
-      travelerFrameRef.current = window.requestAnimationFrame(() => {
-        travelerFrameRef.current = null;
-        updateTravelerPointRef.current?.(latest);
-      });
-    }
-
+    const point = exactSpinePoint(path, totalLength, desiredProgress, rect);
     displayedProgressRef.current = point.progress;
     displayedPathProgress.set(point.progress);
 
-    const travelerX = (point.x / 100) * svgRect.width;
-    const travelerY = (point.y / 100) * svgRect.height;
-    node.style.transform = `translate(${travelerX}px, ${travelerY}px) translate(-50%, -50%)`;
-  }, [displayedPathProgress, getCachedSvgRect, runtime.viewportHeight]);
+    const travelerX = (point.x / 100) * rect.width;
+    // Pin the dot vertically to viewport center; convert to column-relative coords
+    // (the column shares its top edge with the SVG's document-top).
+    const svgTopDocument =
+      svgMetricsRef.current?.topDocument ?? scrollY + rect.top;
+    const travelerY = scrollY + viewportCenterY - svgTopDocument;
+    node.style.transform = `translate3d(${travelerX}px, ${travelerY}px, 0) translate(-50%, -50%)`;
+  }, [
+    displayedPathProgress,
+    getCachedSvgRect,
+    runtime.scrollY,
+    runtime.viewportHeight,
+  ]);
 
   useEffect(() => {
-    updateTravelerPointRef.current = updateTravelerPoint;
-  }, [updateTravelerPoint]);
-
-  useEffect(() => {
+    if (!showTraveler) return;
     measureSvgGeometry();
-    updateTravelerPoint(rawProgress.get());
+    updateTravelerPoint();
     const initialFrame = window.requestAnimationFrame(() => {
-      updateTravelerPoint(rawProgress.get());
+      updateTravelerPoint();
     });
 
     const svg = pathRef.current?.ownerSVGElement;
@@ -244,23 +201,30 @@ function JourneySpine({
 
     return () => {
       window.cancelAnimationFrame(initialFrame);
-      if (travelerFrameRef.current !== null) {
-        window.cancelAnimationFrame(travelerFrameRef.current);
-        travelerFrameRef.current = null;
-      }
       if (geometryFrameRef.current !== null) {
         window.cancelAnimationFrame(geometryFrameRef.current);
         geometryFrameRef.current = null;
       }
       observer?.disconnect();
     };
-  }, [measureSvgGeometry, rawProgress, scheduleSvgGeometryMeasure, updateTravelerPoint]);
+  }, [
+    measureSvgGeometry,
+    rawProgress,
+    scheduleSvgGeometryMeasure,
+    showTraveler,
+    updateTravelerPoint,
+  ]);
 
-  useMotionValueEvent(rawProgress, "change", updateTravelerPoint);
+  useMotionValueEvent(rawProgress, "change", () => {
+    if (!showTraveler) return;
+    updateTravelerPoint();
+  });
   useMotionValueEvent(runtime.viewportWidth, "change", () => {
+    if (!showTraveler) return;
     scheduleSvgGeometryMeasure();
   });
   useMotionValueEvent(runtime.viewportHeight, "change", () => {
+    if (!showTraveler) return;
     scheduleSvgGeometryMeasure();
   });
 
@@ -314,17 +278,17 @@ function JourneySpine({
               style={{ pathLength: motionEnabled ? displayedPathProgress : 1 }}
             />
           </svg>
-          <motion.div
-            ref={travelerRef}
-            aria-hidden
-            className="landing-journey-spine__traveler"
-            style={
-              motionEnabled ? { opacity: travelerOpacity } : { opacity: 0 }
-            }
-          >
-            <span className="landing-journey-spine__traveler-halo" />
-            <span className="landing-journey-spine__traveler-core" />
-          </motion.div>
+          {showTraveler ? (
+            <motion.div
+              ref={travelerRef}
+              aria-hidden
+              className="landing-journey-spine__traveler"
+              style={{ opacity: travelerOpacity }}
+            >
+              <span className="landing-journey-spine__traveler-halo" />
+              <span className="landing-journey-spine__traveler-core" />
+            </motion.div>
+          ) : null}
         </div>
       </motion.div>
     </>
@@ -468,8 +432,8 @@ function LandingExperienceBody() {
                 not in 10 different apps.
               </h1>
               <p className="landing-fade-up landing-stagger-3 mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-                Itinerary, supplies, expenses, and votes - collaborative from
-                day one. Move your mouse and the compass follows.
+                Itinerary, supplies, expenses, and votes in one shared route.
+                Scroll the trail and keep the whole crew aligned from day one.
               </p>
               <div className="landing-hero-actions landing-fade-up landing-stagger-4 mx-auto mt-9 flex w-full max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
                 <Link
@@ -501,7 +465,7 @@ function LandingExperienceBody() {
           <SupplyCrate />
           <ExpenseSplitter />
           <VoteMountain />
-          <Constellation />
+          <CrewSignal />
           <FinalBeacon />
         </main>
 
