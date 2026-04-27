@@ -1268,6 +1268,50 @@
     transform: none !important;
   }
 
+  @media (min-width: 1024px) {
+    .landing-orb {
+      filter: blur(56px);
+    }
+
+    .dark .landing-orb {
+      filter: blur(68px);
+    }
+
+    .landing-journey-spine__progress {
+      filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.3));
+    }
+
+    .dark .landing-journey-spine__progress {
+      filter: drop-shadow(0 0 7px hsl(var(--primary) / 0.36));
+    }
+
+    .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 7px hsl(var(--primary) / 0.4));
+    }
+
+    .dark .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.48));
+    }
+
+    .landing-glass {
+      backdrop-filter: blur(8px) saturate(118%);
+      box-shadow:
+        0 18px 42px -24px hsl(var(--primary) / 0.22),
+        inset 0 1px 0 hsl(var(--foreground) / 0.04);
+    }
+
+    .landing-beacon-lit {
+      box-shadow:
+        0 0 0 1px hsl(var(--primary) / 0.24),
+        0 26px 72px -40px hsl(var(--primary) / 0.5);
+    }
+
+    .landing-journey-chapter {
+      content-visibility: auto;
+      contain-intrinsic-size: 920px;
+    }
+  }
+
   html[data-motion="reduced"] .landing-trail-path,
   html[data-motion="reduced"] .landing-flag,
   html[data-motion="reduced"] .landing-beacon-light,

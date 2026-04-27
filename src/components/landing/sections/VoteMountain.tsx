@@ -107,9 +107,10 @@ export function VoteMountain() {
               }
               onClick={() => castKeyboardVote(peak.id)}
               whileTap={{ scale: 0.985 }}
-              className={`landing-glass group relative flex h-80 flex-col items-center justify-end overflow-hidden rounded-3xl p-5 text-left outline-none transition-[transform,box-shadow] duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-1 hover:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.45),0_14px_48px_hsl(var(--primary)/0.24),0_0_72px_hsl(var(--primary)/0.35)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.45),0_14px_48px_hsl(var(--primary)/0.24),0_0_72px_hsl(var(--primary)/0.35)] ${
+              className={`landing-glass group relative flex h-80 flex-col items-center justify-end overflow-hidden rounded-3xl p-5 text-left outline-none transition-[transform,box-shadow] duration-700 hover:-translate-y-1 hover:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.45),0_14px_48px_hsl(var(--primary)/0.24),0_0_72px_hsl(var(--primary)/0.35)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.45),0_14px_48px_hsl(var(--primary)/0.24),0_0_72px_hsl(var(--primary)/0.35)] ${
                 selected ? "ring-2 ring-primary/45" : ""
               }`}
+              style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
               initial={false}
               animate={{ scale: selected ? 1.012 : 1 }}
               transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}

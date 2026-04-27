@@ -12,6 +12,7 @@ import { usePointerTilt } from "../hooks/usePointerTilt";
 import { MapPin, Mountain, Tent, Trees, Waves } from "lucide-react";
 import { useElementScrollProgress } from "../hooks/useElementScrollProgress";
 import { useMotionEnabled } from "../hooks/useIsMobile";
+import { useLandingMotionRuntime } from "../hooks/useLandingMotionRuntime";
 
 type Stop = {
   id: string;
@@ -93,6 +94,10 @@ function StopCard({
   total: number;
 }) {
   const coarsePointer = useCoarsePointer();
+  const motionEnabled = useMotionEnabled();
+  const runtime = useLandingMotionRuntime();
+  const enableTilt =
+    motionEnabled && !coarsePointer && runtime.qualityTier === "full";
   const { primePointerTarget, reset, rotateX, rotateY, schedulePointerMove } =
     usePointerTilt({
       bounds: {
@@ -106,7 +111,7 @@ function StopCard({
     });
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (coarsePointer) return;
+    if (!enableTilt) return;
     schedulePointerMove(e);
   }
 
@@ -141,15 +146,23 @@ function StopCard({
         onBlur={() => setActive(null)}
         onKeyDown={handleKeyDown}
         onMouseEnter={(event) => {
-          primePointerTarget(event.currentTarget);
+          if (enableTilt) {
+            primePointerTarget(event.currentTarget);
+          }
           setActive(stop);
         }}
         onMouseLeave={() => {
           setActive(null);
-          reset();
+          if (enableTilt) {
+            reset();
+          }
         }}
         onMouseMove={handleMouseMove}
-        style={{ rotateX, rotateY, transformPerspective: 850 }}
+        style={
+          enableTilt
+            ? { rotateX, rotateY, transformPerspective: 850 }
+            : undefined
+        }
         className="landing-tilt landing-glass relative w-44 rounded-2xl p-4 outline-none ring-primary/0 transition-shadow focus-visible:ring-2"
       >
         <AnimatePresence>

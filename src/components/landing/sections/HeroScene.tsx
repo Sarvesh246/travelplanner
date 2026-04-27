@@ -12,7 +12,10 @@ import {
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useIsMobile, useMotionEnabled } from "../hooks/useIsMobile";
-import { useLandingMotionRuntime } from "../hooks/useLandingMotionRuntime";
+import {
+  useLandingMotionRuntime,
+  type LandingQualityTier,
+} from "../hooks/useLandingMotionRuntime";
 import { useThemeColors } from "../hooks/useThemeColors";
 
 function toThreeColor(value: string) {
@@ -166,7 +169,7 @@ function CompassNeedle({
         <meshStandardMaterial color={secondary} roughness={0.55} metalness={0.2} />
       </mesh>
       <mesh position={[0, 0, 0.1]}>
-        <cylinderGeometry args={[0.085, 0.085, 0.1, 20]} />
+        <cylinderGeometry args={[0.085, 0.085, 0.1, 14]} />
         <meshStandardMaterial color={foreground} metalness={0.55} roughness={0.28} />
       </mesh>
     </group>
@@ -198,7 +201,7 @@ function CompassBody({
   return (
     <group>
       <mesh>
-        <torusGeometry args={[1.48, 0.085, 28, 96]} />
+        <torusGeometry args={[1.48, 0.085, 18, 72]} />
         <meshStandardMaterial
           color={foreground}
           emissive={primary}
@@ -208,11 +211,11 @@ function CompassBody({
         />
       </mesh>
       <mesh>
-        <torusGeometry args={[1.22, 0.035, 18, 96]} />
+        <torusGeometry args={[1.22, 0.035, 14, 60]} />
         <meshStandardMaterial color={primary} metalness={0.42} roughness={0.36} />
       </mesh>
       <mesh position={[0, 0, -0.04]}>
-        <circleGeometry args={[1.18, 80]} />
+        <circleGeometry args={[1.18, 52]} />
         <meshStandardMaterial color={background} roughness={0.72} metalness={0.1} />
       </mesh>
       {tickData.map((tick, i) => (
@@ -253,8 +256,8 @@ function MountainRing({
   });
 
   const peaks = useMemo(() => {
-    return Array.from({ length: 16 }, (_, i) => {
-      const angle = (i / 16) * Math.PI * 2;
+    return Array.from({ length: 12 }, (_, i) => {
+      const angle = (i / 12) * Math.PI * 2;
       const radius = 4.8 + (i % 4) * 0.28;
       return {
         height: 1.26 + ((i * 17) % 8) * 0.17,
@@ -306,7 +309,7 @@ function BeaconOrb({ active, primary }: { active: boolean; primary: THREE.Color 
           <meshStandardMaterial color={primary} emissive={primary} emissiveIntensity={1.8} />
         </mesh>
         <mesh ref={halo}>
-          <sphereGeometry args={[0.36, 24, 24]} />
+          <sphereGeometry args={[0.36, 18, 18]} />
           <meshBasicMaterial color={primary} transparent opacity={0.16} depthWrite={false} />
         </mesh>
         <pointLight ref={light} color={primary} intensity={4.5} distance={7} />
@@ -460,7 +463,7 @@ function SceneContents({
   compassScale: number;
   compassY: number;
   isMobile: boolean;
-  qualityTier: "full" | "balanced";
+  qualityTier: LandingQualityTier;
 }) {
   const colors = useThemeColors();
   const palette = useMemo(
@@ -513,14 +516,34 @@ function SceneContents({
       {colors.isDark ? (
         <StarField
           active={active}
-          count={qualityTier === "balanced" ? (isMobile ? 420 : 600) : isMobile ? 700 : 900}
+          count={
+            qualityTier === "full"
+              ? isMobile
+                ? 320
+                : 360
+              : qualityTier === "balanced"
+                ? isMobile
+                  ? 180
+                  : 220
+                : 0
+          }
           foreground={palette.foreground}
           primary={palette.primary}
         />
       ) : (
         <PollenField
           active={active}
-          count={qualityTier === "balanced" ? (isMobile ? 60 : 80) : isMobile ? 90 : 110}
+          count={
+            qualityTier === "full"
+              ? isMobile
+                ? 56
+                : 72
+              : qualityTier === "balanced"
+                ? isMobile
+                  ? 36
+                  : 42
+                : 0
+          }
           primary={palette.primary}
           secondary={palette.secondary}
         />
@@ -555,25 +578,25 @@ export function HeroScene({ onReady }: { onReady?: () => void }) {
   const cameraFov = isMobile ? (tallViewport ? 45 : 48) : compactHeight ? 46 : ultraWide ? 37 : 41;
 
   useEffect(() => {
-    if (!motionEnabled) onReady?.();
-  }, [motionEnabled, onReady]);
+    if (!motionEnabled || heroTier === "static") onReady?.();
+  }, [heroTier, motionEnabled, onReady]);
 
-  if (!motionEnabled) return <StaticHeroBackdrop />;
+  if (!motionEnabled || heroTier === "static") return <StaticHeroBackdrop />;
 
   const dpr: [number, number] = isMobile
     ? heroTier === "balanced"
-      ? [1, 1]
-      : [1, 1.15]
+      ? [0.95, 1]
+      : [1, 1.05]
     : heroTier === "balanced"
-      ? [1, 1.0]
-      : [1, 1.2];
+      ? [0.9, 1]
+      : [0.95, 1.05];
 
   return (
     <div ref={ref} className="absolute inset-0">
       <Canvas
         dpr={dpr}
         camera={{ position: [0, 0, 5.5], fov: cameraFov }}
-        gl={{ antialias: !isMobile, alpha: true, powerPreference: "high-performance" }}
+        gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         frameloop={isVisible ? "always" : "demand"}
         resize={{ scroll: false, debounce: { resize: 0, scroll: 80 } }}
         style={{ position: "absolute", inset: 0 }}
@@ -588,7 +611,7 @@ export function HeroScene({ onReady }: { onReady?: () => void }) {
             qualityTier={heroTier}
           />
           <HeroPerformanceMonitor
-            active={isVisible && heroTier === "full"}
+            active={isVisible}
             onDegrade={runtime.downgradeQuality}
           />
           {onReady ? <SceneGpuReady onSaturated={onReady} /> : null}

@@ -4,6 +4,8 @@ import {
   motion,
 } from "framer-motion";
 import { useState } from "react";
+import { useMotionEnabled } from "../hooks/useIsMobile";
+import { useLandingMotionRuntime } from "../hooks/useLandingMotionRuntime";
 import { usePointerTilt } from "../hooks/usePointerTilt";
 import { Backpack, Check, Compass, Droplet, Flame, Tent, Utensils } from "lucide-react";
 
@@ -19,6 +21,10 @@ const INITIAL: Item[] = [
 ];
 
 export function SupplyCrate() {
+  const motionEnabled = useMotionEnabled();
+  const runtime = useLandingMotionRuntime();
+  const enableTilt =
+    motionEnabled && runtime.qualityTier === "full";
   const [packed, setPacked] = useState<Set<string>>(new Set());
   const { primePointerTarget, reset, rotateX, rotateY, schedulePointerMove } =
     usePointerTilt({
@@ -37,6 +43,7 @@ export function SupplyCrate() {
     });
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!enableTilt) return;
     schedulePointerMove(e);
   }
 
@@ -55,10 +62,12 @@ export function SupplyCrate() {
   }
 
   function handlePointerEnter(e: React.PointerEvent<HTMLDivElement>) {
+    if (!enableTilt) return;
     primePointerTarget(e.currentTarget);
   }
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (!enableTilt) return;
     primePointerTarget(e.currentTarget);
   }
 
@@ -93,11 +102,19 @@ export function SupplyCrate() {
           className="landing-crate-stage relative mx-auto h-[28rem] w-full max-w-md overflow-visible"
           onPointerDown={handlePointerDown}
           onPointerEnter={handlePointerEnter}
-          onPointerLeave={reset}
+          onPointerLeave={() => {
+            if (enableTilt) {
+              reset();
+            }
+          }}
           onPointerMove={handleStagePointerMove}
         >
           <motion.div
-            style={{ rotateX, rotateY, transformPerspective: 1200 }}
+            style={
+              enableTilt
+                ? { rotateX, rotateY, transformPerspective: 1200 }
+                : undefined
+            }
             className="landing-crate relative h-full w-full"
           >
             <div className="landing-crate-face flex flex-col p-5 sm:p-6">
@@ -198,7 +215,8 @@ export function SupplyCrate() {
             ))}
           </ul>
           <p className="text-xs italic text-muted-foreground">
-            Hover the crate to inspect it. Click items to pack them.
+            Click items to pack them. On larger displays the scene keeps the
+            depth, without forcing every hover to re-render the whole crate.
           </p>
         </div>
       </div>

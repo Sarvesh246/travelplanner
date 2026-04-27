@@ -70,8 +70,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        {/* Apply persisted theme and motion preferences before paint. */}
+      <body
+        className={`${inter.variable} ${jetBrainsMono.variable} min-h-dvh touch-manipulation font-sans`}
+      >
+        {/* beforeInteractive scripts are injected into <head> by Next.js even when declared here. */}
         <Script
           id="beacon-preferences"
           strategy="beforeInteractive"
@@ -80,10 +82,6 @@ export default function RootLayout({
               "(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';r.classList.remove('light','dark');r.classList.add(t);if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();",
           }}
         />
-      </head>
-      <body
-        className={`${inter.variable} ${jetBrainsMono.variable} min-h-dvh touch-manipulation font-sans`}
-      >
         <RootProvider>{children}</RootProvider>
       </body>
     </html>

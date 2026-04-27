@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useMotionValue, type MotionValue } from "framer-motion";
 
-export type LandingQualityTier = "full" | "balanced";
+export type LandingQualityTier = "full" | "balanced" | "static";
 
 type LandingViewportSnapshot = {
   width: number;
@@ -29,6 +29,7 @@ type LandingMotionRuntime = {
 };
 
 const LandingMotionContext = createContext<LandingMotionRuntime | null>(null);
+const DEFAULT_VIEWPORT: LandingViewportSnapshot = { width: 1280, height: 800 };
 
 function readScrollY() {
   if (typeof window === "undefined") return 0;
@@ -36,9 +37,7 @@ function readScrollY() {
 }
 
 function readViewport(): LandingViewportSnapshot {
-  if (typeof window === "undefined") {
-    return { width: 1280, height: 800 };
-  }
+  if (typeof window === "undefined") return DEFAULT_VIEWPORT;
 
   return {
     width: window.innerWidth,
@@ -50,6 +49,7 @@ function detectInitialQualityTier(): LandingQualityTier {
   if (typeof window === "undefined") return "full";
 
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const desktopViewport = window.innerWidth >= 1024;
   const lowMemory =
     typeof navigator !== "undefined" &&
     "deviceMemory" in navigator &&
@@ -60,30 +60,32 @@ function detectInitialQualityTier(): LandingQualityTier {
     typeof navigator.hardwareConcurrency === "number" &&
     navigator.hardwareConcurrency <= 6;
 
-  return coarsePointer || lowMemory || lowConcurrency ? "balanced" : "full";
+  if (desktopViewport && (lowMemory || lowConcurrency)) return "static";
+  if (coarsePointer || desktopViewport) return "balanced";
+  if (lowMemory || lowConcurrency) return "balanced";
+  return "full";
 }
 
 export function LandingMotionProvider({ children }: { children: ReactNode }) {
-  const initialViewport = readViewport();
-  const scrollY = useMotionValue(readScrollY());
-  const viewportWidth = useMotionValue(initialViewport.width);
-  const viewportHeight = useMotionValue(initialViewport.height);
-  const [qualityTier, setQualityTier] = useState<LandingQualityTier>(
-    detectInitialQualityTier,
-  );
-  const [viewport, setViewport] = useState<LandingViewportSnapshot>(initialViewport);
+  const scrollY = useMotionValue(0);
+  const viewportWidth = useMotionValue(DEFAULT_VIEWPORT.width);
+  const viewportHeight = useMotionValue(DEFAULT_VIEWPORT.height);
+  const [qualityTier, setQualityTier] = useState<LandingQualityTier>("full");
+  const [viewport, setViewport] =
+    useState<LandingViewportSnapshot>(DEFAULT_VIEWPORT);
   const frameRef = useRef<number | null>(null);
 
   const updateSnapshot = useCallback(() => {
     frameRef.current = null;
-    const nextViewport = {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
+    const nextViewport = readViewport();
 
-    scrollY.set(window.scrollY || window.pageYOffset || 0);
+    scrollY.set(readScrollY());
     viewportWidth.set(nextViewport.width);
     viewportHeight.set(nextViewport.height);
+    setQualityTier((current) => {
+      const nextTier = detectInitialQualityTier();
+      return current === nextTier ? current : nextTier;
+    });
     setViewport((current) =>
       current.width === nextViewport.width && current.height === nextViewport.height
         ? current
@@ -111,7 +113,11 @@ export function LandingMotionProvider({ children }: { children: ReactNode }) {
   }, [scheduleUpdate, updateSnapshot]);
 
   const downgradeQuality = useCallback(() => {
-    setQualityTier((current) => (current === "full" ? "balanced" : current));
+    setQualityTier((current) => {
+      if (current === "full") return "balanced";
+      if (current === "balanced") return "static";
+      return current;
+    });
   }, []);
 
   const value = useMemo(
