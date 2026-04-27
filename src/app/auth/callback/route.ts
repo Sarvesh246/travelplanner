@@ -2,16 +2,20 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 function redirectToApp(request: Request, path: string) {
   const { origin } = new URL(request.url);
   const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
   const isLocalEnv = process.env.NODE_ENV === "development";
 
   if (isLocalEnv) {
     return NextResponse.redirect(`${origin}${path}`);
   }
   if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${path}`);
+    return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${path}`);
   }
   return NextResponse.redirect(`${origin}${path}`);
 }

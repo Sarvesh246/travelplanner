@@ -1,8 +1,14 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { useState } from "react";
-import { Backpack, Check, Flame, Tent, Utensils, Compass, Droplet } from "lucide-react";
+import { Backpack, Check, Compass, Droplet, Flame, Tent, Utensils } from "lucide-react";
+import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
 
 type Item = { id: string; label: string; assignee: string; Icon: typeof Backpack };
 
@@ -17,23 +23,31 @@ const INITIAL: Item[] = [
 
 export function SupplyCrate() {
   const [packed, setPacked] = useState<Set<string>>(new Set());
-
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateY = useSpring(useTransform(x, [-200, 200], [-18, 18]), {
-    stiffness: 120,
-    damping: 14,
+  const rotateY = useSpring(useTransform(x, [-220, 220], [-15, 15]), {
+    stiffness: 130,
+    damping: 16,
   });
-  const rotateX = useSpring(useTransform(y, [-200, 200], [12, -12]), {
-    stiffness: 120,
-    damping: 14,
+  const rotateX = useSpring(useTransform(y, [-220, 220], [10, -10]), {
+    stiffness: 130,
+    damping: 16,
   });
 
-  function handleMove(e: React.MouseEvent<HTMLDivElement>) {
+  function handleMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (
+      e.target instanceof Element &&
+      e.target.closest(".landing-crate-item")
+    ) {
+      reset();
+      return;
+    }
+
     const rect = e.currentTarget.getBoundingClientRect();
     x.set(e.clientX - rect.left - rect.width / 2);
     y.set(e.clientY - rect.top - rect.height / 2);
   }
+
   function reset() {
     x.set(0);
     y.set(0);
@@ -51,90 +65,106 @@ export function SupplyCrate() {
   const progress = (packed.size / INITIAL.length) * 100;
 
   return (
-    <section className="relative mx-auto max-w-6xl px-4 py-32 sm:px-6">
+    <motion.section
+      className="landing-journey-chapter max-w-6xl"
+      initial={{ opacity: 0, y: 64 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={LANDING_SECTION_VIEWPORT}
+      transition={{ type: "spring", stiffness: 78, damping: 22 }}
+    >
       <div className="mb-12 text-center">
-        <p className="landing-kicker mb-5">Chapter 03 — The Crate</p>
+        <p className="landing-kicker mb-5">Chapter 03 - The Crate</p>
         <h2 className="text-balance font-sans text-3xl font-semibold tracking-tight sm:text-4xl">
           Who&apos;s bringing <span className="gradient-text">what?</span>
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-          Tap an item to pack it. Move your mouse over the crate — Beacon&apos;s shared supply
-          tracker keeps the whole crew on the same page.
+          Tap an item to pack it. The shared supply list tracks owners, progress, and the
+          packed pile in one place.
         </p>
       </div>
 
-      <div className="grid items-center gap-12 lg:grid-cols-2">
-        {/* 3D Crate */}
+      <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr]">
         <div
-          className="landing-crate-stage relative mx-auto h-80 w-full max-w-md"
-          onMouseMove={handleMove}
-          onMouseLeave={reset}
+          className="landing-crate-stage relative mx-auto h-[28rem] w-full max-w-md overflow-visible"
+          onPointerMove={handleMove}
+          onPointerLeave={reset}
         >
           <motion.div
             style={{ rotateX, rotateY, transformPerspective: 1200 }}
             className="landing-crate relative h-full w-full"
           >
-            <div className="landing-crate-face flex flex-col p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    <Backpack className="h-4 w-4" />
+            <div className="landing-crate-face flex flex-col p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                    <Backpack className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Trip Crate
                     </p>
-                    <p className="text-sm font-semibold">Sierra Loop · 5 days</p>
+                    <p className="truncate text-sm font-semibold">Sierra Loop &middot; 5 days</p>
                   </div>
                 </div>
-                <span className="text-xs font-medium text-primary">
+                <span className="shrink-0 text-sm font-semibold text-primary">
                   {packed.size}/{INITIAL.length}
                 </span>
               </div>
 
-              <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-primary to-success"
                   initial={false}
                   animate={{ width: `${progress}%` }}
-                  transition={{ type: "spring", stiffness: 120, damping: 18 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
 
-              <ul className="flex-1 space-y-1.5 overflow-hidden">
+              <ul className="space-y-2">
                 {INITIAL.map((item) => {
                   const isPacked = packed.has(item.id);
                   return (
                     <li key={item.id}>
-                      <button
+                      <motion.button
                         type="button"
                         onClick={() => toggle(item.id)}
-                        className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition-colors hover:bg-muted/60"
+                        whileTap={{ scale: 0.985 }}
+                        aria-pressed={isPacked}
+                        className={`landing-crate-item flex min-h-11 w-full items-center gap-3 rounded-xl p-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+                          isPacked ? "bg-primary/10" : ""
+                        }`}
                       >
-                        <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
+                        <motion.span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                             isPacked
                               ? "bg-success text-success-foreground"
                               : "bg-muted text-muted-foreground"
                           }`}
+                          animate={{
+                            rotate: isPacked ? 360 : 0,
+                            scale: isPacked ? 1.04 : 1,
+                          }}
+                          transition={{ type: "spring", stiffness: 180, damping: 18 }}
                         >
                           {isPacked ? (
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-4 w-4" />
                           ) : (
-                            <item.Icon className="h-3.5 w-3.5" />
+                            <item.Icon className="h-4 w-4" />
                           )}
-                        </span>
-                        <span className="flex-1 text-sm">
+                        </motion.span>
+                        <span className="min-w-0 flex-1">
                           <span
-                            className={`font-medium transition-colors ${
+                            className={`block truncate text-sm font-medium ${
                               isPacked ? "text-muted-foreground line-through" : ""
                             }`}
                           >
                             {item.label}
                           </span>
                         </span>
-                        <span className="text-[11px] text-muted-foreground">{item.assignee}</span>
-                      </button>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {item.assignee}
+                        </span>
+                      </motion.button>
                     </li>
                   );
                 })}
@@ -143,17 +173,16 @@ export function SupplyCrate() {
           </motion.div>
         </div>
 
-        {/* Copy */}
         <div className="space-y-5">
           <h3 className="font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
             Pack like a crew, not a committee.
           </h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
             {[
-              "Assign owners — no more 'who has the stove?' texts",
-              "Track quantities and split costs in one place",
-              "Real-time progress across every device",
-              "Templates remember last trip's checklist",
+              "Assign owners before the trip starts",
+              "Track quantities and split shared costs later",
+              "See progress update across every device",
+              "Reuse the same checklist on the next route",
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -162,10 +191,10 @@ export function SupplyCrate() {
             ))}
           </ul>
           <p className="text-xs italic text-muted-foreground">
-            Move your cursor over the crate ↗
+            Hover the crate to inspect it. Click items to pack them.
           </p>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

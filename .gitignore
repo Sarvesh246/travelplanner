@@ -30,3 +30,10 @@ prisma/*.db-journal
 .agents/
 .claude/
 .cursor/
+
+# Local tool artifacts
+.codex-dev.err.log
+.codex-dev.out.log
+.playwright-cli/
+test-results/
+output/playwright/

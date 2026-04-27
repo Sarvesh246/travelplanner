@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 
 type Theme = "dark" | "light";
 
@@ -13,6 +20,7 @@ type ThemeContextValue = {
 const STORAGE_KEY = "beacon-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+const listeners = new Set<() => void>();
 
 function applyTheme(theme: Theme) {
   if (typeof document === "undefined") return;
@@ -21,23 +29,41 @@ function applyTheme(theme: Theme) {
   root.classList.add(theme);
 }
 
+function getStoredTheme(): Theme {
+  if (typeof window === "undefined") return "dark";
+  return window.localStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark";
+}
+
+function notifyThemeSubscribers() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribeTheme(listener: () => void) {
+  if (typeof window === "undefined") return () => {};
+  listeners.add(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY) listener();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const theme = useSyncExternalStore<Theme>(subscribeTheme, getStoredTheme, () => "dark");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    const nextTheme: Theme = saved === "light" ? "light" : "dark";
-    setThemeState(nextTheme);
-    applyTheme(nextTheme);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, next);
     }
     applyTheme(next);
+    notifyThemeSubscribers();
   }, []);
 
   const value = useMemo<ThemeContextValue>(

@@ -4,30 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { Suspense, useEffect, useState } from "react";
 import { AppThemeProvider } from "@/components/layout/AppThemeProvider";
-import { CommandPalette } from "@/components/layout/CommandPalette";
+import { AppWorkspaceOverlays } from "@/components/layout/AppWorkspaceOverlays";
 import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecovery";
-import { KeyboardShortcuts } from "@/components/layout/KeyboardShortcuts";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { useCommandPalette } from "@/hooks/useCommandPalette";
-
-/**
- * Locks page scroll while the command palette is open. This avoids the
- * background jumping when the search modal mounts on iOS/desktop with
- * scrollbars and keeps focus management predictable.
- */
-function CommandPaletteScrollLock() {
-  const open = useCommandPalette((s) => s.open);
-  useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open]);
-  return null;
-}
 
 /**
  * Previous local builds may leave a stale service worker/chunk cache behind.
@@ -83,10 +63,8 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
         {children}
         <LocalhostCacheReset />
         <InvalidSessionRecovery />
-        <KeyboardShortcuts />
+        <AppWorkspaceOverlays />
         <LoadingScreen />
-        <CommandPalette />
-        <CommandPaletteScrollLock />
         {/* useSearchParams() inside NavigationProgress must be wrapped in Suspense
             so the rest of the app can stream while it hydrates. */}
         <Suspense fallback={null}>

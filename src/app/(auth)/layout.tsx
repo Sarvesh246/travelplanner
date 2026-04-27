@@ -1,9 +1,14 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background p-4 py-8 sm:py-10">
-      <div className="w-full max-w-md space-y-8">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <div className="flex h-14 shrink-0 items-center justify-end border-b border-border/70 bg-background/85 px-3 pt-[max(0px,env(safe-area-inset-top,0px))] backdrop-blur-md sm:px-5">
+        <ThemeToggle className="h-10 w-10" />
+      </div>
+      <div className="flex flex-1 flex-col items-center justify-center p-4 py-8 sm:py-10">
+        <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-2">
           <Link href="/" className="flex items-center gap-2 group">
             <svg viewBox="0 0 64 64" className="w-8 h-8 group-hover:scale-105 transition-transform" xmlns="http://www.w3.org/2000/svg">
@@ -26,6 +31,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </p>
         </div>
         {children}
+        </div>
       </div>
     </div>
   );

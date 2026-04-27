@@ -11,9 +11,38 @@ function isRecoverableSessionError(err: { message?: string; name?: string } | nu
   const m = err.message.toLowerCase();
   return (
     m.includes("refresh") ||
+    m.includes("refresh token not found") ||
     m.includes("invalid jwt") ||
     (m.includes("jwt expired") && m.includes("session"))
   );
+}
+
+function hasSupabaseRefreshTokenCookie() {
+  if (typeof document === "undefined") return false;
+
+  const cookies = document.cookie
+    .split(";")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  for (const cookie of cookies) {
+    const [rawName, ...rawValueParts] = cookie.split("=");
+    const name = rawName?.trim();
+    if (!name || !name.startsWith("sb-") || !name.includes("-auth-token")) continue;
+
+    const value = rawValueParts.join("=");
+    if (!value) continue;
+
+    const decoded = decodeURIComponent(value);
+    if (
+      decoded.includes('"refresh_token":"') ||
+      decoded.includes('"refresh_token": "')
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -31,6 +60,9 @@ export function InvalidSessionRecovery() {
       if (typeof window === "undefined") return;
       const pathname = window.location.pathname;
       if (AUTH_RELATIVE_PATHS.some((a) => pathname === a || pathname.startsWith(a))) {
+        return;
+      }
+      if (!hasSupabaseRefreshTokenCookie()) {
         return;
       }
 

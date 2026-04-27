@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { RootProvider } from "@/components/layout/RootProvider";
 
@@ -71,12 +72,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* Apply persisted motion preference before paint to avoid an entrance-
-            animation flash for users who have opted into reduced motion. */}
-        <script
+        {/* Apply persisted theme and motion preferences before paint. */}
+        <Script
+          id="beacon-preferences"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{if(localStorage.getItem('beacon-motion')==='reduced'){document.documentElement.setAttribute('data-motion','reduced');}}catch(e){}})();",
+              "(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';r.classList.remove('light','dark');r.classList.add(t);if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();",
           }}
         />
       </head>

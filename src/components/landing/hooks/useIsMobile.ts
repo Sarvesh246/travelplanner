@@ -1,35 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export function useIsMobile(breakpoint = 640): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (typeof window === "undefined") return () => {};
+      const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+      mq.addEventListener("change", callback);
+      return () => mq.removeEventListener("change", callback);
+    },
+    [breakpoint]
+  );
 
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+  const getSnapshot = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
   }, [breakpoint]);
 
-  return isMobile;
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
+
+function subscribeMotion(callback: () => void) {
+  if (typeof document === "undefined") return () => {};
+  const obs = new MutationObserver(callback);
+  obs.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-motion"],
+  });
+  return () => obs.disconnect();
+}
+
+function getMotionSnapshot() {
+  if (typeof document === "undefined") return true;
+  return document.documentElement.getAttribute("data-motion") !== "reduced";
 }
 
 export function useMotionEnabled(): boolean {
-  const [enabled, setEnabled] = useState(true);
-
-  useEffect(() => {
-    const read = () =>
-      document.documentElement.getAttribute("data-motion") !== "reduced";
-    setEnabled(read());
-    const obs = new MutationObserver(() => setEnabled(read()));
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-motion"],
-    });
-    return () => obs.disconnect();
-  }, []);
-
-  return enabled;
+  return useSyncExternalStore(subscribeMotion, getMotionSnapshot, () => true);
 }

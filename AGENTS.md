@@ -2,6 +2,8 @@
 
 - Wants a cohesive outdoors-inspired look in both light and dark mode, with layered contrast and neutral bases (avoid a single flat hue across the whole UI).
 - Prefers compact, efficient navigation on narrow/mobile widths (avoid redundant controls and excessive empty spacing).
+- Wants pre-login/public surfaces to use visible UI controls (for example, a theme toggle) instead of app-only keyboard shortcuts or command palette interactions.
+- Prefers smooth, gradual CSS transitions for interactive effects (hover glows, color shifts); abrupt or instant state changes should be avoided.
 
 ## Learned Workspace Facts
 
@@ -17,3 +19,4 @@
 - Trip deletion removes the `Trip` row and child rows through Prisma cascade; `deleteTrip` also best-effort removes cover objects under per-uploader `trip-covers/{userId}/{tripId}/` paths (the database delete still succeeds if storage cleanup fails).
 - Trip collaboration now includes a `VIEWER` role and centralized permission helpers in `src/lib/auth/trip-permissions.ts`; `VIEWER` can view but cannot contribute, while member/invite management is `OWNER`/`ADMIN` only.
 - Invite creation supports optional Resend delivery (`RESEND_API_KEY` + `EMAIL_FROM`); if email sending is unavailable or fails, invites still work via copyable invite links.
+- The landing page uses Three.js (`@react-three/fiber`, `@react-three/drei`, `three`) for the 3D hero scene (`src/components/landing/sections/HeroScene.tsx`) and a scroll-driven `JourneySpine` trail animation in `src/components/landing/LandingExperience.tsx`; the spine path and GPS dot must always sit at a lower z-index than content cards.

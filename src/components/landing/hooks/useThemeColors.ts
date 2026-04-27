@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 export type ThemeColors = {
   isDark: boolean;
@@ -14,51 +14,81 @@ export type ThemeColors = {
   muted: string;
 };
 
-function readVar(name: string, fallback: string): string {
+function readRawVar(name: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  if (!v) return fallback;
-  return `hsl(${v})`;
+  return v || fallback;
 }
 
-function snapshot(): ThemeColors {
+function asHsl(value: string): string {
+  return value.startsWith("hsl(") ? value : `hsl(${value})`;
+}
+
+const SERVER_KEY = [
+  "dark",
+  "158 30% 50%",
+  "135 12% 26%",
+  "130 8% 8%",
+  "90 14% 92%",
+  "160 28% 50%",
+  "135 7% 13%",
+  "130 8% 22%",
+  "130 6% 18%",
+].join("|");
+
+function snapshotKey(): string {
   const isDark =
     typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+  return [
+    isDark ? "dark" : "light",
+    readRawVar("--primary", isDark ? "158 30% 50%" : "163 33% 27%"),
+    readRawVar("--secondary", isDark ? "135 12% 26%" : "131 19% 69%"),
+    readRawVar("--background", isDark ? "130 8% 8%" : "90 14% 96%"),
+    readRawVar("--foreground", isDark ? "90 14% 92%" : "210 24% 16%"),
+    readRawVar("--success", isDark ? "160 28% 50%" : "158 33% 37%"),
+    readRawVar("--card", isDark ? "135 7% 13%" : "0 0% 100%"),
+    readRawVar("--border", isDark ? "130 8% 22%" : "100 9% 90%"),
+    readRawVar("--muted", isDark ? "130 6% 18%" : "100 12% 91%"),
+  ].join("|");
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof document === "undefined") return () => {};
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "style"],
+  });
+  return () => observer.disconnect();
+}
+
+function colorsFromKey(key: string): ThemeColors {
+  const [
+    mode,
+    primary,
+    secondary,
+    background,
+    foreground,
+    success,
+    card,
+    border,
+    muted,
+  ] = key.split("|");
+
   return {
-    isDark,
-    primary: readVar("--primary", "hsl(163 33% 27%)"),
-    secondary: readVar("--secondary", "hsl(131 19% 69%)"),
-    background: readVar("--background", "hsl(90 14% 96%)"),
-    foreground: readVar("--foreground", "hsl(210 24% 16%)"),
-    success: readVar("--success", "hsl(158 33% 37%)"),
-    card: readVar("--card", "hsl(0 0% 100%)"),
-    border: readVar("--border", "hsl(100 9% 90%)"),
-    muted: readVar("--muted", "hsl(100 12% 91%)"),
+    isDark: mode === "dark",
+    primary: asHsl(primary),
+    secondary: asHsl(secondary),
+    background: asHsl(background),
+    foreground: asHsl(foreground),
+    success: asHsl(success),
+    card: asHsl(card),
+    border: asHsl(border),
+    muted: asHsl(muted),
   };
 }
 
 export function useThemeColors(): ThemeColors {
-  const [colors, setColors] = useState<ThemeColors>(() => ({
-    isDark: true,
-    primary: "hsl(158 30% 50%)",
-    secondary: "hsl(135 12% 26%)",
-    background: "hsl(130 8% 8%)",
-    foreground: "hsl(90 14% 92%)",
-    success: "hsl(160 28% 50%)",
-    card: "hsl(135 7% 13%)",
-    border: "hsl(130 8% 22%)",
-    muted: "hsl(130 6% 18%)",
-  }));
-
-  useEffect(() => {
-    setColors(snapshot());
-    const observer = new MutationObserver(() => setColors(snapshot()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "style"],
-    });
-    return () => observer.disconnect();
-  }, []);
-
-  return colors;
+  const key = useSyncExternalStore(subscribeTheme, snapshotKey, () => SERVER_KEY);
+  return useMemo(() => colorsFromKey(key), [key]);
 }

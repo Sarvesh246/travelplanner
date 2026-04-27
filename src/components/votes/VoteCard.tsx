@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Clock, Check, MoreHorizontal, Trash2, Lock, CalendarDays } from "lucide-react";
+import {
+  Clock,
+  Check,
+  MoreHorizontal,
+  Trash2,
+  Lock,
+  CalendarDays,
+} from "lucide-react";
 import { cn, formatDate, formatDateRange } from "@/lib/utils";
 import { AvatarGroup } from "@/components/shared/AvatarGroup";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -40,12 +47,12 @@ export function VoteCard({ vote }: VoteCardProps) {
 
   const totalResponses = useMemo(
     () => vote.options.reduce((sum, o) => sum + o.voters.length, 0),
-    [vote]
+    [vote],
   );
 
   const maxVotes = useMemo(
     () => Math.max(0, ...vote.options.map((o) => o.voters.length)),
-    [vote]
+    [vote],
   );
 
   const isClosed = vote.status !== "OPEN";
@@ -99,7 +106,7 @@ export function VoteCard({ vote }: VoteCardProps) {
 
   return (
     <>
-      <div className="bg-card border border-border rounded-2xl p-5">
+      <div className="bg-card border border-border rounded-2xl p-5 transition-shadow duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.4),0_14px_44px_hsl(var(--primary)/0.2),0_0_64px_hsl(var(--primary)/0.3)]">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -119,7 +126,9 @@ export function VoteCard({ vote }: VoteCardProps) {
             </div>
             <h3 className="font-semibold text-base truncate">{vote.title}</h3>
             {vote.description && (
-              <p className="text-xs text-muted-foreground mt-1">{vote.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {vote.description}
+              </p>
             )}
             {vote.deadline && !locked && (
               <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -141,14 +150,26 @@ export function VoteCard({ vote }: VoteCardProps) {
               </button>
               {menuOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setMenuOpen(false)}
+                  />
                   <div className="absolute right-0 top-full mt-1 w-40 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
                     {!isClosed && (
-                      <button onClick={handleClose} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors">
+                      <button
+                        onClick={handleClose}
+                        className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors"
+                      >
                         <Lock className="w-3.5 h-3.5" /> Close vote
                       </button>
                     )}
-                    <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors">
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setConfirmDelete(true);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" /> Delete
                     </button>
                   </div>
@@ -175,23 +196,29 @@ export function VoteCard({ vote }: VoteCardProps) {
                     ? "border-primary/60 bg-primary/5"
                     : "border-border hover:border-border/80",
                   locked && "cursor-default",
-                  !locked && !pending && "hover:bg-muted/40"
+                  !locked && !pending && "hover:bg-muted/40",
                 )}
               >
-                <VoteResultBar percentage={pct} isWinner={isWinner} myVote={option.myVote} />
+                <VoteResultBar
+                  percentage={pct}
+                  isWinner={isWinner}
+                  myVote={option.myVote}
+                />
                 <div className="relative flex items-center gap-3">
                   <div
                     className={cn(
                       "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
                       option.myVote
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-muted-foreground/30"
+                        : "border-muted-foreground/30",
                     )}
                   >
                     {option.myVote && <Check className="w-3 h-3" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{option.label}</p>
+                    <p className="text-sm font-medium truncate">
+                      {option.label}
+                    </p>
                     {(option.dateStart || option.dateEnd) && (
                       <p className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-0.5">
                         <CalendarDays className="w-3 h-3" />
@@ -202,7 +229,11 @@ export function VoteCard({ vote }: VoteCardProps) {
                   <div className="flex items-center gap-2 shrink-0">
                     {!vote.isAnonymous && option.voters.length > 0 && (
                       <AvatarGroup
-                        users={option.voters.map((v) => ({ id: v.id, name: v.name, avatarUrl: v.avatarUrl }))}
+                        users={option.voters.map((v) => ({
+                          id: v.id,
+                          name: v.name,
+                          avatarUrl: v.avatarUrl,
+                        }))}
                         size="xs"
                         maxVisible={3}
                       />

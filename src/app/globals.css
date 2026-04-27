@@ -326,6 +326,20 @@
   100% { transform: scale(1.6);  opacity: 0;   }
 }
 
+@keyframes landing-boot-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -7px, 0); }
+}
+
+@keyframes landing-boot-line {
+  0% { transform: translateX(-105%); }
+  100% { transform: translateX(225%); }
+}
+
+@keyframes landing-boot-dismiss {
+  to { opacity: 0; visibility: hidden; }
+}
+
 @layer utilities {
   .landing-fade-up {
     opacity: 0;
@@ -341,7 +355,6 @@
     position: absolute;
     border-radius: 9999px;
     filter: blur(90px);
-    will-change: transform;
     pointer-events: none;
   }
   .landing-orb--primary {
@@ -384,6 +397,244 @@
   }
   .dark .landing-grid { opacity: 0.35; }
 
+  .landing-hero-fallback {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 30%, hsl(var(--primary) / 0.18), transparent 30%),
+      linear-gradient(to bottom, hsl(var(--background)), hsl(var(--muted) / 0.55));
+  }
+
+  .landing-hero-fallback__ring {
+    position: absolute;
+    left: 50%;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--primary) / 0.3);
+    transform: translateX(-50%);
+  }
+
+  .landing-hero-fallback__ring--outer {
+    top: 18%;
+    height: clamp(13rem, 22vw, 19rem);
+    width: clamp(13rem, 22vw, 19rem);
+    box-shadow: 0 0 90px hsl(var(--primary) / 0.22);
+  }
+
+  .landing-hero-fallback__ring--inner {
+    top: 24%;
+    height: clamp(8rem, 14vw, 12rem);
+    width: clamp(8rem, 14vw, 12rem);
+    border-color: hsl(var(--secondary) / 0.45);
+  }
+
+  .landing-hero-fallback__needle {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    height: clamp(4.5rem, 8vw, 6.5rem);
+    width: 0.42rem;
+    border-radius: 9999px;
+    background: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--secondary)));
+    transform: translateX(-50%) rotate(28deg);
+    opacity: 0.72;
+  }
+
+  .landing-hero-fallback__ridge {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 42%;
+    opacity: 0.84;
+    clip-path: polygon(0 100%, 0 52%, 8% 64%, 16% 48%, 25% 58%, 34% 36%, 45% 62%, 58% 42%, 68% 58%, 78% 38%, 90% 58%, 100% 48%, 100% 100%);
+  }
+
+  .landing-hero-fallback__ridge--back {
+    background: hsl(var(--secondary) / 0.32);
+    transform: translateY(-12%);
+  }
+
+  .landing-hero-fallback__ridge--front {
+    background: hsl(var(--primary) / 0.34);
+  }
+
+  .landing-journey {
+    isolation: isolate;
+  }
+
+  .landing-hero-section {
+    min-height: 100svh;
+  }
+
+  .landing-journey-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .landing-journey-spine__column {
+    position: relative;
+    height: 100%;
+    width: min(100%, 112rem);
+    margin: 0 auto;
+  }
+  .landing-journey-spine__column::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    z-index: 2;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid hsl(var(--background) / 0.9);
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle, hsl(var(--primary)) 0 34%, hsl(var(--primary) / 0.34) 36% 64%, transparent 66%),
+      hsl(var(--card) / 0.85);
+    box-shadow:
+      0 0 0 0.4rem hsl(var(--primary) / 0.08),
+      0 0 22px hsl(var(--primary) / 0.55);
+    transform: translate(-50%, -50%);
+  }
+  .landing-journey-spine__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .landing-journey-spine__track {
+    stroke: hsl(var(--primary) / 0.2);
+    stroke-width: 9px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .landing-journey-spine__progress {
+    stroke: url("#landing-journey-spine-gradient");
+    stroke-width: 6px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter:
+      drop-shadow(0 0 10px hsl(var(--primary) / 0.48))
+      drop-shadow(0 0 2px hsl(var(--background) / 0.75));
+    vector-effect: non-scaling-stroke;
+  }
+  .dark .landing-journey-spine__progress {
+    stroke: url("#landing-journey-spine-gradient-dark");
+    filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.55));
+  }
+  .landing-journey-spine__traveler {
+    position: absolute;
+    top: var(--traveler-y, 1.5%);
+    left: var(--traveler-x, 50%);
+    z-index: 2;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    will-change: transform;
+    filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.65));
+  }
+  .landing-journey-spine__traveler-halo {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle,
+      hsl(var(--primary) / 0.32) 0%,
+      hsl(var(--primary) / 0.12) 60%,
+      transparent 100%
+    );
+    border: 1.5px solid hsl(var(--primary) / 0.55);
+  }
+  .landing-journey-spine__traveler-core {
+    position: absolute;
+    inset: 35%;
+    border-radius: 9999px;
+    background: hsl(var(--background));
+    box-shadow:
+      0 0 0 1.5px hsl(var(--primary)),
+      0 0 8px hsl(var(--primary) / 0.6);
+  }
+  .dark .landing-journey-spine__track {
+    stroke: hsl(var(--primary) / 0.28);
+  }
+  .dark .landing-journey-spine__traveler-core {
+    background: hsl(var(--foreground));
+  }
+  .dark .landing-journey-spine__traveler {
+    filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.75));
+  }
+  .dark .landing-journey-spine__traveler-halo {
+    border-color: hsl(var(--primary) / 0.65);
+  }
+
+  .landing-boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    gap: 1rem;
+    background:
+      radial-gradient(circle at 50% 36%, hsl(var(--primary) / 0.18), transparent 30rem),
+      linear-gradient(to bottom, hsl(var(--background)), hsl(var(--card)));
+    color: hsl(var(--foreground));
+    pointer-events: none;
+    animation: landing-boot-dismiss 0.28s cubic-bezier(0.16, 1, 0.3, 1) 0.72s forwards;
+  }
+
+  .landing-boot-screen p {
+    margin: 0;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .landing-boot-compass {
+    margin-inline: auto;
+    display: grid;
+    height: 5rem;
+    width: 5rem;
+    place-items: center;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--primary) / 0.28);
+    background: hsl(var(--card) / 0.78);
+    box-shadow:
+      0 28px 80px -36px hsl(var(--primary) / 0.8),
+      inset 0 1px 0 hsl(var(--foreground) / 0.08);
+    animation: landing-boot-float 1.35s ease-in-out infinite;
+  }
+
+  .landing-boot-line {
+    position: relative;
+    margin-inline: auto;
+    height: 0.24rem;
+    width: min(15rem, 70vw);
+    overflow: hidden;
+    border-radius: 9999px;
+    background: hsl(var(--primary) / 0.16);
+  }
+
+  .landing-boot-line::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 45%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    animation: landing-boot-line 1.05s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
   .landing-card {
     position: relative;
     transform: perspective(1200px) rotateX(0) rotateY(0) translateY(0);
@@ -403,8 +654,11 @@
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
-            mask-composite: exclude;
+    mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.4s ease;
     pointer-events: none;
@@ -420,7 +674,6 @@
 
   .landing-card__icon {
     transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
   }
   .landing-card:hover .landing-card__icon {
     transform: translateZ(24px) scale(1.08);
@@ -476,10 +729,33 @@
     animation: landing-pulse-ring 2.4s ease-out infinite;
   }
 
+  .landing-scroll-cue {
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--primary) / 0.28);
+    background: hsl(var(--card) / 0.78);
+    padding: 0.55rem 0.9rem;
+    color: hsl(var(--foreground));
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow:
+      0 16px 42px -24px hsl(var(--primary) / 0.65),
+      inset 0 1px 0 hsl(var(--foreground) / 0.08);
+    backdrop-filter: blur(10px) saturate(140%);
+    transition:
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.25s ease,
+      background-color 0.25s ease;
+  }
+  .landing-scroll-cue:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.56);
+    background: hsl(var(--card) / 0.92);
+  }
+
   /* ── Tilt card (mouse-tracked perspective) ─────────────────────── */
   .landing-tilt {
     transform-style: preserve-3d;
-    will-change: transform;
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .landing-tilt-inner {
@@ -495,12 +771,13 @@
   .landing-crate {
     transform-style: preserve-3d;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
   }
   .landing-crate-face {
     position: absolute;
     inset: 0;
     backface-visibility: hidden;
+    transform: translateZ(0);
+    transform-style: flat;
     border-radius: 1.25rem;
     border: 1px solid hsl(var(--border));
     background: linear-gradient(
@@ -519,6 +796,38 @@
       hsl(135 8% 18%) 100%
     );
   }
+  .landing-crate-item {
+    position: relative;
+    border: 1px solid transparent;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .landing-crate-item::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.55rem;
+    left: 0;
+    width: 3px;
+    border-radius: 9999px;
+    background: hsl(var(--primary));
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .landing-crate-item:hover,
+  .landing-crate-item:focus-visible {
+    background: hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary) / 0.16);
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.08);
+  }
+  .landing-crate-item:hover::before,
+  .landing-crate-item:focus-visible::before,
+  .landing-crate-item[aria-pressed="true"]::before {
+    opacity: 1;
+  }
 
   /* ── Trail (dashed connector line) ─────────────────────────────── */
   @keyframes landing-trail-flow {
@@ -528,6 +837,81 @@
   .landing-trail-path {
     stroke-dasharray: 6 8;
     animation: landing-trail-flow 2.4s linear infinite;
+  }
+  .landing-trail-progress,
+  .landing-range-route {
+    stroke: hsl(var(--primary) / 0.88);
+    filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.34));
+  }
+  .dark .landing-range-route {
+    stroke: hsl(var(--primary) / 0.96);
+    filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.45));
+  }
+  .landing-range-route-track {
+    stroke: hsl(var(--primary) / 0.26);
+  }
+  .dark .landing-range-route-track {
+    stroke: hsl(var(--primary) / 0.4);
+  }
+
+  .landing-range-track {
+    --range-progress: 43%;
+    position: relative;
+    height: 1.35rem;
+  }
+  .landing-range-track::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 0.58rem;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    background: hsl(var(--muted));
+    box-shadow: inset 0 1px 2px hsl(var(--foreground) / 0.08);
+  }
+  .landing-range-fill {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: var(--range-progress);
+    height: 0.58rem;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.62), hsl(var(--primary)));
+    box-shadow: 0 0 18px hsl(var(--primary) / 0.24);
+  }
+  .landing-range-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+    background: transparent;
+  }
+  .landing-range-input::-webkit-slider-thumb {
+    height: 1.22rem;
+    width: 1.22rem;
+    appearance: none;
+    border-radius: 9999px;
+    border: 3px solid hsl(var(--background));
+    background: hsl(var(--primary));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.48),
+      0 6px 16px hsl(var(--primary) / 0.28);
+  }
+  .landing-range-input::-moz-range-thumb {
+    height: 1.22rem;
+    width: 1.22rem;
+    border-radius: 9999px;
+    border: 3px solid hsl(var(--background));
+    background: hsl(var(--primary));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.48),
+      0 6px 16px hsl(var(--primary) / 0.28);
+  }
+  .landing-range-input::-moz-range-track {
+    background: transparent;
   }
 
   /* ── Vote Mountain — flag plant ────────────────────────────────── */
@@ -553,6 +937,10 @@
     border: 2px solid hsl(var(--primary) / 0.6);
     animation: landing-beacon-ripple 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     pointer-events: none;
+  }
+  .landing-beacon-ripple--steady {
+    animation: landing-beacon-ripple 1.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    border-color: hsl(var(--primary) / 0.42);
   }
 
   /* ── Beacon tower glow ─────────────────────────────────────────── */
@@ -594,27 +982,214 @@
   .landing-sky {
     background: linear-gradient(
       to bottom,
-      hsl(200 60% 88%) 0%,
-      hsl(45 60% 92%) 40%,
+      hsl(var(--secondary) / 0.32) 0%,
+      hsl(var(--background)) 44%,
       hsl(var(--background)) 100%
     );
   }
   .dark .landing-sky {
     background: linear-gradient(
       to bottom,
-      hsl(220 30% 8%) 0%,
-      hsl(220 20% 14%) 40%,
+      hsl(130 9% 7%) 0%,
+      hsl(var(--card)) 42%,
       hsl(var(--background)) 100%
+    );
+  }
+
+  .landing-range-copy {
+    min-height: 100svh;
+  }
+
+  .landing-journey-chapter {
+    position: relative;
+    z-index: 20;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 5rem 1rem;
+  }
+  @media (min-width: 640px) {
+    .landing-journey-chapter {
+      padding: 6rem 1.5rem;
+    }
+  }
+  .landing-journey-chapter--after-range {
+    padding-top: 2.5rem;
+    padding-bottom: 5rem;
+  }
+  @media (min-width: 640px) {
+    .landing-journey-chapter--after-range {
+      padding-top: 3rem;
+      padding-bottom: 6rem;
+    }
+  }
+
+  .landing-trail-section {
+    scroll-margin-top: 4rem;
+  }
+
+  .landing-spine-peek-gutter {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #fff 0,
+      #fff max(0%, calc(50% - 2.6rem)),
+      transparent calc(50% - 0.2rem),
+      transparent calc(50% + 0.2rem),
+      #fff min(100%, calc(50% + 2.6rem)),
+      #fff 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #fff 0,
+      #fff max(0%, calc(50% - 2.6rem)),
+      transparent calc(50% - 0.2rem),
+      transparent calc(50% + 0.2rem),
+      #fff min(100%, calc(50% + 2.6rem)),
+      #fff 100%
     );
   }
 
   /* ── Glassmorphic card ─────────────────────────────────────────── */
   .landing-glass {
-    background: hsl(var(--card) / 0.6);
+    background: hsl(var(--card) / 0.94);
     backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid hsl(var(--border) / 0.6);
     box-shadow:
       0 8px 32px -8px hsl(var(--primary) / 0.25),
       inset 0 1px 0 hsl(var(--foreground) / 0.04);
+  }
+
+  .landing-beacon-lit {
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.28),
+      0 34px 90px -36px hsl(var(--primary) / 0.7);
+  }
+
+  html[data-motion="reduced"] .landing-fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html[data-motion="reduced"] .landing-trail-path,
+  html[data-motion="reduced"] .landing-flag,
+  html[data-motion="reduced"] .landing-beacon-light,
+  html[data-motion="reduced"] .landing-beacon-ripple,
+  html[data-motion="reduced"] .landing-badge-dot::after {
+    animation: none !important;
+  }
+
+  @media (max-width: 640px) {
+    .landing-range-copy {
+      padding-top: 24svh;
+    }
+    .landing-trail-section {
+      min-height: auto;
+    }
+    .landing-hero-section {
+      min-height: 100dvh;
+    }
+    .landing-hero-copy {
+      width: min(100%, 36rem);
+    }
+    .landing-journey-spine {
+      opacity: 0.55 !important;
+    }
+    .landing-journey-spine__column {
+      max-width: 220px;
+    }
+    .landing-journey-spine__track {
+      stroke-width: 5px;
+    }
+    .landing-journey-spine__progress {
+      stroke-width: 3.5px;
+    }
+    .landing-journey-spine__column::before {
+      width: 0.95rem;
+      height: 0.95rem;
+    }
+    .landing-journey-spine__traveler {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+    .landing-scroll-cue {
+      margin-top: 2.5rem;
+    }
+  }
+  .dark .landing-glass {
+    background: hsl(var(--card) / 0.92);
+  }
+
+  @media (max-width: 380px) {
+    .landing-hero-section {
+      padding-left: 0.875rem;
+      padding-right: 0.875rem;
+    }
+    .landing-hero-copy h1 {
+      font-size: 1.875rem;
+      line-height: 1.08;
+    }
+    .landing-hero-eyebrow {
+      margin-bottom: 0.75rem;
+      padding-inline: 0.75rem;
+    }
+    .landing-hero-copy p {
+      margin-top: 0.875rem;
+      font-size: 0.98rem;
+    }
+    .landing-hero-actions {
+      margin-top: 1rem;
+    }
+    .landing-scroll-cue {
+      margin-top: 1rem;
+    }
+  }
+
+  @media (max-height: 720px) and (min-width: 641px) {
+    .landing-hero-section {
+      padding-top: 4.75rem;
+      padding-bottom: 1.25rem;
+    }
+    .landing-hero-eyebrow {
+      margin-bottom: 1rem;
+    }
+    .landing-hero-copy h1 {
+      font-size: 4.25rem;
+      line-height: 1.04;
+    }
+    .landing-hero-copy p {
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    .landing-hero-actions {
+      margin-top: 1.25rem;
+    }
+    .landing-scroll-cue {
+      margin-top: 1.25rem;
+    }
+  }
+
+  @media (max-height: 620px) and (min-width: 641px) {
+    .landing-hero-copy h1 {
+      font-size: 3.5rem;
+    }
+    .landing-hero-copy p {
+      max-width: 34rem;
+    }
+  }
+
+  @media (min-width: 2200px) {
+    .landing-hero-copy {
+      max-width: 72rem;
+    }
+    .landing-hero-copy h1 {
+      font-size: 6rem;
+      line-height: 1.05;
+    }
+    .landing-hero-copy p {
+      max-width: 44rem;
+      font-size: 1.35rem;
+    }
+    .landing-hero-actions {
+      margin-top: 2.5rem;
+    }
   }
 }
