@@ -25,7 +25,7 @@ const SIGNAL_NODES: SignalNode[] = [
     detail:
       "Share one link, bring late joiners in fast, and keep the plan anchored to a single trip.",
     Icon: UserPlus,
-    position: { x: "18%", y: "24%" },
+    position: { x: "22%", y: "22%" },
   },
   {
     id: "viewer",
@@ -34,7 +34,7 @@ const SIGNAL_NODES: SignalNode[] = [
     detail:
       "Give parents, drivers, or tentative friends a read-only view so the itinerary stays clean.",
     Icon: Eye,
-    position: { x: "78%", y: "20%" },
+    position: { x: "78%", y: "22%" },
   },
   {
     id: "members",
@@ -43,7 +43,7 @@ const SIGNAL_NODES: SignalNode[] = [
     detail:
       "Everyone sees the same source of truth as the route changes, the crate fills, and the split updates.",
     Icon: Users2,
-    position: { x: "74%", y: "74%" },
+    position: { x: "78%", y: "78%" },
   },
   {
     id: "admins",
@@ -102,7 +102,7 @@ export function CrewSignal() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,hsl(var(--primary)/0.14),transparent_38%),linear-gradient(180deg,transparent,hsl(var(--background)/0.18))]" />
 
           <div className="relative grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="relative min-h-[24rem] overflow-hidden rounded-[1.75rem] border border-border/50 bg-background/25">
+            <div className="relative aspect-square w-full max-w-[32rem] mx-auto overflow-hidden rounded-[1.75rem] border border-border/50 bg-background/25">
               <svg className="absolute inset-0 h-full w-full" aria-hidden>
                 {SIGNAL_NODES.map((node) => (
                   <line
@@ -118,14 +118,14 @@ export function CrewSignal() {
                 ))}
               </svg>
 
-              <div className="absolute left-1/2 top-1/2 z-10 w-40 -translate-x-1/2 -translate-y-1/2 rounded-[1.5rem] border border-primary/30 bg-card/85 px-4 py-5 text-center shadow-[0_24px_54px_-32px_hsl(var(--primary)/0.55)] backdrop-blur-sm">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                  <Users2 className="h-5 w-5" />
+              <div className="absolute left-1/2 top-1/2 z-10 w-[28%] min-w-[7.5rem] max-w-[11rem] -translate-x-1/2 -translate-y-1/2 rounded-[1.5rem] border border-primary/30 bg-card/85 px-3 py-4 text-center shadow-[0_24px_54px_-32px_hsl(var(--primary)/0.55)] backdrop-blur-sm sm:px-4 sm:py-5">
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary sm:mb-3 sm:h-12 sm:w-12">
+                  <Users2 className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground sm:text-[10px]">
                   Beacon Trip
                 </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">
+                <p className="mt-1 text-xs font-semibold text-foreground sm:text-sm">
                   Shared plan
                 </p>
               </div>
@@ -139,7 +139,7 @@ export function CrewSignal() {
                     onFocus={() => setActiveId(node.id)}
                     onMouseEnter={() => setActiveId(node.id)}
                     onClick={() => setActiveId(node.id)}
-                    className={`absolute z-20 w-32 -translate-x-1/2 -translate-y-1/2 rounded-2xl border px-3 py-3 text-left outline-none transition-[transform,border-color,box-shadow,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`absolute z-20 w-[26%] min-w-[6.5rem] max-w-[8.5rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border px-2.5 py-2.5 text-left outline-none transition-[transform,border-color,box-shadow,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-ring sm:px-3 sm:py-3 ${
                       selected
                         ? "border-primary/45 bg-card/90 shadow-[0_24px_48px_-28px_hsl(var(--primary)/0.6)]"
                         : "border-border/60 bg-card/72 hover:-translate-y-[52%] hover:border-primary/30"
@@ -150,13 +150,13 @@ export function CrewSignal() {
                       transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
                   >
-                    <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                      <node.Icon className="h-4 w-4" />
+                    <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl bg-primary/12 text-primary sm:mb-2 sm:h-9 sm:w-9">
+                      <node.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
-                    <p className="text-xs font-semibold text-foreground">
+                    <p className="text-[11px] font-semibold leading-tight text-foreground sm:text-xs">
                       {node.label}
                     </p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground sm:text-[11px]">
                       {node.id === "viewer" ? "Follow-only" : "Crew-ready"}
                     </p>
                   </button>
