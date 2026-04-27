@@ -723,8 +723,8 @@
   }
   .landing-journey-spine__traveler {
     position: absolute;
-    top: var(--traveler-y, 1.5%);
-    left: var(--traveler-x, 50%);
+    top: 0;
+    left: 0;
     z-index: 2;
     width: 1.5rem;
     height: 1.5rem;
@@ -732,7 +732,7 @@
     transform: translate(-50%, -50%);
     pointer-events: none;
     filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.65));
-    contain: layout paint;
+    contain: strict;
     will-change: transform, opacity;
   }
   .landing-journey-spine__traveler-halo {

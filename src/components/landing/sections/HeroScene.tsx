@@ -513,14 +513,14 @@ function SceneContents({
       {colors.isDark ? (
         <StarField
           active={active}
-          count={qualityTier === "balanced" ? (isMobile ? 420 : 880) : isMobile ? 700 : 1400}
+          count={qualityTier === "balanced" ? (isMobile ? 420 : 600) : isMobile ? 700 : 900}
           foreground={palette.foreground}
           primary={palette.primary}
         />
       ) : (
         <PollenField
           active={active}
-          count={qualityTier === "balanced" ? (isMobile ? 60 : 120) : isMobile ? 90 : 180}
+          count={qualityTier === "balanced" ? (isMobile ? 60 : 80) : isMobile ? 90 : 110}
           primary={palette.primary}
           secondary={palette.secondary}
         />
@@ -565,8 +565,8 @@ export function HeroScene({ onReady }: { onReady?: () => void }) {
       ? [1, 1]
       : [1, 1.15]
     : heroTier === "balanced"
-      ? [1, 1.18]
-      : [1, 1.35];
+      ? [1, 1.0]
+      : [1, 1.2];
 
   return (
     <div ref={ref} className="absolute inset-0">

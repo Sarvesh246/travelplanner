@@ -189,7 +189,7 @@ function JourneySpine({
     }
 
     let nextProgress = targetPoint.progress;
-    const maxScreenStep = 24;
+    const maxScreenStep = Math.max(24, svgRect.width * 0.018);
 
     if (screenDistanceFromPrevious(targetPoint.progress) > maxScreenStep) {
       let low = previousProgress;
@@ -222,8 +222,9 @@ function JourneySpine({
     displayedProgressRef.current = point.progress;
     displayedPathProgress.set(point.progress);
 
-    node.style.setProperty("--traveler-x", `${point.x}%`);
-    node.style.setProperty("--traveler-y", `${point.y}%`);
+    const travelerX = (point.x / 100) * svgRect.width;
+    const travelerY = (point.y / 100) * svgRect.height;
+    node.style.transform = `translate(${travelerX}px, ${travelerY}px) translate(-50%, -50%)`;
   }, [displayedPathProgress, getCachedSvgRect, runtime.viewportHeight]);
 
   useEffect(() => {
