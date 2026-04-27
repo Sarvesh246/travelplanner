@@ -169,7 +169,7 @@ export function CrewSignal() {
               initial={motionEnabled ? { opacity: 0, y: 10 } : false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col justify-between rounded-[1.75rem] border border-border/60 bg-card/72 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05)]"
+              className="flex min-h-[26rem] flex-col justify-between rounded-[1.75rem] border border-border/60 bg-card/72 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05)]"
             >
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
