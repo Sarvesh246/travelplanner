@@ -1,32 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getRequestOrigin } from "@/lib/app-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function redirectToApp(request: Request, path: string) {
-  const { origin } = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-  const isLocalEnv = process.env.NODE_ENV === "development";
+  return NextResponse.redirect(new URL(path, getRequestOrigin(request)));
+}
 
-  if (isLocalEnv) {
-    return NextResponse.redirect(`${origin}${path}`);
-  }
-  if (forwardedHost) {
-    return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${path}`);
-  }
-  return NextResponse.redirect(`${origin}${path}`);
+function getSafeNext(searchParams: URLSearchParams): string {
+  const next = searchParams.get("next") ?? "/dashboard";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = getSafeNext(searchParams);
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth-failed`);
+    return redirectToApp(request, "/login?error=auth-failed");
   }
 
   try {
@@ -34,7 +29,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error || !data.user) {
-      return NextResponse.redirect(`${origin}/login?error=auth-failed`);
+      return redirectToApp(request, "/login?error=auth-failed");
     }
 
     const dbUrl = process.env.DATABASE_URL?.trim();
@@ -74,6 +69,6 @@ export async function GET(request: Request) {
     return redirectToApp(request, next);
   } catch (e) {
     console.error("[auth/callback] Unexpected error:", e);
-    return NextResponse.redirect(`${origin}/login?error=auth-failed`);
+    return redirectToApp(request, "/login?error=auth-failed");
   }
 }

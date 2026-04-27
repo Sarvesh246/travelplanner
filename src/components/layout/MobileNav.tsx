@@ -26,7 +26,7 @@ export function MobileNav({ tripId }: MobileNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 pb-safe backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/75 bg-background/90 pb-safe shadow-[0_-14px_36px_-30px_hsl(var(--primary)/0.7)] backdrop-blur-xl md:hidden"
       aria-label="Trip sections"
     >
       <div className="flex px-[max(0.25rem,env(safe-area-inset-left,0px))] pr-[max(0.25rem,env(safe-area-inset-right,0px))]">
@@ -43,10 +43,13 @@ export function MobileNav({ tripId }: MobileNavProps) {
               href={item.href}
               prefetch
               className={cn(
-                "flex-1 flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] font-medium transition-colors",
+                "relative flex-1 flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] font-medium transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
+              {isActive && (
+                <span className="absolute top-1 h-1 w-1 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.8)]" aria-hidden />
+              )}
               <Icon className="w-5 h-5" />
               {item.label}
             </Link>

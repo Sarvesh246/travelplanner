@@ -8,6 +8,7 @@ import {
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
 import { sendInviteEmail } from "@/lib/email/send-invite";
+import { getAppUrl } from "@/lib/app-url";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -56,11 +57,7 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
   });
 
   revalidatePath(`/trips/${tripId}/members`);
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.APP_URL ??
-    "http://localhost:3000";
-  const inviteLink = `${appUrl}/invite/${invite.token}`;
+  const inviteLink = getAppUrl(`/invite/${invite.token}`);
 
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },

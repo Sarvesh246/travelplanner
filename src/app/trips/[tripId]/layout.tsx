@@ -60,12 +60,12 @@ export default async function TripLayout({
         user: m.user,
       }))}
     >
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="app-workspace-shell min-h-screen flex flex-col bg-background">
         <TopNav user={profile} />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <TripSidebar tripId={tripId} tripName={trip.name} />
           <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-5xl px-3 py-6 pb-28 min-[400px]:px-4 sm:px-6 md:pb-6">
+            <div className="mx-auto max-w-5xl px-3 py-5 pb-28 min-[400px]:px-4 sm:px-6 sm:py-6 md:pb-6">
               <ViewerReadOnlyBanner />
               {children}
             </div>

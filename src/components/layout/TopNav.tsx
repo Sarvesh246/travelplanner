@@ -62,7 +62,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
 
   return (
     <header
-      className="sticky top-0 z-40 flex min-h-14 h-14 min-w-0 items-center gap-1.5 border-b border-border bg-background/80 pt-[max(0px,env(safe-area-inset-top,0px))] backdrop-blur-md px-2.5 sm:gap-3 sm:px-4"
+      className="sticky top-0 z-40 flex min-h-14 h-14 min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl px-2.5 sm:gap-3 sm:px-4"
     >
       <Link
         href={ROUTES.dashboard}
@@ -83,7 +83,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           onClick={handleOpenPalette}
           title={`Search commands (${isMac ? "⌘K" : "Ctrl K"} or /)`}
           aria-label="Open command palette"
-          className="hidden h-9 min-h-10 min-w-0 w-full max-w-md flex-1 items-center gap-2 rounded-lg border border-transparent bg-muted/70 px-3 text-left text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted focus-ring md:inline-flex"
+          className="app-glass hidden h-9 min-h-10 min-w-0 w-full max-w-md flex-1 items-center gap-2 rounded-lg px-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/25 hover:bg-card/90 hover:text-foreground focus-ring md:inline-flex"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="min-w-0 flex-1 truncate">Search or jump to…</span>
@@ -95,7 +95,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           onClick={handleOpenPalette}
           title="Search (/)"
           aria-label="Open command palette"
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-ring md:hidden"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-ring md:hidden"
         >
           <Search className="h-4 w-4" />
         </button>
@@ -119,7 +119,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full z-50 mt-2 max-h-[min(70vh,28rem)] w-[min(16rem,calc(100vw-1rem))] max-w-[calc(100dvw-1rem)] overflow-y-auto rounded-xl border border-border bg-popover py-1 text-left shadow-lg animate-in fade-in slide-in-from-top-1 duration-150"
+              className="app-glass absolute right-0 top-full z-50 mt-2 max-h-[min(70vh,28rem)] w-[min(16rem,calc(100vw-1rem))] max-w-[calc(100dvw-1rem)] overflow-y-auto rounded-xl py-1 text-left shadow-lg animate-in fade-in slide-in-from-top-1 duration-150"
             >
               <div className="mb-1 border-b border-border px-2.5 py-2.5">
                 <p className="text-sm font-medium truncate">{user.name}</p>

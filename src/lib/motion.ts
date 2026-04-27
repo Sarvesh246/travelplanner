@@ -2,19 +2,19 @@ import { Variants } from "framer-motion";
 
 export const fadeUp: Variants = {
   initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.15 } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.16 } },
 };
 
 export const fadeIn: Variants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.18 } },
+  animate: { opacity: 1, transition: { duration: 0.22 } },
   exit: { opacity: 0, transition: { duration: 0.15 } },
 };
 
 export const scaleIn: Variants = {
-  initial: { opacity: 0, scale: 0.95 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.18, ease: "easeOut" } },
+  initial: { opacity: 0, scale: 0.97, y: 6 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
   exit: { opacity: 0, scale: 0.97, transition: { duration: 0.12 } },
 };
 
@@ -44,7 +44,7 @@ export const fastStagger: Variants = {
 
 export const listItem: Variants = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
   exit: { opacity: 0, x: -12, transition: { duration: 0.15 } },
 };
 

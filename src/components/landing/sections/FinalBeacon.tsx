@@ -8,7 +8,6 @@ import { ArrowRight } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { BeaconLogo } from "@/components/shared/BeaconLogo";
 import { useMotionEnabled } from "../hooks/useIsMobile";
-import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
 
 export function FinalBeacon() {
   const router = useRouter();
@@ -39,10 +38,6 @@ export function FinalBeacon() {
   return (
     <motion.section
       className="landing-journey-chapter max-w-5xl"
-      initial={{ opacity: 0, y: 64 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={LANDING_SECTION_VIEWPORT}
-      transition={{ type: "spring", stiffness: 78, damping: 22 }}
     >
       <div
         className={`relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-secondary/15 to-success/15 p-8 transition-colors sm:p-16 ${

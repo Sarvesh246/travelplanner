@@ -61,7 +61,7 @@ export function StopList({ tripId, stops, onSelectStop }: StopListProps) {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
+        <div className="relative space-y-3 pl-5 before:absolute before:left-2 before:top-5 before:bottom-5 before:w-px before:bg-gradient-to-b before:from-primary/15 before:via-primary/45 before:to-primary/15">
           {items.map((stop, index) => (
             <SortableStop
               key={stop.id}

@@ -51,10 +51,10 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
 
   return (
     <>
-      <div className="bg-card border border-border rounded-2xl overflow-hidden hover:border-border/80 transition-colors">
+      <div className="app-surface app-hover-lift rounded-2xl overflow-hidden">
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
               <Receipt className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">

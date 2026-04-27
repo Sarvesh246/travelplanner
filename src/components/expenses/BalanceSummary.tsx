@@ -18,9 +18,9 @@ export function BalanceSummary({ balances, settlements, currency }: BalanceSumma
   const lookup = new Map(members.map((m) => [m.userId, m.user]));
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5">
+    <div className="app-surface rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
           <Scale className="w-4 h-4 text-primary" />
         </div>
         <h3 className="font-semibold text-sm">Balance</h3>

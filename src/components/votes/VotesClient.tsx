@@ -27,13 +27,14 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
   return (
     <>
       <PageHeader
+        eyebrow="Crew decisions"
         title="Votes"
         description="Gather opinions and reach decisions as a group"
         actions={
           canEdit && (
             <button
               onClick={() => setCreateOpen(true)}
-              className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="app-hover-lift flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               New Poll
@@ -42,7 +43,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
         }
       />
 
-      <div className="mb-5 flex w-full max-w-md gap-1 rounded-xl bg-muted/60 p-1 min-[480px]:w-fit min-[480px]:max-w-none">
+      <div className="app-glass mb-5 flex w-full max-w-md gap-1 rounded-xl p-1 min-[480px]:w-fit min-[480px]:max-w-none">
         {(["open", "closed"] as const).map((t) => (
           <button
             key={t}
@@ -73,7 +74,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
             tab === "open" && (
               <button
                 onClick={() => setCreateOpen(true)}
-                className="mt-2 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="app-hover-lift mt-2 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-4 h-4" /> Create first poll
               </button>

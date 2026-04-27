@@ -36,14 +36,13 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
 
   return (
     <aside
-      className="hidden w-56 min-h-0 shrink-0 flex-col self-stretch overflow-y-auto border-r border-sidebar-border md:flex"
-      style={{ background: "hsl(var(--sidebar-bg))" }}
+      className="hidden w-56 min-h-0 shrink-0 flex-col self-stretch overflow-y-auto border-r border-sidebar-border/80 bg-sidebar/[0.88] shadow-[16px_0_36px_-34px_hsl(var(--primary)/0.8)] backdrop-blur-xl md:flex"
     >
       {/* Back to dashboard */}
-      <div className="p-3 border-b border-sidebar-border">
+      <div className="p-3 border-b border-sidebar-border/80">
         <Link
           href={ROUTES.dashboard}
-          className="flex items-center gap-2 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-2 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors hover:bg-[hsl(var(--sidebar-fg)/0.08)]"
           style={{ color: "hsl(var(--sidebar-fg) / 0.7)" }}
         >
           <ChevronLeft className="w-3.5 h-3.5" />
@@ -52,9 +51,10 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
       </div>
 
       {/* Trip name */}
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="p-4 border-b border-sidebar-border/80">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+          <div className="relative w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]">
+            <span className="app-waypoint absolute -right-1 -top-1 h-2 w-2" aria-hidden />
             <Plane className="w-4 h-4 text-primary rotate-45" />
           </div>
           <p
@@ -67,7 +67,7 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 p-3 space-y-0.5">
+      <nav className="flex-1 p-3 space-y-1">
         {items.map((item) => {
           const itineraryHref = ROUTES.tripItinerary(tripId);
           const isActive =
@@ -82,17 +82,20 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
               href={item.href}
               prefetch
               className={cn(
-                "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-100",
+                "relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
                   ? "text-[hsl(var(--sidebar-accent-fg))]"
-                  : "text-[hsl(var(--sidebar-fg))] hover:bg-[hsl(var(--sidebar-fg)/0.08)]"
+                  : "text-[hsl(var(--sidebar-fg))] hover:bg-[hsl(var(--sidebar-fg)/0.08)] hover:text-[hsl(var(--sidebar-accent-fg))]"
               )}
             >
               {isActive && (
-                <div
-                  className="absolute inset-0 rounded-lg bg-[hsl(var(--sidebar-accent))]"
-                  aria-hidden
-                />
+                <>
+                  <div
+                    className="absolute inset-0 rounded-lg bg-[hsl(var(--sidebar-accent))]"
+                    aria-hidden
+                  />
+                  <div className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-primary" aria-hidden />
+                </>
               )}
               <Icon className="w-4 h-4 shrink-0 relative z-10" />
               <span className="relative z-10">{item.label}</span>

@@ -111,7 +111,7 @@ function TripCardImpl({
 
   return (
     <div className="group">
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-[transform,box-shadow] duration-200 ease-out will-change-transform hover:-translate-y-1 hover:shadow-md motion-reduce:transform-none motion-reduce:transition-none">
+      <div className="app-surface app-hover-lift rounded-2xl overflow-hidden will-change-transform motion-reduce:transform-none motion-reduce:transition-none">
         {/* Cover: link to trip + optional upload for editors */}
         <div className="h-36 relative overflow-hidden bg-muted/30">
           {trip.coverImageUrl ? (
@@ -150,6 +150,8 @@ function TripCardImpl({
             className="absolute inset-0 z-10"
             aria-label={`Open ${trip.name}`}
           />
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card/78 to-transparent" aria-hidden />
 
           {canDelete && (
             <button
@@ -291,7 +293,8 @@ function TripCardImpl({
 
           {days !== null && days >= 0 && (
             <div className="mt-3 pt-3 border-t border-border">
-              <p className="text-xs font-medium text-primary">
+              <p className="flex items-center gap-2 text-xs font-medium text-primary">
+                <span className="app-waypoint h-1.5 w-1.5" aria-hidden />
                 {days === 0 ? "Trip starts today! 🎉" : `${days} day${days !== 1 ? "s" : ""} to go`}
               </p>
             </div>

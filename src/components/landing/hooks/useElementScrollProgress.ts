@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, type RefObject } from "react";
-import { useMotionValue } from "framer-motion";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type RefObject,
+} from "react";
+import { useMotionValue, useMotionValueEvent } from "framer-motion";
+import { useLandingMotionRuntime } from "./useLandingMotionRuntime";
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -12,40 +19,77 @@ export function useElementScrollProgress(
   startViewportRatio: number,
   endViewportRatio: number
 ) {
+  const runtime = useLandingMotionRuntime();
   const progress = useMotionValue(0);
+  const boundsRef = useRef<{ top: number; bottom: number } | null>(null);
+  const measureFrameRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    let frame = 0;
+  const updateProgress = useCallback(
+    (scrollY: number, viewportHeight: number) => {
+      const bounds = boundsRef.current;
+      if (!bounds) return;
 
-    function updateProgress() {
-      frame = 0;
-      const target = targetRef.current;
-      if (!target) return;
-
-      const rect = target.getBoundingClientRect();
-      const scrollY = window.scrollY || window.pageYOffset;
-      const start = scrollY + rect.top - window.innerHeight * startViewportRatio;
-      const end = scrollY + rect.bottom - window.innerHeight * endViewportRatio;
+      const start = bounds.top - viewportHeight * startViewportRatio;
+      const end = bounds.bottom - viewportHeight * endViewportRatio;
       const distance = Math.max(1, end - start);
 
       progress.set(clamp01((scrollY - start) / distance));
-    }
+    },
+    [endViewportRatio, progress, startViewportRatio]
+  );
 
-    function scheduleUpdate() {
-      if (frame) return;
-      frame = window.requestAnimationFrame(updateProgress);
-    }
+  const measureBounds = useCallback(() => {
+    measureFrameRef.current = null;
+    const target = targetRef.current;
+    if (!target) return;
 
-    updateProgress();
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", scheduleUpdate);
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", scheduleUpdate);
+    const rect = target.getBoundingClientRect();
+    const scrollY = runtime.scrollY.get();
+    boundsRef.current = {
+      top: scrollY + rect.top,
+      bottom: scrollY + rect.bottom,
     };
-  }, [progress, startViewportRatio, endViewportRatio, targetRef]);
+    updateProgress(scrollY, runtime.viewportHeight.get());
+  }, [runtime.scrollY, runtime.viewportHeight, targetRef, updateProgress]);
+
+  const scheduleMeasure = useCallback(() => {
+    if (measureFrameRef.current !== null) return;
+    measureFrameRef.current = window.requestAnimationFrame(measureBounds);
+  }, [measureBounds]);
+
+  useLayoutEffect(() => {
+    measureBounds();
+  }, [measureBounds]);
+
+  useEffect(() => {
+    const target = targetRef.current;
+    if (!target) return;
+
+    const observer = new ResizeObserver(scheduleMeasure);
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [scheduleMeasure, targetRef]);
+
+  useEffect(() => {
+    return () => {
+      if (measureFrameRef.current !== null) {
+        window.cancelAnimationFrame(measureFrameRef.current);
+      }
+    };
+  }, []);
+
+  useMotionValueEvent(runtime.scrollY, "change", (latest) => {
+    updateProgress(latest, runtime.viewportHeight.get());
+  });
+
+  useMotionValueEvent(runtime.viewportHeight, "change", () => {
+    scheduleMeasure();
+  });
+
+  useMotionValueEvent(runtime.viewportWidth, "change", () => {
+    scheduleMeasure();
+  });
 
   return progress;
 }

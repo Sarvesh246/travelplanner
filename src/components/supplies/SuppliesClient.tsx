@@ -31,13 +31,14 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
   return (
     <>
       <PageHeader
+        eyebrow="Pack list"
         title="Supplies"
         description={`${items.length} item${items.length !== 1 ? "s" : ""} tracked`}
         actions={
           canEdit && (
             <button
               onClick={() => setAddOpen(true)}
-              className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="app-hover-lift flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Item
@@ -57,7 +58,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
             canEdit && (
               <button
                 onClick={() => setAddOpen(true)}
-                className="mt-2 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="app-hover-lift mt-2 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-4 h-4" /> Add first item
               </button>

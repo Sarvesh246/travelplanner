@@ -4,14 +4,14 @@ import {
   AnimatePresence,
   motion,
   Reorder,
-  useMotionValue,
   useTransform,
 } from "framer-motion";
 import { useMemo, useRef, useState } from "react";
+import { useCoarsePointer } from "../hooks/useIsMobile";
+import { usePointerTilt } from "../hooks/usePointerTilt";
 import { MapPin, Mountain, Tent, Trees, Waves } from "lucide-react";
 import { useElementScrollProgress } from "../hooks/useElementScrollProgress";
 import { useMotionEnabled } from "../hooks/useIsMobile";
-import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
 
 type Stop = {
   id: string;
@@ -92,20 +92,22 @@ function StopCard({
   stop: Stop;
   total: number;
 }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateY = useTransform(x, [-60, 60], [-10, 10]);
-  const rotateX = useTransform(y, [-60, 60], [8, -8]);
+  const coarsePointer = useCoarsePointer();
+  const { primePointerTarget, reset, rotateX, rotateY, schedulePointerMove } =
+    usePointerTilt({
+      bounds: {
+        x: [8, -8],
+        y: [-10, 10],
+      },
+      inputRange: {
+        x: 60,
+        y: 60,
+      },
+    });
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set(e.clientX - rect.left - rect.width / 2);
-    y.set(e.clientY - rect.top - rect.height / 2);
-  }
-
-  function resetTilt() {
-    x.set(0);
-    y.set(0);
+    if (coarsePointer) return;
+    schedulePointerMove(e);
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -138,10 +140,13 @@ function StopCard({
         onFocus={() => setActive(stop)}
         onBlur={() => setActive(null)}
         onKeyDown={handleKeyDown}
-        onMouseEnter={() => setActive(stop)}
+        onMouseEnter={(event) => {
+          primePointerTarget(event.currentTarget);
+          setActive(stop);
+        }}
         onMouseLeave={() => {
           setActive(null);
-          resetTilt();
+          reset();
         }}
         onMouseMove={handleMouseMove}
         style={{ rotateX, rotateY, transformPerspective: 850 }}
@@ -214,10 +219,6 @@ export function TrailBuilder() {
       id="trail"
       ref={ref}
       className="landing-trail-section landing-journey-chapter landing-journey-chapter--after-range max-w-6xl flex flex-col"
-      initial={{ opacity: 0, y: 64 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={LANDING_SECTION_VIEWPORT}
-      transition={{ type: "spring", stiffness: 78, damping: 22 }}
     >
       <div className="landing-trail-heading mb-12 text-center">
         <p className="landing-kicker mb-5">Chapter 02 - The Trail</p>

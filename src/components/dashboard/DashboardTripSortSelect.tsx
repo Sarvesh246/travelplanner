@@ -33,7 +33,7 @@ export function DashboardTripSortSelect() {
   }
 
   return (
-    <div className="flex min-w-0 max-w-full shrink-0 items-center gap-2 text-sm text-muted-foreground">
+    <div className="app-glass flex min-w-0 max-w-full shrink-0 items-center gap-2 rounded-xl px-2.5 py-1.5 text-sm text-muted-foreground">
       <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden />
       <span className="shrink-0">Sort by</span>
       <Select value={current} onValueChange={onValueChange}>

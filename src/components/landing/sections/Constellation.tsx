@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useMotionValue, useTransform } from "framer-motion";
-import { useState } from "react";
-import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
+import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { usePointerTilt } from "../hooks/usePointerTilt";
 
 type Star = {
   id: string;
@@ -92,27 +92,38 @@ const DUST = Array.from({ length: 36 }, (_, i) => ({
 
 export function Constellation() {
   const [active, setActive] = useState<Star>(STARS[0]);
-  const [dragging, setDragging] = useState(false);
-  const tilt = useMotionValue(0);
-  const rotateY = useTransform(tilt, [-320, 320], [-14, 14]);
-  const rotateX = useTransform(tilt, [-320, 320], [2, -2]);
+  const draggingRef = useRef(false);
+  const { primePointerTarget, reset, rotateX, rotateY, schedulePointerMove } =
+    usePointerTilt({
+      bounds: {
+        x: [2, -2],
+        y: [-14, 14],
+      },
+      inputRange: {
+        x: 320,
+        y: 320,
+      },
+      resolveOffset: ({ bounds, clientX }) => {
+        const offset = clientX - bounds.left - bounds.width / 2;
+        const effectiveOffset = draggingRef.current ? offset : offset * 0.35;
+        return {
+          x: effectiveOffset,
+          y: effectiveOffset,
+        };
+      },
+    });
 
   function byId(id: string) {
     return STARS.find((star) => star.id === id)!;
   }
 
-  function updateTilt(clientX: number, rect: DOMRect, activeDrag: boolean) {
-    const offset = clientX - rect.left - rect.width / 2;
-    tilt.set(activeDrag ? offset : offset * 0.35);
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    schedulePointerMove(event);
   }
 
   return (
     <motion.section
       className="landing-journey-chapter max-w-6xl"
-      initial={{ opacity: 0, y: 64 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={LANDING_SECTION_VIEWPORT}
-      transition={{ type: "spring", stiffness: 78, damping: 22 }}
     >
       <div className="mb-12 text-center">
         <p className="landing-kicker mb-5">Chapter 06 - The Crew</p>
@@ -127,20 +138,21 @@ export function Constellation() {
       <div
         className="landing-glass landing-constellation relative h-[30rem] cursor-grab overflow-hidden rounded-3xl active:cursor-grabbing"
         onPointerDown={(event) => {
-          setDragging(true);
+          draggingRef.current = true;
+          primePointerTarget(event.currentTarget);
           event.currentTarget.setPointerCapture(event.pointerId);
-          updateTilt(event.clientX, event.currentTarget.getBoundingClientRect(), true);
         }}
-        onPointerMove={(event) => {
-          updateTilt(event.clientX, event.currentTarget.getBoundingClientRect(), dragging);
+        onPointerEnter={(event) => {
+          primePointerTarget(event.currentTarget);
         }}
+        onPointerMove={handlePointerMove}
         onPointerUp={(event) => {
-          setDragging(false);
+          draggingRef.current = false;
           event.currentTarget.releasePointerCapture(event.pointerId);
         }}
         onPointerLeave={() => {
-          setDragging(false);
-          tilt.set(0);
+          draggingRef.current = false;
+          reset();
         }}
       >
         <motion.div
@@ -166,7 +178,7 @@ export function Constellation() {
               const A = byId(a);
               const B = byId(b);
               return (
-                <motion.line
+                <line
                   key={i}
                   x1={`${A.x}%`}
                   y1={`${A.y}%`}
@@ -174,10 +186,6 @@ export function Constellation() {
                   y2={`${B.y}%`}
                   stroke="hsl(var(--primary) / 0.32)"
                   strokeWidth="1.2"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  whileInView={{ pathLength: 1, opacity: 1 }}
-                  viewport={{ ...LANDING_SECTION_VIEWPORT, amount: 0.4 }}
-                  transition={{ delay: i * 0.04, duration: 0.45 }}
                 />
               );
             })}

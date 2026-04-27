@@ -48,13 +48,14 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
   return (
     <>
       <PageHeader
+        eyebrow="Crew access"
         title="Members"
         description={`${members.length} member${members.length !== 1 ? "s" : ""} in this trip`}
         actions={
           canManage && (
             <button
               onClick={() => setInviteOpen(true)}
-              className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="app-hover-lift flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <UserPlus className="w-4 h-4" />
               Invite
@@ -78,14 +79,14 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
 
       {pendingInvites.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Pending invites
           </h3>
           <div className="space-y-2">
             {pendingInvites.map((invite) => (
               <div
                 key={invite.id}
-                className="flex items-center gap-3 py-3 px-4 bg-card border border-border border-dashed rounded-xl"
+                className="app-glass flex items-center gap-3 rounded-xl border-dashed px-4 py-3"
               >
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Clock className="w-4 h-4 text-muted-foreground" />

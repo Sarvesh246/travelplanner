@@ -12,6 +12,7 @@ import {
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useIsMobile, useMotionEnabled } from "../hooks/useIsMobile";
+import { useLandingMotionRuntime } from "../hooks/useLandingMotionRuntime";
 import { useThemeColors } from "../hooks/useThemeColors";
 
 function toThreeColor(value: string) {
@@ -64,7 +65,10 @@ function SceneGpuReady({ onSaturated }: { onSaturated: () => void }) {
   const { gl, scene, camera } = useThree();
   const onSaturatedRef = useRef(onSaturated);
   const doneRef = useRef(false);
-  onSaturatedRef.current = onSaturated;
+
+  useLayoutEffect(() => {
+    onSaturatedRef.current = onSaturated;
+  }, [onSaturated]);
 
   useLayoutEffect(() => {
     if (doneRef.current) return;
@@ -92,25 +96,6 @@ function SceneGpuReady({ onSaturated }: { onSaturated: () => void }) {
   }, [gl, scene, camera]);
 
   return null;
-}
-
-function useViewportSize() {
-  const [viewport, setViewport] = useState({ width: 1280, height: 800 });
-
-  useEffect(() => {
-    function update() {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    }
-
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  return viewport;
 }
 
 function FloatingGroup({
@@ -367,7 +352,14 @@ function StarField({
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color={color} size={0.022} transparent opacity={0.62} sizeAttenuation />
+      <pointsMaterial
+        color={color}
+        depthWrite={false}
+        size={0.022}
+        transparent
+        opacity={0.62}
+        sizeAttenuation
+      />
     </points>
   );
 }
@@ -411,9 +403,50 @@ function PollenField({
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color={color} size={0.026} transparent opacity={0.48} sizeAttenuation />
+      <pointsMaterial
+        color={color}
+        depthWrite={false}
+        size={0.026}
+        transparent
+        opacity={0.48}
+        sizeAttenuation
+      />
     </points>
   );
+}
+
+function HeroPerformanceMonitor({
+  active,
+  onDegrade,
+}: {
+  active: boolean;
+  onDegrade: () => void;
+}) {
+  const sampleFramesRef = useRef(0);
+  const slowFramesRef = useRef(0);
+  const degradedRef = useRef(false);
+
+  useFrame((_, delta) => {
+    if (!active || degradedRef.current) return;
+
+    sampleFramesRef.current += 1;
+    if (delta > 1 / 48) {
+      slowFramesRef.current += 1;
+    }
+
+    if (sampleFramesRef.current < 45) return;
+
+    if (slowFramesRef.current >= 18) {
+      degradedRef.current = true;
+      onDegrade();
+      return;
+    }
+
+    sampleFramesRef.current = 0;
+    slowFramesRef.current = 0;
+  });
+
+  return null;
 }
 
 function SceneContents({
@@ -421,11 +454,13 @@ function SceneContents({
   compassScale,
   compassY,
   isMobile,
+  qualityTier,
 }: {
   active: boolean;
   compassScale: number;
   compassY: number;
   isMobile: boolean;
+  qualityTier: "full" | "balanced";
 }) {
   const colors = useThemeColors();
   const palette = useMemo(
@@ -478,14 +513,14 @@ function SceneContents({
       {colors.isDark ? (
         <StarField
           active={active}
-          count={isMobile ? 700 : 1800}
+          count={qualityTier === "balanced" ? (isMobile ? 420 : 880) : isMobile ? 700 : 1400}
           foreground={palette.foreground}
           primary={palette.primary}
         />
       ) : (
         <PollenField
           active={active}
-          count={isMobile ? 90 : 180}
+          count={qualityTier === "balanced" ? (isMobile ? 60 : 120) : isMobile ? 90 : 180}
           primary={palette.primary}
           secondary={palette.secondary}
         />
@@ -499,12 +534,14 @@ function SceneContents({
 export function HeroScene({ onReady }: { onReady?: () => void }) {
   const isMobile = useIsMobile();
   const motionEnabled = useMotionEnabled();
+  const runtime = useLandingMotionRuntime();
   const { ref, isVisible } = useCanvasVisibility();
-  const viewport = useViewportSize();
+  const viewport = runtime.viewport;
   const aspect = viewport.width / Math.max(1, viewport.height);
   const compactHeight = viewport.height < 700;
   const tallViewport = viewport.height > viewport.width * 1.35;
   const ultraWide = aspect > 2.15;
+  const heroTier = runtime.qualityTier;
   const compassScale = isMobile
     ? tallViewport
       ? 0.78
@@ -523,10 +560,18 @@ export function HeroScene({ onReady }: { onReady?: () => void }) {
 
   if (!motionEnabled) return <StaticHeroBackdrop />;
 
+  const dpr: [number, number] = isMobile
+    ? heroTier === "balanced"
+      ? [1, 1]
+      : [1, 1.15]
+    : heroTier === "balanced"
+      ? [1, 1.18]
+      : [1, 1.35];
+
   return (
     <div ref={ref} className="absolute inset-0">
       <Canvas
-        dpr={isMobile ? [1, 1.15] : [1, 1.35]}
+        dpr={dpr}
         camera={{ position: [0, 0, 5.5], fov: cameraFov }}
         gl={{ antialias: !isMobile, alpha: true, powerPreference: "high-performance" }}
         frameloop={isVisible ? "always" : "demand"}
@@ -540,6 +585,11 @@ export function HeroScene({ onReady }: { onReady?: () => void }) {
             compassScale={compassScale}
             compassY={compassY}
             isMobile={isMobile}
+            qualityTier={heroTier}
+          />
+          <HeroPerformanceMonitor
+            active={isVisible && heroTier === "full"}
+            onDegrade={runtime.downgradeQuality}
           />
           {onReady ? <SceneGpuReady onSaturated={onReady} /> : null}
         </Suspense>

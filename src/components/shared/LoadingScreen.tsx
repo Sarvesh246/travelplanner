@@ -28,9 +28,9 @@ export function LoadingScreen() {
       className="fixed inset-0 z-[100] flex items-center justify-center"
     >
       {/* Instant blur backdrop — does NOT animate in */}
-      <div className="absolute inset-0 bg-background/70 backdrop-blur-md" aria-hidden />
+      <div className="absolute inset-0 bg-background/[0.72] backdrop-blur-md" aria-hidden />
 
-      <div className="relative flex flex-col items-center gap-5 animate-in fade-in zoom-in-95 duration-150 ease-out">
+      <div className="app-glass relative flex flex-col items-center gap-5 rounded-2xl px-8 py-7 animate-in fade-in zoom-in-95 duration-150 ease-out">
         <div className="relative flex h-28 w-28 items-center justify-center">
           <span
             className="absolute inset-0 rounded-full bg-primary/15 animate-beacon-ping-slow motion-reduce:hidden"
@@ -54,6 +54,7 @@ export function LoadingScreen() {
           <p className="text-sm font-medium text-foreground">
             {message || "Loading…"}
           </p>
+          <span className="app-route-divider w-32" aria-hidden />
           <span className="sr-only">Please wait while we load this view.</span>
         </div>
       </div>

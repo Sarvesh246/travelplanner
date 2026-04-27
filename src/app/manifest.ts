@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const base = (() => {
   try {
-    return new URL(APP_URL);
+    return new URL(getAppOrigin());
   } catch {
     return new URL("http://localhost:3000");
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAppOrigin } from "@/lib/app-url";
 
 const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
 const SHARED_CACHE_HEADERS = {
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     limit: "5",
   });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppOrigin();
 
   try {
     const response = await fetch(`${NOMINATIM_SEARCH_URL}?${params}`, {

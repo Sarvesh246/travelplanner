@@ -9,7 +9,7 @@ export function ViewerReadOnlyBanner() {
 
   return (
     <div
-      className="mb-4 flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+      className="app-glass mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground"
       role="status"
     >
       <Eye className="w-4 h-4 shrink-0" aria-hidden />

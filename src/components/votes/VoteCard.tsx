@@ -106,7 +106,7 @@ export function VoteCard({ vote }: VoteCardProps) {
 
   return (
     <>
-      <div className="bg-card border border-border rounded-2xl p-5 transition-shadow duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_0_1.5px_hsl(var(--primary)/0.4),0_14px_44px_hsl(var(--primary)/0.2),0_0_64px_hsl(var(--primary)/0.3)]">
+      <div className="app-surface app-hover-lift rounded-2xl p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -193,7 +193,7 @@ export function VoteCard({ vote }: VoteCardProps) {
                 className={cn(
                   "relative w-full text-left px-3 py-2.5 rounded-xl border transition-all",
                   option.myVote
-                    ? "border-primary/60 bg-primary/5"
+                    ? "border-primary/60 bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.08)]"
                     : "border-border hover:border-border/80",
                   locked && "cursor-default",
                   !locked && !pending && "hover:bg-muted/40",

@@ -294,6 +294,197 @@
   .dark .role-viewer {
     background-color: hsl(var(--muted) / 0.25);
   }
+
+  /* Authenticated app surfaces -- quieter carry-through from the landing trail. */
+  .app-workspace-shell {
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
+    background:
+      radial-gradient(circle at 12% -10%, hsl(var(--primary) / 0.12), transparent 28rem),
+      radial-gradient(circle at 88% 6%, hsl(var(--secondary) / 0.16), transparent 24rem),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  .dark .app-workspace-shell {
+    background:
+      radial-gradient(circle at 14% -8%, hsl(var(--primary) / 0.13), transparent 30rem),
+      radial-gradient(circle at 92% 8%, hsl(var(--secondary) / 0.08), transparent 26rem),
+      linear-gradient(180deg, hsl(130 9% 7%), hsl(var(--background)) 18rem);
+  }
+
+  .app-workspace-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(115deg, transparent 0 44%, hsl(var(--primary) / 0.045) 44% 44.25%, transparent 44.25% 100%),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.03), transparent 18rem);
+    opacity: 0.8;
+  }
+
+  .dark .app-workspace-shell::before {
+    background-image:
+      linear-gradient(115deg, transparent 0 45%, hsl(var(--primary) / 0.065) 45% 45.25%, transparent 45.25% 100%),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.035), transparent 18rem);
+    opacity: 1;
+  }
+
+  .app-glass {
+    border: 1px solid hsl(var(--border) / 0.72);
+    background: hsl(var(--card) / 0.82);
+    box-shadow:
+      0 18px 44px -34px hsl(var(--primary) / 0.5),
+      inset 0 1px 0 hsl(var(--foreground) / 0.05);
+    backdrop-filter: blur(16px) saturate(130%);
+  }
+
+  .dark .app-glass {
+    border-color: hsl(var(--border) / 0.82);
+    background: hsl(var(--card) / 0.74);
+    box-shadow:
+      0 20px 54px -38px hsl(var(--primary) / 0.65),
+      inset 0 1px 0 hsl(var(--foreground) / 0.05);
+  }
+
+  .app-surface {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border) / 0.78);
+    background:
+      linear-gradient(135deg, hsl(var(--card) / 0.96), hsl(var(--card) / 0.82)),
+      radial-gradient(circle at 92% 10%, hsl(var(--primary) / 0.1), transparent 18rem);
+    box-shadow:
+      0 14px 34px -30px hsl(var(--primary) / 0.58),
+      inset 0 1px 0 hsl(var(--foreground) / 0.04);
+  }
+
+  .dark .app-surface {
+    background:
+      linear-gradient(135deg, hsl(var(--card) / 0.94), hsl(135 8% 16% / 0.84)),
+      radial-gradient(circle at 90% 8%, hsl(var(--primary) / 0.12), transparent 18rem);
+  }
+
+  .app-page-band {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .app-page-band {
+      padding: 1.125rem 1.25rem;
+    }
+  }
+
+  .app-page-band::before {
+    content: "";
+    position: absolute;
+    inset-inline: 1rem;
+    bottom: 0;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.1),
+      hsl(var(--primary) / 0.62),
+      hsl(var(--secondary) / 0.22)
+    );
+    opacity: 0.78;
+  }
+
+  .app-page-band::after {
+    content: "";
+    position: absolute;
+    right: clamp(1.25rem, 7vw, 5rem);
+    top: 0.85rem;
+    width: clamp(5rem, 16vw, 12rem);
+    height: clamp(5rem, 16vw, 12rem);
+    border-radius: 9999px;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 68%);
+    pointer-events: none;
+  }
+
+  .app-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: hsl(var(--primary));
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .app-waypoint {
+    display: inline-flex;
+    position: relative;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 9999px;
+    background: hsl(var(--primary));
+    box-shadow:
+      0 0 0 0.28rem hsl(var(--primary) / 0.12),
+      0 0 16px hsl(var(--primary) / 0.36);
+  }
+
+  .app-route-divider {
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.68),
+      hsl(var(--primary) / 0.2),
+      transparent
+    );
+  }
+
+  .app-hover-lift {
+    transition:
+      transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.24s ease,
+      background-color 0.24s ease,
+      box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .app-hover-lift:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.34);
+    box-shadow:
+      0 18px 34px -30px hsl(var(--primary) / 0.72),
+      inset 0 1px 0 hsl(var(--foreground) / 0.05);
+  }
+
+  .app-route-card {
+    position: relative;
+  }
+
+  .app-route-card::before {
+    content: "";
+    position: absolute;
+    left: 1.45rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--primary) / 0.12),
+      hsl(var(--primary) / 0.46),
+      hsl(var(--primary) / 0.12)
+    );
+    pointer-events: none;
+  }
+
+  html[data-motion="reduced"] .app-hover-lift,
+  html[data-motion="reduced"] .app-hover-lift:hover {
+    transform: none !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* ──────────────────────────────────────────────────
@@ -354,8 +545,10 @@
   .landing-orb {
     position: absolute;
     border-radius: 9999px;
-    filter: blur(90px);
+    filter: blur(78px);
+    contain: paint;
     pointer-events: none;
+    will-change: transform, opacity;
   }
   .landing-orb--primary {
     width: 38rem; height: 38rem;
@@ -378,7 +571,7 @@
     animation: landing-float 22s ease-in-out infinite;
     opacity: 0.35;
   }
-  .dark .landing-orb { filter: blur(110px); }
+  .dark .landing-orb { filter: blur(96px); }
   .dark .landing-orb--primary { opacity: 0.4; }
   .dark .landing-orb--secondary { opacity: 0.35; }
   .dark .landing-orb--tertiary { opacity: 0.25; }
@@ -522,6 +715,7 @@
       drop-shadow(0 0 10px hsl(var(--primary) / 0.48))
       drop-shadow(0 0 2px hsl(var(--background) / 0.75));
     vector-effect: non-scaling-stroke;
+    will-change: filter;
   }
   .dark .landing-journey-spine__progress {
     stroke: url("#landing-journey-spine-gradient-dark");
@@ -537,8 +731,9 @@
     margin: 0;
     transform: translate(-50%, -50%);
     pointer-events: none;
-    will-change: transform;
     filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.65));
+    contain: layout paint;
+    will-change: transform, opacity;
   }
   .landing-journey-spine__traveler-halo {
     position: absolute;
@@ -755,12 +950,15 @@
 
   /* ── Tilt card (mouse-tracked perspective) ─────────────────────── */
   .landing-tilt {
+    transform: translateZ(0);
     transform-style: preserve-3d;
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
   }
   .landing-tilt-inner {
     transform: translateZ(40px);
     transform-style: preserve-3d;
+    will-change: transform;
   }
 
   /* ── 3D Crate ──────────────────────────────────────────────────── */
@@ -771,6 +969,7 @@
   .landing-crate {
     transform-style: preserve-3d;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
   }
   .landing-crate-face {
     position: absolute;
@@ -1051,7 +1250,7 @@
   /* ── Glassmorphic card ─────────────────────────────────────────── */
   .landing-glass {
     background: hsl(var(--card) / 0.94);
-    backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(135%);
     border: 1px solid hsl(var(--border) / 0.6);
     box-shadow:
       0 8px 32px -8px hsl(var(--primary) / 0.25),
@@ -1077,7 +1276,46 @@
     animation: none !important;
   }
 
+  @media (prefers-reduced-transparency: reduce) {
+    .landing-orb {
+      filter: blur(52px);
+    }
+    .dark .landing-orb {
+      filter: blur(64px);
+    }
+    .landing-journey-spine__progress {
+      filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.42));
+    }
+    .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.55));
+    }
+    .dark .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.65));
+    }
+    .landing-glass {
+      backdrop-filter: blur(10px) saturate(125%);
+    }
+  }
+
   @media (max-width: 640px) {
+    .landing-orb {
+      filter: blur(72px);
+    }
+    .dark .landing-orb {
+      filter: blur(88px);
+    }
+    .landing-journey-spine__progress {
+      filter: drop-shadow(0 0 9px hsl(var(--primary) / 0.44));
+    }
+    .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 9px hsl(var(--primary) / 0.58));
+    }
+    .dark .landing-journey-spine__traveler {
+      filter: drop-shadow(0 0 11px hsl(var(--primary) / 0.72));
+    }
+    .landing-glass {
+      backdrop-filter: blur(11px) saturate(130%);
+    }
     .landing-range-copy {
       padding-top: 24svh;
     }

@@ -3,12 +3,11 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { RootProvider } from "@/components/layout/RootProvider";
+import { getAppOrigin } from "@/lib/app-url";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const metadataBase = (() => {
-  if (!appUrl) return new URL("http://localhost:3000");
   try {
-    return new URL(appUrl);
+    return new URL(getAppOrigin());
   } catch {
     return new URL("http://localhost:3000");
   }

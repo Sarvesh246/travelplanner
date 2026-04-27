@@ -2,13 +2,10 @@
 
 import {
   motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
 } from "framer-motion";
 import { useState } from "react";
+import { usePointerTilt } from "../hooks/usePointerTilt";
 import { Backpack, Check, Compass, Droplet, Flame, Tent, Utensils } from "lucide-react";
-import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
 
 type Item = { id: string; label: string; assignee: string; Icon: typeof Backpack };
 
@@ -23,34 +20,46 @@ const INITIAL: Item[] = [
 
 export function SupplyCrate() {
   const [packed, setPacked] = useState<Set<string>>(new Set());
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateY = useSpring(useTransform(x, [-220, 220], [-15, 15]), {
-    stiffness: 130,
-    damping: 16,
-  });
-  const rotateX = useSpring(useTransform(y, [-220, 220], [10, -10]), {
-    stiffness: 130,
-    damping: 16,
-  });
+  const { primePointerTarget, reset, rotateX, rotateY, schedulePointerMove } =
+    usePointerTilt({
+      bounds: {
+        x: [10, -10],
+        y: [-15, 15],
+      },
+      inputRange: {
+        x: 220,
+        y: 220,
+      },
+      spring: {
+        stiffness: 130,
+        damping: 16,
+      },
+    });
 
-  function handleMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (
-      e.target instanceof Element &&
-      e.target.closest(".landing-crate-item")
-    ) {
-      reset();
-      return;
-    }
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set(e.clientX - rect.left - rect.width / 2);
-    y.set(e.clientY - rect.top - rect.height / 2);
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    schedulePointerMove(e);
   }
 
-  function reset() {
-    x.set(0);
-    y.set(0);
+  const scheduleMove = ({ eventTarget }: { eventTarget: EventTarget | null }) => {
+    if (
+      eventTarget instanceof Element &&
+      eventTarget.closest(".landing-crate-item")
+    ) {
+      reset();
+    }
+  };
+
+  function handleStagePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    handlePointerMove(e);
+    scheduleMove({ eventTarget: e.target });
+  }
+
+  function handlePointerEnter(e: React.PointerEvent<HTMLDivElement>) {
+    primePointerTarget(e.currentTarget);
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    primePointerTarget(e.currentTarget);
   }
 
   function toggle(id: string) {
@@ -67,10 +76,6 @@ export function SupplyCrate() {
   return (
     <motion.section
       className="landing-journey-chapter max-w-6xl"
-      initial={{ opacity: 0, y: 64 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={LANDING_SECTION_VIEWPORT}
-      transition={{ type: "spring", stiffness: 78, damping: 22 }}
     >
       <div className="mb-12 text-center">
         <p className="landing-kicker mb-5">Chapter 03 - The Crate</p>
@@ -86,8 +91,10 @@ export function SupplyCrate() {
       <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr]">
         <div
           className="landing-crate-stage relative mx-auto h-[28rem] w-full max-w-md overflow-visible"
-          onPointerMove={handleMove}
+          onPointerDown={handlePointerDown}
+          onPointerEnter={handlePointerEnter}
           onPointerLeave={reset}
+          onPointerMove={handleStagePointerMove}
         >
           <motion.div
             style={{ rotateX, rotateY, transformPerspective: 1200 }}

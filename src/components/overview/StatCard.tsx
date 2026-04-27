@@ -19,14 +19,14 @@ export function StatCard({ label, value, icon, iconColor, href, className }: Sta
     <motion.div
       variants={scaleIn}
       className={cn(
-        "min-w-0 bg-card border border-border rounded-2xl p-4 min-[24rem]:p-5 hover:border-border/80 hover:shadow-sm transition-all",
-        href && "cursor-pointer hover:-translate-y-0.5",
+        "app-surface min-w-0 rounded-2xl p-4 min-[24rem]:p-5 transition-all",
+        href && "app-hover-lift cursor-pointer",
         className
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide mb-1">{label}</p>
+          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-1">{label}</p>
           <p className="text-2xl font-bold">{value}</p>
         </div>
         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", iconColor ?? "bg-primary/10 text-primary")}>

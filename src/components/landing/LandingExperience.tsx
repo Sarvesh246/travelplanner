@@ -12,6 +12,13 @@ import {
   type RefObject,
 } from "react";
 import {
+  buildSpineSamples,
+  exactSpinePoint,
+  interpolateSpinePoint,
+  progressForScreenY,
+  SPINE_CLAMP,
+} from "./journey-spine-geometry";
+import {
   AnimatePresence,
   MotionConfig,
   motion,
@@ -26,6 +33,10 @@ import { MotionToggle } from "@/components/shared/MotionToggle";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useElementScrollProgress } from "./hooks/useElementScrollProgress";
 import { useMotionEnabled } from "./hooks/useIsMobile";
+import {
+  LandingMotionProvider,
+  useLandingMotionRuntime,
+} from "./hooks/useLandingMotionRuntime";
 import { ParallaxRange } from "./sections/ParallaxRange";
 import { TrailBuilder } from "./sections/TrailBuilder";
 import { SupplyCrate } from "./sections/SupplyCrate";
@@ -67,14 +78,22 @@ function JourneySpine({
   targetRef: RefObject<HTMLElement | null>;
 }) {
   const motionEnabled = useMotionEnabled();
+  const runtime = useLandingMotionRuntime();
   const pathRef = useRef<SVGPathElement>(null);
   const travelerRef = useRef<HTMLDivElement>(null);
   const displayedProgressRef = useRef(0.015);
   const travelerFrameRef = useRef<number | null>(null);
+  const geometryFrameRef = useRef<number | null>(null);
   const updateTravelerPointRef = useRef<((latest: number) => void) | null>(
     null,
   );
+  const svgMetricsRef = useRef<{
+    height: number;
+    topDocument: number;
+    width: number;
+  } | null>(null);
   const displayedPathProgress = useMotionValue(0.015);
+  const spineDataRef = useRef<ReturnType<typeof buildSpineSamples> | null>(null);
   const rawProgress = useElementScrollProgress(targetRef, 0, 0.5);
   const travelerOpacity = useTransform(
     rawProgress,
@@ -87,71 +106,84 @@ function JourneySpine({
     [0, 0.86, 0.86, 0.34],
   );
 
+  useLayoutEffect(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    spineDataRef.current = buildSpineSamples(path);
+  }, []);
+
+  const measureSvgGeometry = useCallback(() => {
+    geometryFrameRef.current = null;
+    const svg = pathRef.current?.ownerSVGElement;
+    if (!svg) return;
+
+    const rect = svg.getBoundingClientRect();
+    svgMetricsRef.current = {
+      height: rect.height,
+      topDocument: runtime.scrollY.get() + rect.top,
+      width: rect.width,
+    };
+  }, [runtime.scrollY]);
+
+  const scheduleSvgGeometryMeasure = useCallback(() => {
+    if (geometryFrameRef.current !== null) return;
+    geometryFrameRef.current = window.requestAnimationFrame(measureSvgGeometry);
+  }, [measureSvgGeometry]);
+
+  const getCachedSvgRect = useCallback(() => {
+    let metrics = svgMetricsRef.current;
+    if (!metrics || metrics.width === 0 || metrics.height === 0) {
+      measureSvgGeometry();
+      metrics = svgMetricsRef.current;
+    }
+    if (!metrics) return null;
+
+    return new DOMRect(
+      0,
+      metrics.topDocument - runtime.scrollY.get(),
+      metrics.width,
+      metrics.height,
+    );
+  }, [measureSvgGeometry, runtime.scrollY]);
+
   const updateTravelerPoint = useCallback((latest: number) => {
     const path = pathRef.current;
     const node = travelerRef.current;
     if (!path || !node) return;
 
-    const svg = path.ownerSVGElement;
-    if (!svg) return;
-
-    const routePath = path;
-    const totalLength = path.getTotalLength();
-    const rect = svg.getBoundingClientRect();
-    const lowerBound = Math.min(window.innerHeight - 84, window.innerHeight * 0.78);
-    const upperBound = Math.max(84, window.innerHeight * 0.2);
-    const desiredProgress = Math.max(0.015, Math.min(0.985, latest));
-
-    function pointAt(progress: number) {
-      const clamped = Math.max(0.015, Math.min(0.985, progress));
-      const point = routePath.getPointAtLength(totalLength * clamped);
-      return {
-        progress: clamped,
-        screenY: rect.top + (point.y / 100) * rect.height,
-        x: point.x,
-        y: point.y,
-      };
+    let spine = spineDataRef.current;
+    if (!spine) {
+      spine = buildSpineSamples(path);
+      spineDataRef.current = spine;
     }
+    const { totalLength, samples } = spine;
 
-    function progressForScreenY(targetY: number) {
-      let low = 0.015;
-      let high = 0.985;
-      const start = pointAt(low).screenY;
-      const end = pointAt(high).screenY;
+    const rect = getCachedSvgRect();
+    if (!rect) return;
+    const svgRect: DOMRect = rect;
 
-      if (targetY <= start) return low;
-      if (targetY >= end) return high;
-
-      for (let i = 0; i < 18; i += 1) {
-        const mid = (low + high) / 2;
-        if (pointAt(mid).screenY < targetY) {
-          low = mid;
-        } else {
-          high = mid;
-        }
-      }
-
-      return (low + high) / 2;
-    }
+    const viewportHeight = runtime.viewportHeight.get();
+    const lowerBound = Math.min(viewportHeight - 84, viewportHeight * 0.78);
+    const upperBound = Math.max(84, viewportHeight * 0.2);
+    const desiredProgress = Math.max(SPINE_CLAMP.min, Math.min(SPINE_CLAMP.max, latest));
 
     function visiblePoint(progress: number) {
-      const minVisibleProgress = progressForScreenY(upperBound);
-      const maxVisibleProgress = progressForScreenY(lowerBound);
+      const minVisibleProgress = progressForScreenY(samples, svgRect, upperBound);
+      const maxVisibleProgress = progressForScreenY(samples, svgRect, lowerBound);
       const clampedProgress = Math.max(
         minVisibleProgress,
         Math.min(maxVisibleProgress, progress),
       );
-
-      return pointAt(clampedProgress);
+      return interpolateSpinePoint(samples, clampedProgress, svgRect);
     }
 
     const targetPoint = visiblePoint(desiredProgress);
     const previousProgress = displayedProgressRef.current;
-    const previousPoint = pointAt(previousProgress);
+    const previousPoint = interpolateSpinePoint(samples, previousProgress, svgRect);
 
     function screenDistanceFromPrevious(progress: number) {
-      const nextPoint = pointAt(progress);
-      const dx = ((nextPoint.x - previousPoint.x) / 100) * rect.width;
+      const nextPoint = interpolateSpinePoint(samples, progress, svgRect);
+      const dx = ((nextPoint.x - previousPoint.x) / 100) * svgRect.width;
       const dy = nextPoint.screenY - previousPoint.screenY;
       return Math.hypot(dx, dy);
     }
@@ -175,7 +207,7 @@ function JourneySpine({
       nextProgress = low;
     }
 
-    const point = pointAt(nextProgress);
+    const point = exactSpinePoint(path, totalLength, nextProgress, svgRect);
 
     if (
       Math.abs(point.progress - targetPoint.progress) > 0.001 &&
@@ -192,34 +224,44 @@ function JourneySpine({
 
     node.style.setProperty("--traveler-x", `${point.x}%`);
     node.style.setProperty("--traveler-y", `${point.y}%`);
-  }, [displayedPathProgress]);
+  }, [displayedPathProgress, getCachedSvgRect, runtime.viewportHeight]);
 
   useEffect(() => {
     updateTravelerPointRef.current = updateTravelerPoint;
   }, [updateTravelerPoint]);
 
   useEffect(() => {
+    measureSvgGeometry();
     updateTravelerPoint(rawProgress.get());
     const initialFrame = window.requestAnimationFrame(() => {
       updateTravelerPoint(rawProgress.get());
     });
 
-    function handleResize() {
-      updateTravelerPoint(rawProgress.get());
-    }
+    const svg = pathRef.current?.ownerSVGElement;
+    const observer = svg ? new ResizeObserver(scheduleSvgGeometryMeasure) : null;
+    if (svg) observer?.observe(svg);
 
-    window.addEventListener("resize", handleResize);
     return () => {
       window.cancelAnimationFrame(initialFrame);
       if (travelerFrameRef.current !== null) {
         window.cancelAnimationFrame(travelerFrameRef.current);
         travelerFrameRef.current = null;
       }
-      window.removeEventListener("resize", handleResize);
+      if (geometryFrameRef.current !== null) {
+        window.cancelAnimationFrame(geometryFrameRef.current);
+        geometryFrameRef.current = null;
+      }
+      observer?.disconnect();
     };
-  }, [rawProgress, updateTravelerPoint]);
+  }, [measureSvgGeometry, rawProgress, scheduleSvgGeometryMeasure, updateTravelerPoint]);
 
   useMotionValueEvent(rawProgress, "change", updateTravelerPoint);
+  useMotionValueEvent(runtime.viewportWidth, "change", () => {
+    scheduleSvgGeometryMeasure();
+  });
+  useMotionValueEvent(runtime.viewportHeight, "change", () => {
+    scheduleSvgGeometryMeasure();
+  });
 
   return (
     <>
@@ -308,7 +350,7 @@ function LandingBootScreen() {
   );
 }
 
-export function LandingExperience() {
+function LandingExperienceBody() {
   const motionEnabled = useMotionEnabled();
   const mainRef = useRef<HTMLElement>(null);
   const [heroPipelineReady, setHeroPipelineReady] = useState(false);
@@ -485,5 +527,13 @@ export function LandingExperience() {
         </footer>
       </div>
     </MotionConfig>
+  );
+}
+
+export function LandingExperience() {
+  return (
+    <LandingMotionProvider>
+      <LandingExperienceBody />
+    </LandingMotionProvider>
   );
 }

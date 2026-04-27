@@ -38,9 +38,9 @@ export function ExpenseCategoryChart({ expenses, currency }: ExpenseCategoryChar
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5">
+    <div className="app-surface rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
           <PieChart className="w-4 h-4 text-primary" />
         </div>
         <h3 className="font-semibold text-sm">By category</h3>

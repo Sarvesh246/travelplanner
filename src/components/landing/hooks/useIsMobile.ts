@@ -2,6 +2,22 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+export function useCoarsePointer(): boolean {
+  const subscribe = useCallback((callback: () => void) => {
+    if (typeof window === "undefined") return () => {};
+    const mq = window.matchMedia("(pointer: coarse)");
+    mq.addEventListener("change", callback);
+    return () => mq.removeEventListener("change", callback);
+  }, []);
+
+  const getSnapshot = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(pointer: coarse)").matches;
+  }, []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
+
 export function useIsMobile(breakpoint = 640): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {

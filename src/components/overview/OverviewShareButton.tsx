@@ -16,7 +16,7 @@ export function OverviewShareButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex min-h-10 w-full min-[480px]:w-auto items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted/60"
+        className="app-hover-lift inline-flex min-h-10 w-full min-[480px]:w-auto items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted/60"
       >
         <UserPlus className="w-4 h-4" />
         Share

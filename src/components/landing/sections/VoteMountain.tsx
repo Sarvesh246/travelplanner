@@ -3,7 +3,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
-import { LANDING_SECTION_VIEWPORT } from "../landing-viewport";
 
 type Peak = { id: string; name: string; subtitle: string; baseVotes: number };
 
@@ -80,10 +79,6 @@ export function VoteMountain() {
   return (
     <motion.section
       className="landing-journey-chapter max-w-6xl"
-      initial={{ opacity: 0, y: 64 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={LANDING_SECTION_VIEWPORT}
-      transition={{ type: "spring", stiffness: 78, damping: 22 }}
     >
       <div className="mb-12 text-center">
         <p className="landing-kicker mb-5">Chapter 05 - The Vote</p>

@@ -48,7 +48,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
 
   return (
     <>
-      <div className="flex items-center gap-3 py-3 px-4 bg-card border border-border rounded-xl hover:border-border/80 transition-colors">
+      <div className="app-surface app-hover-lift flex items-center gap-3 rounded-xl px-4 py-3">
         <UserAvatar name={member.user.name} avatarUrl={member.user.avatarUrl} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">

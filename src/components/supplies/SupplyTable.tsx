@@ -34,7 +34,7 @@ export function SupplyTable({ items, currency }: SupplyTableProps) {
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-            className="bg-card border border-border rounded-2xl divide-y divide-border overflow-hidden"
+            className="app-surface rounded-2xl divide-y divide-border/70 overflow-hidden"
           >
             {categoryItems.map((item) => (
               <motion.div key={item.id} variants={listItem}>
