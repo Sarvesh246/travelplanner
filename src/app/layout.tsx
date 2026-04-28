@@ -79,7 +79,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';r.classList.remove('light','dark');r.classList.add(t);if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();",
+              "(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';var s=false;try{s=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}catch(_e){}r.classList.remove('light','dark');r.classList.add(t);r.setAttribute('data-standalone',s?'true':'false');if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();",
           }}
         />
         <RootProvider>{children}</RootProvider>

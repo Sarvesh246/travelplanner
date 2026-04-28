@@ -2,6 +2,7 @@
 
 import { Search, LogOut, LayoutDashboard, Plus } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { MotionToggle } from "@/components/shared/MotionToggle";
 import { UserAvatar } from "@/components/shared/UserAvatar";
@@ -15,6 +16,8 @@ import { useIsMac } from "@/hooks/useIsMac";
 import { useLoading } from "@/hooks/useLoading";
 import { ROUTES } from "@/lib/constants";
 import { Kbd } from "@/components/shared/Kbd";
+import { AppBackButton } from "@/components/layout/AppBackButton";
+import { useStandaloneMode } from "@/hooks/useStandaloneMode";
 
 interface TopNavProps {
   user: { name: string; email: string; avatarUrl?: string | null };
@@ -26,11 +29,31 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
   const setPaletteOpen = useCommandPalette((s) => s.setOpen);
   const isMac = useIsMac();
+  const standalone = useStandaloneMode();
   const handleOpenPalette = onCommandPaletteOpen ?? (() => setPaletteOpen(true));
   const modLabel = isMac ? "⌘" : "Ctrl";
+
+  const tripMatch = pathname.match(/^\/trips\/([^/]+)(?:\/([^/]+))?/);
+  const tripId = tripMatch?.[1] ?? null;
+  const tripSection = tripMatch?.[2] ?? null;
+  const isStopDetail = /^\/trips\/[^/]+\/stops\/[^/]+/.test(pathname);
+  const showBackButton =
+    pathname !== ROUTES.dashboard &&
+    (standalone || pathname.startsWith("/trips/"));
+
+  const fallbackHref = (() => {
+    if (pathname === ROUTES.newTrip) return ROUTES.dashboard;
+    if (tripId && isStopDetail) return ROUTES.tripItinerary(tripId);
+    if (tripId && tripSection && tripSection !== "overview") {
+      return ROUTES.tripOverview(tripId);
+    }
+    if (tripId) return ROUTES.dashboard;
+    return ROUTES.dashboard;
+  })();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -62,17 +85,24 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
 
   return (
     <header
-      className="sticky top-0 z-40 flex min-h-14 h-14 min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl px-2.5 sm:gap-3 sm:px-4"
+      className="app-top-nav sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pl-[max(0.625rem,env(safe-area-inset-left,0px))] pr-[max(0.625rem,env(safe-area-inset-right,0px))] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl sm:gap-3 sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))]"
     >
+      {showBackButton ? (
+        <AppBackButton
+          fallbackHref={fallbackHref}
+          label="Go back"
+          className="shrink-0 sm:hidden"
+        />
+      ) : null}
       <Link
         href={ROUTES.dashboard}
-        className="flex shrink-0 items-center gap-2 rounded-md focus-ring"
+        className="flex min-w-0 shrink items-center gap-2 rounded-md focus-ring"
         aria-label="Go to dashboard"
         title="Dashboard (G D)"
         prefetch
       >
         <BeaconLogo className="h-9 w-9" gradientId="beaconGradient-topnav" />
-        <span className="hidden text-base font-bold tracking-tight sm:block">
+        <span className="truncate text-base font-bold tracking-tight sm:block">
           Beacon
         </span>
       </Link>
@@ -100,7 +130,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           <Search className="h-4 w-4" />
         </button>
 
-        <MotionToggle className="h-10 w-10 shrink-0" />
+        <MotionToggle className="hidden h-10 w-10 shrink-0 min-[420px]:inline-flex" />
         <ThemeToggle className="h-10 w-10 shrink-0" />
 
         <div className="relative shrink-0" ref={menuRef}>

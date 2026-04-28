@@ -113,7 +113,7 @@ function TripCardImpl({
     <div className="group">
       <div className="app-surface app-hover-lift rounded-2xl overflow-hidden will-change-transform motion-reduce:transform-none motion-reduce:transition-none">
         {/* Cover: link to trip + optional upload for editors */}
-        <div className="h-36 relative overflow-hidden bg-muted/30">
+        <div className="relative h-40 overflow-hidden bg-muted/30 sm:h-36">
           {trip.coverImageUrl ? (
             <Image
               src={trip.coverImageUrl}
@@ -161,7 +161,7 @@ function TripCardImpl({
                 e.stopPropagation();
                 setDeleteOpen(true);
               }}
-              className="absolute top-2 left-2 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-background/90 text-destructive shadow backdrop-blur-sm opacity-0 transition-opacity hover:bg-destructive/10 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/92 text-destructive shadow backdrop-blur-sm opacity-100 transition-[opacity,background-color] hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               title="Delete trip…"
               aria-label={`Delete ${trip.name}`}
             >
@@ -170,7 +170,7 @@ function TripCardImpl({
           )}
 
           {canEditCover && (
-            <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1">
+            <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1">
               <input
                 ref={fileRef}
                 type="file"
@@ -186,7 +186,7 @@ function TripCardImpl({
                   fileRef.current?.click();
                 }}
                 disabled={uploading}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-background/90 text-foreground shadow border border-border/80 backdrop-blur-sm hover:bg-background disabled:opacity-50"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/92 text-foreground shadow backdrop-blur-sm hover:bg-background disabled:opacity-50"
                 title="Upload cover image"
                 aria-label="Upload cover image"
               >
@@ -208,7 +208,7 @@ function TripCardImpl({
                   <button
                     type="button"
                     disabled={statusBusy}
-                    className="text-xs font-medium pl-2 pr-1.5 py-1 rounded-full bg-black/30 text-white backdrop-blur-sm border border-white/10 inline-flex items-center gap-0.5 hover:bg-black/45 transition-colors disabled:opacity-60"
+                    className="inline-flex items-center gap-0.5 rounded-full border border-white/10 bg-black/35 py-1 pl-2 pr-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/45 disabled:opacity-60"
                     title="Change trip status"
                     aria-label="Change trip status"
                   >

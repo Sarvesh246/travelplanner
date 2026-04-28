@@ -117,12 +117,15 @@
     scrollbar-gutter: stable;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    background-color: hsl(var(--background));
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     line-height: 1.5;
+    min-height: 100dvh;
+    overscroll-behavior-y: contain;
     /* Avoid rare horizontal scroll from full-bleed children on narrow / zoomed viewports */
     overflow-x: clip;
   }
@@ -300,10 +303,25 @@
     position: relative;
     isolation: isolate;
     overflow-x: clip;
+    overscroll-behavior-y: contain;
     background:
       radial-gradient(circle at 12% -10%, hsl(var(--primary) / 0.12), transparent 28rem),
       radial-gradient(circle at 88% 6%, hsl(var(--secondary) / 0.16), transparent 24rem),
       linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  @media (display-mode: standalone) {
+    .app-workspace-shell {
+      min-height: 100dvh;
+    }
+  }
+
+  html[data-standalone="true"] .app-top-nav {
+    min-height: calc(3.9rem + env(safe-area-inset-top, 0px));
+  }
+
+  html[data-standalone="true"] .app-mobile-nav {
+    padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
   }
 
   .dark .app-workspace-shell {

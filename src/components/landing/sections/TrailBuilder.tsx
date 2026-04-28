@@ -7,7 +7,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useMemo, useRef, useState } from "react";
-import { useCoarsePointer } from "../hooks/useIsMobile";
+import { useCoarsePointer, useIsMobile } from "../hooks/useIsMobile";
 import { usePointerTilt } from "../hooks/usePointerTilt";
 import { MapPin, Mountain, Tent, Trees, Waves } from "lucide-react";
 import { useElementScrollProgress } from "../hooks/useElementScrollProgress";
@@ -80,6 +80,7 @@ function routeMiles(stops: Stop[]) {
 
 function StopCard({
   active,
+  axis,
   index,
   moveStop,
   setActive,
@@ -87,6 +88,7 @@ function StopCard({
   total,
 }: {
   active: boolean;
+  axis: "x" | "y";
   index: number;
   moveStop: (id: string, direction: -1 | 1) => void;
   setActive: (stop: Stop | null) => void;
@@ -116,15 +118,14 @@ function StopCard({
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "ArrowLeft") {
+    const backwardKey = axis === "y" ? "ArrowUp" : "ArrowLeft";
+    const forwardKey = axis === "y" ? "ArrowDown" : "ArrowRight";
+
+    if (event.key === backwardKey) {
       event.preventDefault();
       moveStop(stop.id, -1);
     }
-    if (
-      event.key === "ArrowRight" ||
-      event.key === "Enter" ||
-      event.key === " "
-    ) {
+    if (event.key === forwardKey || event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       moveStop(stop.id, 1);
     }
@@ -141,7 +142,7 @@ function StopCard({
       <motion.div
         role="button"
         tabIndex={0}
-        aria-label={`${stop.day}, ${stop.name}. Press Enter or Space to move this stop later in the route.`}
+        aria-label={`${stop.day}, ${stop.name}. Press ${axis === "y" ? "Arrow Up or Arrow Down" : "Arrow Left or Arrow Right"}, Enter, or Space to move this stop in the route.`}
         onFocus={() => setActive(stop)}
         onBlur={() => setActive(null)}
         onKeyDown={handleKeyDown}
@@ -163,7 +164,7 @@ function StopCard({
             ? { rotateX, rotateY, transformPerspective: 850 }
             : undefined
         }
-        className="landing-tilt landing-glass relative w-44 rounded-2xl p-4 outline-none ring-primary/0 transition-shadow focus-visible:ring-2"
+        className="landing-tilt landing-glass relative w-full max-w-sm rounded-2xl p-4 outline-none ring-primary/0 transition-shadow focus-visible:ring-2 lg:w-44 lg:max-w-none"
       >
         <AnimatePresence>
           {active && (
@@ -206,11 +207,13 @@ function StopCard({
 export function TrailBuilder() {
   const ref = useRef<HTMLElement>(null);
   const motionEnabled = useMotionEnabled();
+  const isCompactLayout = useIsMobile(1023);
   const [stops, setStops] = useState(INITIAL);
   const [active, setActive] = useState<Stop | null>(INITIAL[0]);
   const total = useMemo(() => routeMiles(stops), [stops]);
   const scrollYProgress = useElementScrollProgress(ref, 0.75, 0.45);
   const trailProgress = useTransform(scrollYProgress, [0.12, 0.72], [0, 1]);
+  const reorderAxis: "x" | "y" = isCompactLayout ? "y" : "x";
 
   function moveStop(id: string, direction: -1 | 1) {
     setStops((current) => {
@@ -274,15 +277,16 @@ export function TrailBuilder() {
         </svg>
 
         <Reorder.Group
-          axis="x"
+          axis={reorderAxis}
           values={stops}
           onReorder={setStops}
-          className="relative flex flex-wrap justify-center gap-4 lg:flex-nowrap lg:justify-between"
+          className="relative flex flex-col items-center gap-4 lg:flex-row lg:flex-nowrap lg:justify-between"
         >
           {stops.map((stop, index) => (
             <StopCard
               key={stop.id}
               active={active?.id === stop.id}
+              axis={reorderAxis}
               index={index}
               moveStop={moveStop}
               setActive={setActive}
@@ -299,7 +303,9 @@ export function TrailBuilder() {
             routed
           </div>
           <div className="text-xs text-muted-foreground">
-            Drag horizontally, or focus a stop and press Enter
+            {reorderAxis === "y"
+              ? "Drag vertically, or focus a stop and press Enter or Arrow Down"
+              : "Drag horizontally, or focus a stop and press Enter or Arrow Right"}
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Beacon",
     short_name: "Beacon",
     description: "Plan group trips together. Itinerary, supplies, expenses, and votes in one place.",
-    start_url: "/",
+    start_url: "/dashboard",
     scope: "/",
     id: new URL("/", base).toString(),
     display: "standalone",

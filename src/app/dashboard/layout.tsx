@@ -31,9 +31,9 @@ export default async function DashboardLayout({
   };
 
   return (
-    <div className="app-workspace-shell min-h-screen flex flex-col bg-background">
+    <div className="app-workspace-shell flex min-h-dvh flex-col bg-background">
       <TopNav user={profile} />
-      <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-3 py-6 min-[400px]:px-4 min-[400px]:py-8 sm:px-6">
+      <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-3 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pb-8 sm:pt-6">
         {children}
       </main>
     </div>

@@ -8,8 +8,8 @@ import { createTrip } from "@/actions/trips";
 import { toast } from "sonner";
 import { ROUTES, CURRENCIES } from "@/lib/constants";
 import { slideRight } from "@/lib/motion";
-import Link from "next/link";
 import { useLoading } from "@/hooks/useLoading";
+import { AppBackButton } from "@/components/layout/AppBackButton";
 
 const STEPS = ["Details", "Dates & Budget", "Done"];
 
@@ -52,15 +52,9 @@ export default function NewTripPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="flex min-h-14 h-14 min-w-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-4">
-        <Link
-          href="/dashboard"
-          className="inline-flex min-h-10 min-w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Back to dashboard"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="sticky top-0 z-20 flex min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] min-w-0 items-center gap-2 border-b border-border/70 bg-background/88 px-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0px,env(safe-area-inset-top,0px))] backdrop-blur-xl sm:gap-3 sm:px-4">
+        <AppBackButton fallbackHref={ROUTES.dashboard} label="Back to dashboard" />
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 64 64" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -79,12 +73,13 @@ export default function NewTripPage() {
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg">
+      <div className="flex-1 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6">
+        <div className="mx-auto w-full max-w-xl">
           {/* Steps indicator */}
-          <div className="flex items-center gap-2 mb-8">
-            {STEPS.map((s, i) => (
-              <div key={s} className="flex items-center gap-2">
+          <div className="mb-6 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-max items-center gap-2 pr-4">
+              {STEPS.map((s, i) => (
+                <div key={s} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                   i < step ? "bg-primary text-primary-foreground" :
                   i === step ? "bg-primary/20 text-primary border-2 border-primary" :
@@ -92,23 +87,24 @@ export default function NewTripPage() {
                 }`}>
                   {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
                 </div>
-                <span className={`text-sm font-medium ${i === step ? "text-foreground" : "text-muted-foreground"}`}>
+                <span className={`whitespace-nowrap text-sm font-medium ${i === step ? "text-foreground" : "text-muted-foreground"}`}>
                   {s}
                 </span>
                 {i < STEPS.length - 1 && <div className="w-8 h-px bg-border mx-1" />}
               </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div key="step0" variants={slideRight} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">Name your trip</h2>
+                  <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Name your trip</h2>
                   <p className="text-muted-foreground text-sm">Give it a fun, memorable name</p>
                 </div>
 
-                <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
                   <div>
                     <label className="text-sm font-medium block mb-1.5">
                       <MapPin className="w-3.5 h-3.5 inline mr-1 text-muted-foreground" />
@@ -138,7 +134,7 @@ export default function NewTripPage() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => { if (name.trim()) setStep(1); else toast.error("Enter a trip name first"); }}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
@@ -149,12 +145,12 @@ export default function NewTripPage() {
             {step === 1 && (
               <motion.div key="step1" variants={slideRight} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">Dates & Budget</h2>
+                  <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Dates & Budget</h2>
                   <p className="text-muted-foreground text-sm">Optional — you can fill this in later</p>
                 </div>
 
-                <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="text-sm font-medium block mb-1.5">
                         <Calendar className="w-3.5 h-3.5 inline mr-1 text-muted-foreground" />
@@ -179,7 +175,7 @@ export default function NewTripPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="text-sm font-medium block mb-1.5">
                         <DollarSign className="w-3.5 h-3.5 inline mr-1 text-muted-foreground" />
@@ -210,17 +206,17 @@ export default function NewTripPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                   <button
                     onClick={() => setStep(0)}
-                    className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium border border-border hover:bg-muted transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border px-5 py-3 text-sm font-medium transition-colors hover:bg-muted sm:w-auto"
                   >
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
                   <button
                     onClick={handleCreate}
                     disabled={loading}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Create Trip

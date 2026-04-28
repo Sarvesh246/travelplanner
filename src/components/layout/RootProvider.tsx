@@ -9,6 +9,7 @@ import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecove
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { SyncStatusToast } from "@/components/layout/SyncStatusToast";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
+import { useStandaloneMode } from "@/hooks/useStandaloneMode";
 
 /**
  * Previous local builds may leave a stale service worker/chunk cache behind.
@@ -31,6 +32,19 @@ function LocalhostCacheReset() {
       }
     })();
   }, []);
+
+  return null;
+}
+
+function StandaloneModeSync() {
+  const standalone = useStandaloneMode();
+
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-standalone",
+      standalone ? "true" : "false"
+    );
+  }, [standalone]);
 
   return null;
 }
@@ -63,6 +77,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         {children}
         <LocalhostCacheReset />
+        <StandaloneModeSync />
         <InvalidSessionRecovery />
         <AppWorkspaceOverlays />
         <LoadingScreen />
