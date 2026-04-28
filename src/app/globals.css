@@ -139,6 +139,24 @@
     @apply bg-primary/20 text-foreground;
   }
 
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea,
+    [cmdk-input] {
+      font-size: 16px !important;
+      line-height: 1.35;
+    }
+
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"] {
+      min-inline-size: 0;
+      inline-size: 100%;
+      max-inline-size: 100%;
+    }
+  }
+
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
@@ -321,7 +339,7 @@
   }
 
   html[data-standalone="true"] .app-mobile-nav {
-    padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
 
   .dark .app-workspace-shell {

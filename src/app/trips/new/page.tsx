@@ -12,6 +12,8 @@ import { useLoading } from "@/hooks/useLoading";
 import { AppBackButton } from "@/components/layout/AppBackButton";
 
 const STEPS = ["Details", "Dates & Budget", "Done"];
+const mobileFieldClass =
+  "block w-full min-w-0 max-w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base placeholder:text-muted-foreground transition-shadow focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -116,7 +118,7 @@ export default function NewTripPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Colorado Adventure 2025"
                       autoFocus
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                      className={mobileFieldClass}
                     />
                   </div>
                   <div>
@@ -126,7 +128,7 @@ export default function NewTripPage() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="What's the vibe? What are you planning?"
                       rows={3}
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow resize-none"
+                      className={`${mobileFieldClass} resize-none`}
                     />
                   </div>
                 </div>
@@ -151,7 +153,7 @@ export default function NewTripPage() {
 
                 <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
+                    <div className="min-w-0">
                       <label className="text-sm font-medium block mb-1.5">
                         <Calendar className="w-3.5 h-3.5 inline mr-1 text-muted-foreground" />
                         Start date
@@ -160,23 +162,23 @@ export default function NewTripPage() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                        className={mobileFieldClass}
                       />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="text-sm font-medium block mb-1.5">End date</label>
                       <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         min={startDate}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                        className={mobileFieldClass}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
+                    <div className="min-w-0">
                       <label className="text-sm font-medium block mb-1.5">
                         <DollarSign className="w-3.5 h-3.5 inline mr-1 text-muted-foreground" />
                         Currency
@@ -184,14 +186,14 @@ export default function NewTripPage() {
                       <select
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        className={mobileFieldClass}
                       >
                         {CURRENCIES.map((c) => (
                           <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
                         ))}
                       </select>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="text-sm font-medium block mb-1.5">Budget target</label>
                       <input
                         type="number"
@@ -200,7 +202,7 @@ export default function NewTripPage() {
                         value={budget}
                         onChange={(e) => setBudget(e.target.value)}
                         placeholder="2000"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+                        className={mobileFieldClass}
                       />
                     </div>
                   </div>

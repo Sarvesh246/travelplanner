@@ -65,7 +65,7 @@ export default async function TripLayout({
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <TripSidebar tripId={tripId} tripName={trip.name} />
           <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-            <div className="mx-auto max-w-5xl px-3 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pt-6 md:pb-6">
+            <div className="mx-auto max-w-5xl px-3 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pt-6 md:pb-6">
               <ViewerReadOnlyBanner />
               {children}
             </div>

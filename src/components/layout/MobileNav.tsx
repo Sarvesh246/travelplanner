@@ -29,7 +29,7 @@ export function MobileNav({ tripId }: MobileNavProps) {
       className="app-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/75 bg-background/92 shadow-[0_-14px_36px_-30px_hsl(var(--primary)/0.7)] backdrop-blur-xl md:hidden"
       aria-label="Trip sections"
     >
-      <div className="mx-auto grid max-w-5xl grid-cols-6 gap-1 px-[max(0.35rem,env(safe-area-inset-left,0px))] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pr-[max(0.35rem,env(safe-area-inset-right,0px))] pt-1.5">
+      <div className="mx-auto grid max-w-5xl grid-cols-6 gap-0.5 px-[max(0.3rem,env(safe-area-inset-left,0px))] pb-[max(0.18rem,env(safe-area-inset-bottom,0px))] pr-[max(0.3rem,env(safe-area-inset-right,0px))] pt-1">
         {items.map((item) => {
           const itineraryHref = ROUTES.tripItinerary(tripId);
           const isActive =
@@ -46,16 +46,16 @@ export function MobileNav({ tripId }: MobileNavProps) {
               aria-label={item.label}
               title={item.label}
               className={cn(
-                "relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[9px] font-medium leading-none transition-colors",
+                "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium leading-none transition-colors min-[390px]:text-[10.5px]",
                 isActive
                   ? "bg-primary/12 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
               {isActive && (
-                <span className="absolute top-1 h-1 w-1 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.8)]" aria-hidden />
+                <span className="absolute top-0.5 h-1 w-1 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.8)]" aria-hidden />
               )}
-              <Icon className="h-[1.1rem] w-[1.1rem] shrink-0" />
+              <Icon className="h-[1.28rem] w-[1.28rem] shrink-0 min-[390px]:h-[1.36rem] min-[390px]:w-[1.36rem]" />
               <span className="min-w-0 truncate">{item.mobileLabel ?? item.label}</span>
             </Link>
           );
