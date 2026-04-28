@@ -83,19 +83,15 @@ export function getRequestOrigin(request: Request): string {
     return `${forwardedProto}://${forwardedHost}`;
   }
 
-  const url = new URL(request.url);
   const hostHeader = firstHeaderValue(request.headers.get("host"));
+  const url = new URL(request.url);
 
-  if (hostHeader && isLoopbackHostname(url.hostname)) {
-    if (!isLoopbackHostname(hostnameFromHostHeader(hostHeader))) {
-      const proto =
-        process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
-          ? "https"
-          : url.protocol === "https:"
-            ? "https"
-            : "http";
-      return `${proto}://${hostHeader}`;
-    }
+  // Trust the public Host header next — on Vercel, `x-forwarded-host` is sometimes absent in
+  // Route Handlers while `host` still matches the deployment (e.g. *.vercel.app). `request.url`
+  // may still point at an internal loopback or wrong host, which would otherwise produce
+  // redirects to http://localhost:3000 after OAuth.
+  if (hostHeader && !isLoopbackHostname(hostnameFromHostHeader(hostHeader))) {
+    return `${forwardedProto}://${hostHeader}`;
   }
 
   if (

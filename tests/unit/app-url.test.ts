@@ -100,6 +100,14 @@ describe("getRequestOrigin", () => {
     expect(getRequestOrigin(request)).toBe("https://beacon.example.com");
   });
 
+  it("uses Host when it is the deployment hostname but request.url is loopback (no forwarded-host)", () => {
+    mutableEnv().VERCEL = "1";
+    const request = new Request("http://127.0.0.1:3000/auth/callback?code=x", {
+      headers: { host: "beacon-prod.vercel.app" },
+    });
+    expect(getRequestOrigin(request)).toBe("https://beacon-prod.vercel.app");
+  });
+
   it("falls back to request.url origin when nothing else helps", () => {
     const request = new Request("https://app.example.com/path");
     expect(getRequestOrigin(request)).toBe("https://app.example.com");
