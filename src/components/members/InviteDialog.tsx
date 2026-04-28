@@ -21,11 +21,17 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState<boolean | null>(null);
+  /** True when RESEND_API_KEY + EMAIL_FROM exist — if false on Vercel, add them under Project → Settings → Environment Variables. */
+  const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
+  /** Populated when Resend returns an error (shown so you can fix domain / from / API key without digging in logs). */
+  const [emailSendError, setEmailSendError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   const closeDialog = useCallback(() => {
     setEmailSent(null);
+    setEmailConfigured(null);
+    setEmailSendError(null);
     setInviteLink(null);
     setCopied(false);
     setLoading(false);
@@ -55,11 +61,20 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
       const result = await inviteMember(tripId, to, role);
       setInviteLink(result.inviteLink);
       setEmailSent(result.emailSent);
+      setEmailConfigured(result.emailConfigured);
+      setEmailSendError(result.emailSendError ?? null);
       if (result.emailSent) {
         toast.success(`Invite emailed to ${to}`);
+      } else if (!result.emailConfigured) {
+        toast.message("Invite created", {
+          description:
+            "Email is not configured for this deployment. Add RESEND_API_KEY and EMAIL_FROM in Vercel → Project → Settings → Environment Variables.",
+        });
       } else {
         toast.message("Invite created", {
-          description: "Copy the link below to share, or check Resend and EMAIL_FROM in .env.local.",
+          description: result.emailSendError
+            ? `${result.emailSendError.slice(0, 220)}${result.emailSendError.length > 220 ? "…" : ""}`
+            : "Email was not delivered. Copy the link below. Check Vercel logs, Resend domain verification, and EMAIL_FROM.",
         });
       }
       setEmail("");
@@ -133,13 +148,56 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
             </button>
           </form>
 
-          {inviteLink && emailSent === false && (
+          {inviteLink && emailSent === false && emailConfigured === false && (
             <div
               className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100"
               role="status"
             >
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>Email could not be sent. Copy the invite link below to share it manually.</span>
+              <span>
+                Outgoing email is not set up on this deployment. In the Vercel dashboard, add{" "}
+                <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs dark:bg-amber-900/40">
+                  RESEND_API_KEY
+                </code>{" "}
+                and{" "}
+                <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs dark:bg-amber-900/40">
+                  EMAIL_FROM
+                </code>{" "}
+                (e.g.{" "}
+                <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs dark:bg-amber-900/40">
+                  Beacon &lt;onboarding@resend.dev&gt;
+                </code>{" "}
+                for Resend&apos;s test sender, or your verified domain), then redeploy. Until then, copy
+                the link below to share the invite.
+              </span>
+            </div>
+          )}
+
+          {inviteLink && emailSent === false && emailConfigured === true && (
+            <div
+              className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100"
+              role="status"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <p>
+                  Email could not be sent. Copy the invite link below. Typical fixes: verify your
+                  domain in the Resend dashboard, set{" "}
+                  <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs dark:bg-amber-900/40">
+                    EMAIL_FROM
+                  </code>{" "}
+                  to an allowed sender (e.g.{" "}
+                  <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs dark:bg-amber-900/40">
+                    Beacon &lt;noreply@yourdomain.com&gt;
+                  </code>
+                  ), confirm your API key, and redeploy after changing env vars.
+                </p>
+                {emailSendError ? (
+                  <p className="rounded-md border border-amber-200/80 bg-amber-100/50 px-2.5 py-2 font-mono text-[11px] leading-snug text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-50">
+                    {emailSendError}
+                  </p>
+                ) : null}
+              </div>
             </div>
           )}
 

@@ -75,6 +75,15 @@ export function getAppUrl(path = "/"): string {
  * hit https://your-deployment.vercel.app.
  */
 export function getRequestOrigin(request: Request): string {
+  const url = new URL(request.url);
+
+  // Local dev: always use the URL the browser actually hit. Tools or leaked proxy headers
+  // (e.g. x-forwarded-host pointing at production) must not override loopback — otherwise OAuth
+  // redirects and session cookies target the wrong host and sign-in appears to "bounce" home.
+  if (process.env.NODE_ENV === "development" && isLoopbackHostname(url.hostname)) {
+    return url.origin;
+  }
+
   const forwardedHost = firstHeaderValue(request.headers.get("x-forwarded-host"));
   const forwardedProto =
     firstHeaderValue(request.headers.get("x-forwarded-proto")) ?? "https";
@@ -84,7 +93,6 @@ export function getRequestOrigin(request: Request): string {
   }
 
   const hostHeader = firstHeaderValue(request.headers.get("host"));
-  const url = new URL(request.url);
 
   // Trust the public Host header next — on Vercel, `x-forwarded-host` is sometimes absent in
   // Route Handlers while `host` still matches the deployment (e.g. *.vercel.app). `request.url`

@@ -134,7 +134,7 @@ export function InlineEdit({
           title={editLabel}
           className={cn(
             "group max-w-full text-left text-sm hover:bg-muted/60 rounded px-1 -ml-1 py-0.5 transition-colors border border-transparent hover:border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55",
-            showEditIcon && "inline-flex items-start gap-2 rounded-lg py-1 sm:items-center",
+            showEditIcon && "inline-flex items-start gap-3.5 sm:gap-4 rounded-lg py-1 sm:items-center",
             !value && "text-muted-foreground italic",
             displayClassName
           )}

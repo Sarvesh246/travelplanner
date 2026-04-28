@@ -1,11 +1,24 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { WifiOff } from "lucide-react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { ROUTES } from "@/lib/constants";
+
+/** Marketing / auth surfaces have no trip data to sync — offline banner is misleading noise there. */
+function suppressConnectivityBanner(pathname: string) {
+  return (
+    pathname === ROUTES.home ||
+    pathname === ROUTES.login ||
+    pathname === ROUTES.signup
+  );
+}
 
 export function ConnectivityBanner() {
+  const pathname = usePathname();
   const online = useNetworkStatus();
 
+  if (suppressConnectivityBanner(pathname)) return null;
   if (online) return null;
 
   return (

@@ -17,7 +17,9 @@ export function TripSwipeHint() {
     } catch {
       return;
     }
-    setVisible(true);
+
+    const frame = window.requestAnimationFrame(() => setVisible(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   if (!visible) return null;

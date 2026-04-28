@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { RootProvider } from "@/components/layout/RootProvider";
 import { getAppOrigin } from "@/lib/app-url";
@@ -50,6 +49,9 @@ export const metadata: Metadata = {
   },
 };
 
+/** Inline (not next/script) so dev HMR/chunk loaders don’t add another network hop for prefs bootstrap — avoids occasional ChunkLoadError on layout.js. */
+const THEME_BOOTSTRAP = `(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';var s=false;try{s=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}catch(_e){}r.classList.remove('light','dark');r.classList.add(t);r.setAttribute('data-standalone',s?'true':'false');if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();`;
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -73,15 +75,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetBrainsMono.variable} min-h-dvh touch-manipulation font-sans`}
       >
-        {/* beforeInteractive scripts are injected into <head> by Next.js even when declared here. */}
-        <Script
-          id="beacon-preferences"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var r=document.documentElement;var t=localStorage.getItem('beacon-theme')==='light'?'light':'dark';var s=false;try{s=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}catch(_e){}r.classList.remove('light','dark');r.classList.add(t);r.setAttribute('data-standalone',s?'true':'false');if(localStorage.getItem('beacon-motion')==='reduced'){r.setAttribute('data-motion','reduced');}}catch(e){}})();",
-          }}
-        />
+        {/* First paint: theme/motion prefs — synced with RootProvider */}
+        <script id="beacon-preferences" dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
         <RootProvider>{children}</RootProvider>
       </body>
     </html>

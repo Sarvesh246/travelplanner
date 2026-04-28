@@ -85,6 +85,17 @@ describe("getRequestOrigin", () => {
     expect(getRequestOrigin(request)).toBe("https://beacon.example.com");
   });
 
+  it("in development, keeps loopback origin even when x-forwarded-host points elsewhere", () => {
+    mutableEnv().NODE_ENV = "development";
+    const request = new Request("http://localhost:3000/auth/callback?code=x", {
+      headers: {
+        "x-forwarded-host": "beacon.example.com",
+        "x-forwarded-proto": "https",
+      },
+    });
+    expect(getRequestOrigin(request)).toBe("http://localhost:3000");
+  });
+
   it("defaults forwarded-proto to https when only forwarded-host is set", () => {
     const request = new Request("http://localhost:3000/", {
       headers: { "x-forwarded-host": "beacon.example.com" },

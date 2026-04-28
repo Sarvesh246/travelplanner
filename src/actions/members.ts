@@ -36,13 +36,21 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
     if (existing && existing.status === "ACTIVE") throw new Error("Already a member");
   }
 
-  // Check for existing pending invite
+  const now = new Date();
+
+  // Check for existing usable pending invite. Expired pending rows should not
+  // block creating a fresh invite for the same email.
   const existingInvite = await prisma.tripInvite.findFirst({
-    where: { tripId, email: normalizedEmail, status: "PENDING" },
+    where: {
+      tripId,
+      email: normalizedEmail,
+      status: "PENDING",
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    },
   });
   if (existingInvite) throw new Error("Invite already sent to this email");
 
-  const expiresAt = new Date();
+  const expiresAt = new Date(now);
   expiresAt.setDate(expiresAt.getDate() + 7);
 
   const invite = await prisma.tripInvite.create({
@@ -65,24 +73,42 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
   });
   const tripName = trip?.name ?? "a trip";
 
+  const emailConfigured = Boolean(
+    process.env.RESEND_API_KEY?.trim() && process.env.EMAIL_FROM?.trim()
+  );
+
   let emailSent = false;
-  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
+  let emailSendError: string | undefined;
+
+  const senderDisplay =
+    user.name?.trim() ||
+    user.email.split("@")[0] ||
+    "Someone";
+
+  if (emailConfigured) {
     try {
       await sendInviteEmail({
         to: normalizedEmail,
         inviteLink,
         tripName,
-        senderName: user.name,
+        senderName: senderDisplay,
         role,
         expiresAt: expiresAt,
       });
       emailSent = true;
     } catch (err) {
-      console.error("[inviteMember] email send failed:", err);
+      const raw = err instanceof Error ? err.message : String(err);
+      console.error("[inviteMember] email send failed:", raw);
+      emailSendError = raw.slice(0, 600);
     }
   }
 
-  return { invite, inviteLink, emailSent };
+  return {
+    inviteLink,
+    emailSent,
+    emailConfigured,
+    emailSendError: emailSendError ?? null,
+  };
 }
 
 export async function acceptInvite(token: string) {
@@ -109,7 +135,15 @@ export async function acceptInvite(token: string) {
   });
 
   if (existing) {
-    if (existing.status === "ACTIVE") return { tripId: invite.tripId };
+    if (existing.status === "ACTIVE") {
+      await prisma.tripInvite.update({
+        where: { id: invite.id },
+        data: { status: "ACCEPTED" },
+      });
+      revalidatePath(`/trips/${invite.tripId}/members`);
+      revalidatePath("/dashboard");
+      return { tripId: invite.tripId };
+    }
     // Re-activate if previously left
     await prisma.tripMember.update({
       where: { id: existing.id },
@@ -127,6 +161,7 @@ export async function acceptInvite(token: string) {
   });
 
   revalidatePath(`/trips/${invite.tripId}/members`);
+  revalidatePath("/dashboard");
   return { tripId: invite.tripId };
 }
 

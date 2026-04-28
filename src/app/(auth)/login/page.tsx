@@ -55,12 +55,24 @@ function LoginForm() {
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
+
+    const debugAuth =
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_DEBUG_AUTH_SIGNINS === "true";
+    if (debugAuth) {
+      console.info("[beacon:auth] password sign-in", {
+        userId: data.user?.id,
+        next,
+        at: new Date().toISOString(),
+      });
+    }
+
     router.push(next);
     router.refresh();
   }

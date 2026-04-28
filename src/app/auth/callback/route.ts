@@ -1,13 +1,30 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getRequestOrigin } from "@/lib/app-url";
+
+interface CookieToSet {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function redirectToApp(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, getRequestOrigin(request)));
+function redirectTo(request: NextRequest, path: string) {
+  const origin = getRequestOrigin(request);
+  return NextResponse.redirect(new URL(path, origin));
+}
+
+/** Preserve Supabase session cookies when changing the redirect Location (e.g. after exchange). */
+function redirectPreservingAuthCookies(from: NextResponse, destination: URL): NextResponse {
+  const r = NextResponse.redirect(destination);
+  const cookies = from.headers.getSetCookie?.() ?? [];
+  for (const line of cookies) {
+    r.headers.append("Set-Cookie", line);
+  }
+  return r;
 }
 
 function getSafeNext(searchParams: URLSearchParams): string {
@@ -15,21 +32,44 @@ function getSafeNext(searchParams: URLSearchParams): string {
   return next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 }
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const next = getSafeNext(searchParams);
+export async function GET(request: NextRequest) {
+  const origin = getRequestOrigin(request);
+  const code = request.nextUrl.searchParams.get("code");
+  const nextPath = getSafeNext(request.nextUrl.searchParams);
 
   if (!code) {
-    return redirectToApp(request, "/login?error=auth-failed");
+    return redirectTo(request, "/login?error=auth-failed");
   }
 
+  const destinationAfterAuth = new URL(nextPath, origin);
+  let response = NextResponse.redirect(destinationAfterAuth);
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value }: CookieToSet) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.redirect(destinationAfterAuth);
+          cookiesToSet.forEach(({ name, value, options }: CookieToSet) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error || !data.user) {
-      return redirectToApp(request, "/login?error=auth-failed");
+      return redirectTo(request, "/login?error=auth-failed");
     }
 
     const dbUrl = process.env.DATABASE_URL?.trim();
@@ -57,8 +97,9 @@ export async function GET(request: Request) {
         });
       } catch (e) {
         console.error("[auth/callback] Prisma user upsert failed:", e);
-        const sep = next.includes("?") ? "&" : "?";
-        return redirectToApp(request, `${next}${sep}sync=db-failed`);
+        const sep = nextPath.includes("?") ? "&" : "?";
+        const withSyncFlag = `${nextPath}${sep}sync=db-failed`;
+        return redirectPreservingAuthCookies(response, new URL(withSyncFlag, origin));
       }
     } else if (process.env.NODE_ENV === "development") {
       console.warn(
@@ -66,9 +107,9 @@ export async function GET(request: Request) {
       );
     }
 
-    return redirectToApp(request, next);
+    return response;
   } catch (e) {
     console.error("[auth/callback] Unexpected error:", e);
-    return redirectToApp(request, "/login?error=auth-failed");
+    return redirectTo(request, "/login?error=auth-failed");
   }
 }

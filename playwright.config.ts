@@ -1,4 +1,36 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
+
+/** Load `.env.local` so `npx playwright test` sees PLAYWRIGHT_* without `--env-file` (Codex/CI). */
+function loadEnvLocal(): void {
+  // Project root (run Playwright from repo root). Avoid `import.meta` — Playwright’s TS loader
+  // can compile this file in a way that breaks ESM-only APIs.
+  const path = resolve(process.cwd(), ".env.local");
+  if (!existsSync(path)) return;
+  let text = readFileSync(path, "utf8");
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    if (!key) continue;
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvLocal();
 
 const PORT = Number(process.env.PORT ?? 3000);
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;

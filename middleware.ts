@@ -38,6 +38,10 @@ function clearSupabaseAuthCookies(
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
+  if (pathname === "/api/health") {
+    return NextResponse.next();
+  }
+
   // Recover OAuth flows that land on the wrong route but still include the auth code.
   if (searchParams.has("code") && pathname !== "/auth/callback") {
     const callbackUrl = request.nextUrl.clone();
