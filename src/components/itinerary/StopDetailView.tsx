@@ -9,7 +9,7 @@ import { formatDateRange } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { StayCard } from "./StayCard";
 import { DayTimeline } from "./DayTimeline";
-import { createStay, createActivity, deleteStop } from "@/actions/itinerary";
+import { createStay, createActivity, deleteStop, restoreStop } from "@/actions/itinerary";
 import { useTripContext } from "@/components/trip/TripContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
@@ -43,7 +43,14 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
   async function handleDelete() {
     try {
       await deleteStop(stop.id);
-      toast.success("Stop deleted");
+      toast.success("Stop deleted", {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            void restoreStop(stop.id);
+          },
+        },
+      });
       if (isPage) {
         router.push(ROUTES.tripItinerary(tripId));
         return;

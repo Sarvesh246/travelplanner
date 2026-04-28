@@ -123,10 +123,10 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg my-8">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="relative mt-auto flex max-h-[min(94dvh,44rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:my-8 sm:mt-0 sm:rounded-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <Receipt className="w-5 h-5 text-primary" />
             <h2 className="font-semibold text-base">Add expense</h2>
@@ -139,7 +139,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[min(78dvh,36rem)] space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
           <div>
             <label className="text-sm font-medium block mb-1.5">Title *</label>
             <input
@@ -147,7 +147,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Groceries, Dinner, Airbnb…"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
                 type="date"
                 value={expenseDate}
                 onChange={(e) => setExpenseDate(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {EXPENSE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -187,7 +187,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
               <select
                 value={paidById}
                 onChange={(e) => setPaidById(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {members.map((m) => (
                   <option key={m.userId} value={m.userId}>{m.user.name}</option>
@@ -225,7 +225,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 touch-manipulation"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             Log expense

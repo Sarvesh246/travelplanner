@@ -46,16 +46,23 @@ export function MobileNav({ tripId }: MobileNavProps) {
               aria-label={item.label}
               title={item.label}
               className={cn(
-                "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium leading-none transition-colors min-[390px]:text-[10.5px]",
+                "app-tap relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium leading-none transition-colors min-[390px]:text-[10.5px]",
                 isActive
-                  ? "bg-primary/12 text-primary"
+                  ? "bg-primary/16 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               )}
             >
               {isActive && (
                 <span className="absolute top-0.5 h-1 w-1 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.8)]" aria-hidden />
               )}
-              <Icon className="h-[1.28rem] w-[1.28rem] shrink-0 min-[390px]:h-[1.36rem] min-[390px]:w-[1.36rem]" />
+              <span
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                  isActive ? "bg-primary/14" : "bg-transparent"
+                )}
+              >
+                <Icon className="h-[1.28rem] w-[1.28rem] shrink-0 min-[390px]:h-[1.36rem] min-[390px]:w-[1.36rem]" />
+              </span>
               <span className="min-w-0 truncate">{item.mobileLabel ?? item.label}</span>
             </Link>
           );

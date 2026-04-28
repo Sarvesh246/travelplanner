@@ -8,10 +8,24 @@ import type { SupplyItemSerialized } from "./types";
 interface SupplyTableProps {
   items: SupplyItemSerialized[];
   currency: string;
+  selectedItemId?: string | null;
+  selectedBulkIds?: string[];
+  onSelectItem?: (id: string) => void;
+  onToggleBulk?: (id: string) => void;
+  onToggleBulkAll?: () => void;
 }
 
-export function SupplyTable({ items, currency }: SupplyTableProps) {
+export function SupplyTable({
+  items,
+  currency,
+  selectedItemId,
+  selectedBulkIds = [],
+  onSelectItem,
+  onToggleBulk,
+  onToggleBulkAll,
+}: SupplyTableProps) {
   const groups = groupByCategory(items);
+  const allSelected = items.length > 0 && selectedBulkIds.length === items.length;
 
   return (
     <div className="space-y-6">
@@ -21,7 +35,16 @@ export function SupplyTable({ items, currency }: SupplyTableProps) {
             {category}
           </h3>
 
-          <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+            <label className="flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={onToggleBulkAll}
+                aria-label="Select all items"
+                className="h-4 w-4 rounded border-input"
+              />
+            </label>
             <span>Item</span>
             <span className="w-20 text-right">Needed</span>
             <span className="w-20 text-right">Owned</span>
@@ -38,7 +61,14 @@ export function SupplyTable({ items, currency }: SupplyTableProps) {
           >
             {categoryItems.map((item) => (
               <motion.div key={item.id} variants={listItem}>
-                <SupplyRow item={item} currency={currency} />
+                <SupplyRow
+                  item={item}
+                  currency={currency}
+                  selected={selectedItemId === item.id}
+                  bulkSelected={selectedBulkIds.includes(item.id)}
+                  onSelect={() => onSelectItem?.(item.id)}
+                  onToggleBulk={() => onToggleBulk?.(item.id)}
+                />
               </motion.div>
             ))}
           </motion.div>

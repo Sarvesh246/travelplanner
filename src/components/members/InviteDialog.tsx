@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { inviteMember } from "@/actions/members";
 import { toast } from "sonner";
 import { X, Copy, Mail, Check, Loader2, AlertTriangle } from "lucide-react";
 import { MemberRole } from "@prisma/client";
 import { useLoading } from "@/hooks/useLoading";
+import { createPortal } from "react-dom";
 
 interface InviteDialogProps {
   open: boolean;
@@ -21,14 +22,28 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
+  const portalTarget = typeof document === "undefined" ? null : document.body;
 
-  function closeDialog() {
+  const closeDialog = useCallback(() => {
     setEmailSent(null);
     setInviteLink(null);
     setCopied(false);
     setLoading(false);
     onOpenChange(false);
-  }
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeDialog();
+    }
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeDialog, open]);
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -66,11 +81,13 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  if (!portalTarget) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeDialog} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="relative mt-auto flex max-h-[min(94dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:mt-0 sm:rounded-2xl">
+        <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
           <h2 className="font-semibold text-base">Invite members</h2>
           <button
             onClick={closeDialog}
@@ -80,7 +97,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="max-h-[min(76dvh,30rem)] overflow-y-auto p-5 sm:p-6 space-y-4">
           <form onSubmit={handleInvite} className="space-y-3">
             <div>
               <label className="text-sm font-medium block mb-1.5">Email address</label>
@@ -146,7 +163,19 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
             </div>
           )}
         </div>
+        {inviteLink ? (
+          <div className="border-t border-border px-5 py-4 sm:px-6">
+            <button
+              type="button"
+              onClick={closeDialog}
+              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </div>,
+    portalTarget
   );
 }

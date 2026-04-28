@@ -8,6 +8,7 @@ import { AppWorkspaceOverlays } from "@/components/layout/AppWorkspaceOverlays";
 import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecovery";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { SyncStatusToast } from "@/components/layout/SyncStatusToast";
+import { ConnectivityBanner } from "@/components/layout/ConnectivityBanner";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { useStandaloneMode } from "@/hooks/useStandaloneMode";
 
@@ -79,6 +80,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
         <LocalhostCacheReset />
         <StandaloneModeSync />
         <InvalidSessionRecovery />
+        <ConnectivityBanner />
         <AppWorkspaceOverlays />
         <LoadingScreen />
         {/* useSearchParams() inside NavigationProgress must be wrapped in Suspense

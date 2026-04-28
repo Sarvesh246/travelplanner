@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Map, Plus, Loader2, X } from "lucide-react";
+import { StickyActionBar } from "@/components/layout/StickyActionBar";
+import { Map, Plus, Loader2, X, Users, Package } from "lucide-react";
+import { ROUTES } from "@/lib/constants";
 import { StopList } from "./StopList";
 import { StopDetailPanel } from "./StopDetailPanel";
+import { StopDetailView } from "./StopDetailView";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createStop } from "@/actions/itinerary";
 import { toast } from "sonner";
@@ -37,8 +41,22 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
   const { canEdit } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [desktop, setDesktop] = useState(false);
 
-  const selectedStop = stops.find((s) => s.id === selectedStopId) ?? null;
+  useEffect(() => {
+    function handleResize() {
+      setDesktop(window.innerWidth >= 768);
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const effectiveSelectedStopId =
+    selectedStopId && stops.some((s) => s.id === selectedStopId)
+      ? selectedStopId
+      : stops[0]?.id ?? null;
+  const selectedStop = stops.find((s) => s.id === effectiveSelectedStopId) ?? null;
 
   return (
     <>
@@ -49,8 +67,9 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         actions={
           canEdit && (
             <button
+              type="button"
               onClick={() => setAddOpen(true)}
-              className="app-hover-lift flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="app-hover-lift hidden md:inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Stop
@@ -65,22 +84,57 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
           title="No stops yet"
           description="Add your first stop to start building the route."
           action={
-            canEdit && (
-              <button
-                onClick={() => setAddOpen(true)}
-                className="app-hover-lift mt-2 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+            <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setAddOpen(true)}
+                  className="app-hover-lift inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 min-h-11 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Add first stop
+                </button>
+              )}
+              <Link
+                href={ROUTES.tripOverview(tripId)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-4 py-2.5 min-h-11 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
               >
-                <Plus className="w-4 h-4" /> Add first stop
-              </button>
-            )
+                Trip overview
+              </Link>
+              <Link
+                href={ROUTES.tripSupplies(tripId)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-4 py-2.5 min-h-11 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                <Package className="h-4 w-4 shrink-0" /> Supplies
+              </Link>
+              <Link
+                href={ROUTES.tripMembers(tripId)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-4 py-2.5 min-h-11 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                <Users className="h-4 w-4 shrink-0" /> Members
+              </Link>
+            </div>
           }
         />
       ) : (
-        <StopList
-          tripId={tripId}
-          stops={stops}
-          onSelectStop={(id) => setSelectedStopId(id)}
-        />
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(20rem,25rem)] md:items-start">
+          <StopList
+            tripId={tripId}
+            stops={stops}
+              selectedStopId={effectiveSelectedStopId}
+            onSelectStop={(id) => setSelectedStopId(id)}
+          />
+          <aside className="hidden md:block">
+            {selectedStop ? (
+              <div className="app-surface sticky top-24 max-h-[calc(100dvh-7.25rem)] overflow-hidden rounded-2xl border border-border/80">
+                <StopDetailView stop={selectedStop} tripId={tripId} layout="drawer" />
+              </div>
+            ) : (
+              <div className="app-surface rounded-2xl border border-border/80 p-5 text-sm text-muted-foreground">
+                Select a stop to view details.
+              </div>
+            )}
+          </aside>
+        </div>
       )}
 
       <AddStopDialog
@@ -91,9 +145,24 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
 
       <StopDetailPanel
         stop={selectedStop}
-        open={!!selectedStop}
+        open={!!selectedStop && !desktop}
         onOpenChange={(v) => !v && setSelectedStopId(null)}
       />
+
+      {canEdit ? (
+        <StickyActionBar
+          primary={
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Add stop
+            </button>
+          }
+        />
+      ) : null}
     </>
   );
 }
@@ -152,10 +221,10 @@ function AddStopDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="relative mt-auto flex max-h-[min(92dvh,38rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:mt-0 sm:rounded-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <h2 className="font-semibold text-base">Add stop</h2>
           <button
             onClick={() => onOpenChange(false)}
@@ -164,7 +233,7 @@ function AddStopDialog({
             <X className="w-4 h-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[min(72dvh,28rem)] space-y-4 overflow-y-auto overscroll-contain p-5 pt-4 sm:p-6 sm:pt-4">
           <div>
             <label htmlFor={stopNameId} className="text-sm font-medium block mb-1.5">
               Stop name *
@@ -176,7 +245,7 @@ function AddStopDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder="Kyoto, Japan"
               autoFocus
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <LocationAutocomplete
@@ -200,7 +269,7 @@ function AddStopDialog({
                 type="date"
                 value={arrivalDate}
                 onChange={(e) => setArrivalDate(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -214,14 +283,14 @@ function AddStopDialog({
                 value={departureDate}
                 onChange={(e) => setDepartureDate(e.target.value)}
                 min={arrivalDate}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
           <button
             type="submit"
             disabled={loading || !name.trim()}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 touch-manipulation"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             Add stop
@@ -333,7 +402,7 @@ function LocationAutocomplete({
         onBlur={() => window.setTimeout(() => setOpen(false), 120)}
         placeholder="Search a city, park, hotel, or address"
         autoComplete="off"
-        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
       />
       {searching && (
         <Loader2 className="absolute right-3 top-[38px] h-4 w-4 animate-spin text-muted-foreground" />

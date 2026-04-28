@@ -166,6 +166,19 @@ export async function deleteExpense(expenseId: string) {
   revalidatePath(`/trips/${existing.tripId}/expenses`);
 }
 
+export async function restoreExpense(expenseId: string) {
+  const user = await getAuthUser();
+  const existing = await prisma.expense.findUnique({ where: { id: expenseId } });
+  if (!existing) throw new Error("Expense not found");
+  await assertCanContribute(existing.tripId, user.id);
+
+  await prisma.expense.update({
+    where: { id: expenseId },
+    data: { deletedAt: null },
+  });
+  revalidatePath(`/trips/${existing.tripId}/expenses`);
+}
+
 export async function markSharePaid(shareId: string, hasPaid: boolean) {
   const user = await getAuthUser();
   const share = await prisma.expenseShare.findUnique({

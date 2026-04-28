@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { formatCurrency, formatDateRange, daysUntil, tripDuration } from "@/lib/utils";
+import { formatCurrency, daysUntil, tripDuration } from "@/lib/utils";
 import { CalendarDays, Plane, WalletCards } from "lucide-react";
 import { OverviewClient } from "@/components/overview/OverviewClient";
 import { OverviewShareButton } from "@/components/overview/OverviewShareButton";
+import { OverviewHeroEditor } from "@/components/overview/OverviewHeroEditor";
 
 export const metadata = { title: "Overview" };
 
@@ -18,7 +19,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
   if (!dbUser) redirect("/login");
 
-  const [trip, memberCount, stopCount, supplyStats, expenseStats, openVoteCount] =
+  const [trip, memberCount, stopCount, supplyStats, expenseStats, openVoteCount, recentStops, recentSupplies, recentExpenses] =
     await Promise.all([
       prisma.trip.findUnique({ where: { id: tripId } }),
       prisma.tripMember.count({ where: { tripId, status: "ACTIVE" } }),
@@ -34,6 +35,24 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
         _sum: { totalAmount: true },
       }),
       prisma.vote.count({ where: { tripId, status: "OPEN" } }),
+      prisma.stop.findMany({
+        where: { tripId, deletedAt: null },
+        select: { id: true, name: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+        take: 4,
+      }),
+      prisma.supplyItem.findMany({
+        where: { tripId, deletedAt: null },
+        select: { id: true, name: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+        take: 4,
+      }),
+      prisma.expense.findMany({
+        where: { tripId, deletedAt: null },
+        select: { id: true, title: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+        take: 4,
+      }),
     ]);
 
   if (!trip || trip.deletedAt) notFound();
@@ -45,23 +64,32 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((totalExpenses / budgetTarget) * 100)) : null;
   const coveredItems = await prisma.supplyItem.count({ where: { tripId, status: { in: ["COVERED"] }, deletedAt: null } });
   const totalItems = supplyStats._count.id;
+  const recentActivity = [
+    ...recentStops.map((s) => ({ id: s.id, label: `Stop updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "stop" as const })),
+    ...recentSupplies.map((s) => ({ id: s.id, label: `Supply updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "supply" as const })),
+    ...recentExpenses.map((e) => ({ id: e.id, label: `Expense updated: ${e.title}`, at: e.updatedAt.toISOString(), kind: "expense" as const })),
+  ]
+    .sort((a, b) => (a.at < b.at ? 1 : -1))
+    .slice(0, 8);
 
   return (
     <div className="space-y-5">
       <section className="app-page-band app-surface">
         <div className="relative z-10 flex flex-col gap-5">
           <div className="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-between">
-            <div className="min-w-0">
-              <p className="app-kicker mb-2">
+            <div className="min-w-0 flex-1">
+              <p className="app-kicker mb-3">
                 <span className="app-waypoint" aria-hidden />
                 Trip overview
               </p>
-              <h1 className="min-w-0 text-balance text-2xl font-bold tracking-tight">
-                {trip.name}
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {formatDateRange(trip.startDate, trip.endDate)}
-              </p>
+              <OverviewHeroEditor
+                tripId={tripId}
+                name={trip.name}
+                startDate={trip.startDate ? trip.startDate.toISOString().slice(0, 10) : null}
+                endDate={trip.endDate ? trip.endDate.toISOString().slice(0, 10) : null}
+                budgetTarget={trip.budgetTarget ? Number(trip.budgetTarget) : null}
+                currency={trip.currency}
+              />
             </div>
             <div className="flex shrink-0 items-center justify-stretch min-[520px]:justify-end">
               <OverviewShareButton />
@@ -135,6 +163,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
           openVoteCount,
           expenseCount: expenseStats._count.id,
         }}
+        recentActivity={recentActivity}
         tripId={tripId}
       />
     </div>

@@ -1,17 +1,22 @@
 "use client";
 
-import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight, Map } from "lucide-react";
 import { formatDateRange } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/constants";
 import type { StopSerialized } from "./types";
 import type { HTMLAttributes, DOMAttributes } from "react";
 
 type DragHandle = HTMLAttributes<HTMLButtonElement> & DOMAttributes<HTMLButtonElement>;
 
 interface StopCardProps {
+  tripId: string;
   stop: StopSerialized;
   index: number;
+  selected?: boolean;
   onSelect: () => void;
+  onButtonRef?: (el: HTMLButtonElement | null) => void;
   dragHandleProps?: DragHandle;
 }
 
@@ -21,14 +26,27 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] dark:bg-[hsl(var(--destructive)/0.15)]",
 };
 
-export function StopCard({ stop, index, onSelect, dragHandleProps }: StopCardProps) {
+export function StopCard({
+  tripId,
+  stop,
+  index,
+  selected = false,
+  onSelect,
+  onButtonRef,
+  dragHandleProps,
+}: StopCardProps) {
   return (
     <div className="relative">
       <span
         className="absolute -left-[1.125rem] top-6 z-10 h-3 w-3 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.12),0_0_14px_hsl(var(--primary)/0.45)]"
         aria-hidden
       />
-      <div className="app-surface app-hover-lift group flex items-stretch overflow-hidden rounded-2xl">
+      <div
+        className={cn(
+          "app-surface app-hover-lift group relative flex items-stretch overflow-hidden rounded-2xl",
+          selected && "ring-2 ring-primary/35"
+        )}
+      >
         {dragHandleProps && (
           <button
             type="button"
@@ -42,7 +60,9 @@ export function StopCard({ stop, index, onSelect, dragHandleProps }: StopCardPro
         <button
           type="button"
           onClick={onSelect}
-          className="flex-1 text-left p-4 flex items-start gap-3"
+          ref={onButtonRef}
+          aria-pressed={selected}
+          className="min-w-0 flex-1 text-left p-4 pr-14 md:pr-20 flex items-start gap-3"
         >
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
             <span className="font-bold text-primary text-sm">{index + 1}</span>
@@ -77,8 +97,19 @@ export function StopCard({ stop, index, onSelect, dragHandleProps }: StopCardPro
               </span>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground/60 shrink-0 self-center group-hover:text-muted-foreground transition-colors" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60 shrink-0 self-center group-hover:text-muted-foreground transition-colors md:hidden" />
         </button>
+        <div className="pointer-events-none absolute inset-y-0 right-2 z-[1] hidden w-14 items-center justify-center md:flex">
+          <Link
+            href={ROUTES.tripStop(tripId, stop.id)}
+            title="Open stop map view"
+            aria-label={`Open ${stop.name} on map`}
+            className="pointer-events-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-primary/35 hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Map className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </div>
   );

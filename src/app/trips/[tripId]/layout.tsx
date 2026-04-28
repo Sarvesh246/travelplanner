@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { TripSidebar } from "@/components/layout/TripSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { TopNav } from "@/components/layout/TopNav";
+import { TripShellClient } from "@/components/layout/TripShellClient";
 import { TripProvider } from "@/components/trip/TripContext";
 import { ViewerReadOnlyBanner } from "@/components/trip/ViewerReadOnlyBanner";
 import { getTripLayoutData } from "@/lib/trip-layout-data";
@@ -61,14 +62,19 @@ export default async function TripLayout({
       }))}
     >
       <div className="app-workspace-shell flex min-h-dvh flex-col bg-background">
-        <TopNav user={profile} />
+        <TopNav
+          user={profile}
+          trip={{ id: trip.id, name: trip.name, canManage: ["OWNER", "ADMIN"].includes(membership.role) }}
+        />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <TripSidebar tripId={tripId} tripName={trip.name} />
           <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-            <div className="mx-auto max-w-5xl px-3 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pt-6 md:pb-6">
-              <ViewerReadOnlyBanner />
-              {children}
-            </div>
+            <TripShellClient tripId={tripId}>
+              <div className="mx-auto max-w-[72rem] px-3 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pt-6 md:pb-6">
+                <ViewerReadOnlyBanner />
+                {children}
+              </div>
+            </TripShellClient>
           </main>
         </div>
         <MobileNav tripId={tripId} />

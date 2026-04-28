@@ -7,16 +7,32 @@ import { SUPPLY_STATUS_COLORS } from "@/lib/constants";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTripContext } from "@/components/trip/TripContext";
-import { updateSupplyItem, deleteSupplyItem, markBought } from "@/actions/supplies";
+import {
+  updateSupplyItem,
+  deleteSupplyItem,
+  markBought,
+  restoreSupplyItem,
+} from "@/actions/supplies";
 import { toast } from "sonner";
 import type { SupplyItemSerialized } from "./types";
 
 interface SupplyRowProps {
   item: SupplyItemSerialized;
   currency: string;
+  selected?: boolean;
+  bulkSelected?: boolean;
+  onSelect?: () => void;
+  onToggleBulk?: () => void;
 }
 
-export function SupplyRow({ item, currency }: SupplyRowProps) {
+export function SupplyRow({
+  item,
+  currency,
+  selected = false,
+  bulkSelected = false,
+  onSelect,
+  onToggleBulk,
+}: SupplyRowProps) {
   const { members, canEdit } = useTripContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -50,7 +66,14 @@ export function SupplyRow({ item, currency }: SupplyRowProps) {
   async function handleDelete() {
     try {
       await deleteSupplyItem(item.id);
-      toast.success("Item removed");
+      toast.success("Item removed", {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            void restoreSupplyItem(item.id);
+          },
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -58,13 +81,31 @@ export function SupplyRow({ item, currency }: SupplyRowProps) {
 
   return (
     <>
-      <div className="px-4 py-3 md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center flex flex-col md:flex-row">
+      <div
+        className={cn(
+          "relative group px-4 py-3 md:grid md:grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 items-center flex flex-col md:flex-row",
+          selected && "bg-primary/5"
+        )}
+      >
+        <div className="hidden md:block">
+          <input
+            type="checkbox"
+            checked={bulkSelected}
+            onChange={() => onToggleBulk?.()}
+            aria-label={`Select ${item.name}`}
+            className="h-4 w-4 rounded border-input"
+          />
+        </div>
         <div className="min-w-0 flex items-center gap-3 flex-1 w-full">
           <span className={cn("w-2 h-2 rounded-full shrink-0", SUPPLY_STATUS_COLORS[item.status] === "text-success" ? "[background-color:hsl(var(--success))]" : SUPPLY_STATUS_COLORS[item.status] === "text-warning" ? "[background-color:hsl(var(--warning))]" : SUPPLY_STATUS_COLORS[item.status] === "text-destructive" ? "[background-color:hsl(var(--destructive))]" : "bg-muted-foreground")} />
-          <div className="min-w-0">
+          <button
+            type="button"
+            onClick={onSelect}
+            className="min-w-0 text-left"
+          >
             <p className="font-medium text-sm truncate">{item.name}</p>
             <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>{item.status.replace("_", " ")}</p>
-          </div>
+          </button>
         </div>
 
         <div className="w-20 hidden md:block text-right">
@@ -106,8 +147,9 @@ export function SupplyRow({ item, currency }: SupplyRowProps) {
             {item.whoBrings && <span>Brings: {item.whoBrings.name}</span>}
           </div>
           {canEdit && (
-            <div className="relative">
+            <div className="relative z-[6]">
               <button
+                type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                 aria-label="Item options"
@@ -132,6 +174,31 @@ export function SupplyRow({ item, currency }: SupplyRowProps) {
             </div>
           )}
         </div>
+
+        {canEdit ? (
+          <div className="pointer-events-none absolute right-12 top-1/2 z-[5] hidden -translate-y-1/2 items-center gap-1 md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
+            {item.status !== "COVERED" && (
+              <button
+                type="button"
+                title="Mark covered"
+                aria-label={`Mark ${item.name} as covered`}
+                className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-success/35 hover:bg-success/10 hover:text-success"
+                onClick={() => void handleMarkBought()}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+              </button>
+            )}
+            <button
+              type="button"
+              title="Delete item"
+              aria-label={`Delete ${item.name}`}
+              className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <ConfirmDialog

@@ -96,6 +96,17 @@ export async function deleteStop(stopId: string) {
   revalidateStopPage(stop.tripId, stopId);
 }
 
+export async function restoreStop(stopId: string) {
+  const user = await getAuthUser();
+  const stop = await prisma.stop.findUnique({ where: { id: stopId } });
+  if (!stop) throw new Error("Stop not found");
+  await assertCanContribute(stop.tripId, user.id);
+
+  await prisma.stop.update({ where: { id: stopId }, data: { deletedAt: null } });
+  revalidateItinerary(stop.tripId);
+  revalidateStopPage(stop.tripId, stopId);
+}
+
 export async function reorderStops(tripId: string, orderedIds: string[]) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);

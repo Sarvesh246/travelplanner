@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, ExternalLink, Trash2, MoreHorizontal, Tag, Users } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { Receipt, ExternalLink, Trash2, MoreHorizontal, Tag, Users, CircleDollarSign, ChevronDown } from "lucide-react";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { AvatarGroup } from "@/components/shared/AvatarGroup";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTripContext } from "@/components/trip/TripContext";
-import { deleteExpense, markSharePaid } from "@/actions/expenses";
+import { deleteExpense, markSharePaid, restoreExpense } from "@/actions/expenses";
 import { toast } from "sonner";
 import type { ExpenseSerialized } from "./types";
 
 interface ExpenseCardProps {
   expense: ExpenseSerialized;
   currency: string;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 const SPLIT_MODE_LABELS: Record<string, string> = {
@@ -22,7 +24,7 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
 };
 
-export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
+export function ExpenseCard({ expense, currency, selected = false, onSelect }: ExpenseCardProps) {
   const { canEdit, currentUser } = useTripContext();
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,7 +45,14 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
   async function handleDelete() {
     try {
       await deleteExpense(expense.id);
-      toast.success("Expense removed");
+      toast.success("Expense removed", {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            void restoreExpense(expense.id);
+          },
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -51,8 +60,19 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
 
   return (
     <>
-      <div className="app-surface app-hover-lift rounded-2xl overflow-hidden">
-        <div className="p-4">
+      <div
+        className={cn(
+          "app-surface app-hover-lift group relative overflow-hidden rounded-2xl",
+          selected && "ring-2 ring-primary/35"
+        )}
+      >
+        <button
+          type="button"
+          className="absolute inset-0 z-[1] hidden md:block"
+          onClick={onSelect}
+          aria-label={`Select expense ${expense.title}`}
+        />
+        <div className="relative z-[2] p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
               <Receipt className="w-5 h-5 text-primary" />
@@ -83,10 +103,11 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
               </div>
             </div>
             {canEdit && (
-              <div className="relative">
+              <div className="relative z-[6]">
                 <button
+                  type="button"
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors md:hidden"
                   aria-label="Expense options"
                 >
                   <MoreHorizontal className="w-4 h-4" />
@@ -103,6 +124,44 @@ export function ExpenseCard({ expense, currency }: ExpenseCardProps) {
                 )}
               </div>
             )}
+
+            {canEdit ? (
+              <div className="pointer-events-none absolute right-11 top-4 z-[5] hidden items-center gap-1 md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
+                <button
+                  type="button"
+                  title={expanded ? "Hide split detail" : "View split detail"}
+                  aria-expanded={expanded}
+                  className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+                  onClick={() => setExpanded((v) => !v)}
+                >
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
+                </button>
+                {myShare && expense.paidById !== currentUser.id ? (
+                  <button
+                    type="button"
+                    title={myShare.hasPaid ? "Mark your share unpaid" : "Mark your share paid"}
+                    className={cn(
+                      "pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border shadow-sm transition-colors",
+                      myShare.hasPaid
+                        ? "border-success/45 bg-success/10 text-success hover:bg-success/15"
+                        : "border-border/70 bg-card/90 text-muted-foreground hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+                    )}
+                    onClick={() => void toggleMine()}
+                  >
+                    <CircleDollarSign className="h-4 w-4" />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  title="Delete expense"
+                  aria-label={`Delete ${expense.title}`}
+                  className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">

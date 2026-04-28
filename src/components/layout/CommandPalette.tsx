@@ -60,7 +60,7 @@ function CommandPaletteInner() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center p-3 pt-8 min-[500px]:p-4 min-[500px]:pt-[14vh]"
+      className="fixed inset-0 z-[60] flex items-start justify-center p-3 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+1rem))] min-[500px]:p-4 min-[500px]:pt-[14vh]"
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"
@@ -86,7 +86,9 @@ function CommandPaletteInner() {
             placeholder="Search commands or type to jump…"
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
           />
-          <Kbd keys="Esc" />
+          <span className="hidden min-[500px]:inline-flex">
+            <Kbd keys="Esc" />
+          </span>
         </div>
 
         <Command.List className="max-h-[min(52dvh,380px)] overflow-y-auto p-2">
@@ -179,7 +181,7 @@ function CommandPaletteInner() {
           </Command.Group>
         </Command.List>
 
-        <div className="flex flex-col gap-2 border-t border-border bg-muted/40 px-3 py-2.5 text-[10px] text-muted-foreground min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between min-[500px]:gap-4 min-[500px]:px-4 min-[500px]:text-[11px]">
+        <div className="hidden min-[500px]:flex min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between min-[500px]:gap-4 min-[500px]:border-t min-[500px]:border-border min-[500px]:bg-muted/40 min-[500px]:px-4 min-[500px]:py-2.5 min-[500px]:text-[11px] min-[500px]:text-muted-foreground">
           <div className="flex flex-wrap items-center gap-2 min-[500px]:gap-3">
             <span className="flex items-center gap-1.5">
               <Kbd keys="↑" />
@@ -220,8 +222,12 @@ function CommandItem({
       className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer aria-selected:bg-muted aria-selected:text-foreground text-foreground transition-colors"
     >
       <span className="text-muted-foreground">{icon}</span>
-      <span className="flex-1">{label}</span>
-      {shortcut && <Kbd keys={shortcut} asChord={chord} />}
+      <span className="min-w-0 flex-1">{label}</span>
+      {shortcut && (
+        <span className="hidden min-[500px]:inline-flex">
+          <Kbd keys={shortcut} asChord={chord} />
+        </span>
+      )}
     </Command.Item>
   );
 }

@@ -27,6 +27,7 @@ export function ActivityRow({ activity, canEdit }: ActivityRowProps) {
       await updateActivity(activity.id, { name });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
+      throw err;
     }
   }
 

@@ -56,10 +56,10 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="relative mt-auto flex max-h-[min(92dvh,34rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:mt-0 sm:rounded-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <Package className="w-5 h-5 text-primary" />
             <h2 className="font-semibold text-base">Add supply item</h2>
@@ -72,7 +72,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[min(72dvh,30rem)] space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
           <div>
             <label className="text-sm font-medium block mb-1.5">Item name *</label>
             <input
@@ -80,7 +80,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Tent, Sunscreen, First-aid kit…"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -90,7 +90,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {SUPPLY_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -104,7 +104,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
                 min={0}
                 value={quantityNeeded}
                 onChange={(e) => setQuantityNeeded(parseInt(e.target.value, 10) || 0)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -120,7 +120,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
             <select
               value={whoBringsId}
               onChange={(e) => setWhoBringsId(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Unassigned</option>
               {members.map((m) => (
@@ -132,7 +132,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
           <button
             type="submit"
             disabled={loading || !name.trim()}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 touch-manipulation"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             Add item

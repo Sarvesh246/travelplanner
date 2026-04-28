@@ -338,6 +338,71 @@
     min-height: calc(3.9rem + env(safe-area-inset-top, 0px));
   }
 
+  .app-top-nav[data-collapsed="true"] {
+    min-height: calc(3.05rem + env(safe-area-inset-top, 0px));
+    background: hsl(var(--background) / 0.94);
+    box-shadow: 0 12px 32px -28px hsl(var(--foreground) / 0.55);
+  }
+
+  .app-top-nav__word,
+  .app-top-nav__mobile-search,
+  .app-top-nav__mobile-search-label {
+    transition:
+      opacity 0.24s ease,
+      transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+      max-width 0.24s ease,
+      padding 0.24s ease,
+      margin 0.24s ease,
+      width 0.24s ease;
+  }
+
+  .app-top-nav[data-collapsed="true"] .app-top-nav__word {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  .app-top-nav__mobile-search {
+    width: auto;
+    background: hsl(var(--card) / 0.28);
+  }
+
+  @media (max-width: 767.98px) {
+    .app-top-nav[data-collapsed="false"] .app-top-nav__mobile-search {
+      flex: 1 1 7rem;
+      max-width: 13rem;
+      min-width: 6.75rem;
+      justify-content: flex-start;
+      padding-inline: 0.625rem;
+      border-color: hsl(var(--border) / 0.82);
+      background: hsl(var(--card) / 0.72);
+    }
+
+    .app-top-nav[data-collapsed="false"] .app-top-nav__mobile-search:focus-visible {
+      border-color: hsl(var(--primary) / 0.42);
+      box-shadow: 0 0 0 2px hsl(var(--primary) / 0.22);
+    }
+  }
+
+  .app-top-nav__mobile-search-label {
+    display: inline;
+  }
+
+  .app-top-nav[data-collapsed="true"] .app-top-nav__mobile-search {
+    width: 2.5rem;
+    padding-inline: 0;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .app-top-nav[data-collapsed="true"] .app-top-nav__mobile-search-label {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+    transform: translateX(-6px);
+    overflow: hidden;
+  }
+
   html[data-standalone="true"] .app-mobile-nav {
     padding-bottom: 0;
   }
@@ -520,6 +585,18 @@
   html[data-motion="reduced"] .app-hover-lift:hover {
     transform: none !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .app-tap {
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease,
+      background-color 0.16s ease,
+      border-color 0.16s ease;
+  }
+
+  .app-tap:active {
+    transform: scale(0.98);
   }
 }
 

@@ -113,6 +113,19 @@ export async function deleteSupplyItem(itemId: string) {
   revalidatePath(`/trips/${existing.tripId}/supplies`);
 }
 
+export async function restoreSupplyItem(itemId: string) {
+  const user = await getAuthUser();
+  const existing = await prisma.supplyItem.findUnique({ where: { id: itemId } });
+  if (!existing) throw new Error("Item not found");
+  await assertCanContribute(existing.tripId, user.id);
+
+  await prisma.supplyItem.update({
+    where: { id: itemId },
+    data: { deletedAt: null },
+  });
+  revalidatePath(`/trips/${existing.tripId}/supplies`);
+}
+
 export async function assignBringer(itemId: string, userId: string | null) {
   return updateSupplyItem(itemId, { whoBringsId: userId });
 }
@@ -138,4 +151,57 @@ export async function markBought(itemId: string, actualCost?: number | null) {
 
   revalidatePath(`/trips/${existing.tripId}/supplies`);
   return { item: updated };
+}
+
+export async function bulkMarkBought(itemIds: string[]) {
+  const user = await getAuthUser();
+  if (itemIds.length === 0) return;
+
+  const items = await prisma.supplyItem.findMany({
+    where: { id: { in: itemIds } },
+    select: { id: true, tripId: true, quantityNeeded: true },
+  });
+  if (items.length === 0) return;
+
+  const tripId = items[0].tripId;
+  await assertCanContribute(tripId, user.id);
+  if (items.some((i) => i.tripId !== tripId)) throw new Error("Items must belong to one trip");
+
+  await prisma.$transaction(
+    items.map((item) =>
+      prisma.supplyItem.update({
+        where: { id: item.id },
+        data: {
+          quantityOwned: item.quantityNeeded,
+          quantityRemaining: 0,
+          status: "COVERED",
+          whoBoughtId: user.id,
+        },
+      })
+    )
+  );
+
+  revalidatePath(`/trips/${tripId}/supplies`);
+}
+
+export async function bulkDeleteSupplyItems(itemIds: string[]) {
+  const user = await getAuthUser();
+  if (itemIds.length === 0) return;
+
+  const items = await prisma.supplyItem.findMany({
+    where: { id: { in: itemIds } },
+    select: { id: true, tripId: true },
+  });
+  if (items.length === 0) return;
+
+  const tripId = items[0].tripId;
+  await assertCanContribute(tripId, user.id);
+  if (items.some((i) => i.tripId !== tripId)) throw new Error("Items must belong to one trip");
+
+  await prisma.supplyItem.updateMany({
+    where: { id: { in: items.map((i) => i.id) } },
+    data: { deletedAt: new Date() },
+  });
+
+  revalidatePath(`/trips/${tripId}/supplies`);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, LogOut, LayoutDashboard, Plus } from "lucide-react";
+import { Search, LogOut, LayoutDashboard, Plus, Pencil } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -18,15 +18,18 @@ import { ROUTES } from "@/lib/constants";
 import { Kbd } from "@/components/shared/Kbd";
 import { AppBackButton } from "@/components/layout/AppBackButton";
 import { useStandaloneMode } from "@/hooks/useStandaloneMode";
+import { updateTrip } from "@/actions/trips";
 
 interface TopNavProps {
   user: { name: string; email: string; avatarUrl?: string | null };
+  trip?: { id: string; name: string; canManage: boolean } | null;
   onCommandPaletteOpen?: () => void;
 }
 
-export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
+export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
   const { startLoading, stopLoading } = useLoading();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -72,6 +75,24 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
     };
   }, []);
 
+  useEffect(() => {
+    function handleScroll() {
+      if (window.innerWidth >= 640) {
+        setCollapsed(false);
+        return;
+      }
+      setCollapsed(window.scrollY > 28);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
   async function handleSignOut() {
     startLoading("Signing out...");
     try {
@@ -83,9 +104,29 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
     }
   }
 
+  async function handleRenameTrip() {
+    if (!trip?.canManage) return;
+    const next = window.prompt("Trip name", trip.name);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === trip.name) return;
+
+    startLoading("Updating trip name...");
+    try {
+      await updateTrip(trip.id, { name: trimmed });
+      toast.success("Trip name updated");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to rename trip");
+    } finally {
+      stopLoading();
+    }
+  }
+
   return (
     <header
-      className="app-top-nav sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pl-[max(0.625rem,env(safe-area-inset-left,0px))] pr-[max(0.625rem,env(safe-area-inset-right,0px))] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl sm:gap-3 sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))]"
+      data-collapsed={collapsed ? "true" : "false"}
+      className="app-top-nav sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pl-[max(0.625rem,env(safe-area-inset-left,0px))] pr-[max(0.625rem,env(safe-area-inset-right,0px))] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl transition-[min-height,background-color,box-shadow,padding] duration-300 sm:gap-3 sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))]"
     >
       {showBackButton ? (
         <AppBackButton
@@ -102,7 +143,7 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
         prefetch
       >
         <BeaconLogo className="h-9 w-9" gradientId="beaconGradient-topnav" />
-        <span className="truncate text-base font-bold tracking-tight sm:block">
+        <span className="app-top-nav__word truncate text-base font-bold tracking-tight sm:block">
           Beacon
         </span>
       </Link>
@@ -125,9 +166,10 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           onClick={handleOpenPalette}
           title="Search (/)"
           aria-label="Open command palette"
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-ring md:hidden"
+          className="app-top-nav__mobile-search inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-transparent px-0 text-muted-foreground transition-[background-color,border-color,box-shadow,color,width] duration-200 hover:bg-muted/80 hover:text-foreground focus-ring md:hidden"
         >
           <Search className="h-4 w-4" />
+          <span className="app-top-nav__mobile-search-label ml-2 hidden text-sm font-medium">Search</span>
         </button>
 
         <MotionToggle className="hidden h-10 w-10 shrink-0 min-[420px]:inline-flex" />
@@ -175,6 +217,17 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
                   label="New trip"
                   shortcut="N"
                 />
+                {trip?.canManage ? (
+                  <MenuItem
+                    as="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void handleRenameTrip();
+                    }}
+                    icon={<Pencil className="w-3.5 h-3.5" />}
+                    label="Rename trip"
+                  />
+                ) : null}
                 <MenuItem
                   as="button"
                   onClick={() => {
