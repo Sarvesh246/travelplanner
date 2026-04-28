@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Loader2, Check, AlertCircle } from "lucide-react";
+import { Loader2, Check, AlertCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -14,6 +14,10 @@ interface InlineEditProps {
   multiline?: boolean;
   canEdit?: boolean;
   displayClassName?: string;
+  /** Shows a pencil next to the label when idle so editing is discoverable (e.g. hero titles). */
+  showEditIcon?: boolean;
+  /** Accessible name for the edit control (used as aria-label and title). */
+  editLabel?: string;
 }
 
 export function InlineEdit({
@@ -24,6 +28,8 @@ export function InlineEdit({
   multiline = false,
   canEdit = true,
   displayClassName,
+  showEditIcon = false,
+  editLabel = "Edit",
 }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -117,20 +123,31 @@ export function InlineEdit({
 
   if (!editing) {
     return (
-      <span className="inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5">
+      <span className="inline-flex max-w-full flex-wrap items-start gap-x-1 gap-y-0.5">
         <button
           type="button"
           onClick={() => {
             setDraft(value);
             setEditing(true);
           }}
+          aria-label={editLabel}
+          title={editLabel}
           className={cn(
-            "max-w-full text-left text-sm hover:bg-muted/60 rounded px-1 -ml-1 py-0.5 transition-colors border border-transparent hover:border-border/50",
+            "group max-w-full text-left text-sm hover:bg-muted/60 rounded px-1 -ml-1 py-0.5 transition-colors border border-transparent hover:border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55",
+            showEditIcon && "inline-flex items-start gap-2 rounded-lg py-1 sm:items-center",
             !value && "text-muted-foreground italic",
             displayClassName
           )}
         >
-          {value || placeholder}
+          <span className="min-w-0 flex-1">{value || placeholder}</span>
+          {showEditIcon ? (
+            <span
+              className="inline-flex shrink-0 rounded-md border border-transparent bg-muted/55 p-1.5 text-muted-foreground ring-1 ring-border/70 transition-[color,background-color,border-color] duration-200 group-hover:border-primary/35 group-hover:bg-primary/10 group-hover:text-primary md:p-1"
+              aria-hidden
+            >
+              <Pencil className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5" strokeWidth={2.25} />
+            </span>
+          ) : null}
         </button>
         {statusUi}
       </span>

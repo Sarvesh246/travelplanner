@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CalendarDays, WalletCards } from "lucide-react";
 import { InlineEdit } from "@/components/shared/InlineEdit";
+import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
 import { formatDateRange } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ export function OverviewHeroEditor({
   const [localStart, setLocalStart] = useState(startDate ?? "");
   const [localEnd, setLocalEnd] = useState(endDate ?? "");
   const [localBudget, setLocalBudget] = useState(budgetTarget?.toString() ?? "");
+  const { canManage } = useTripContext();
 
   return (
     <div className="space-y-3">
@@ -32,6 +34,9 @@ export function OverviewHeroEditor({
         onSave={async (next) => {
           await updateTrip(tripId, { name: next });
         }}
+        canEdit={canManage}
+        showEditIcon={canManage}
+        editLabel="Edit trip name"
         displayClassName="min-w-0 text-balance text-2xl font-bold tracking-tight"
       />
 
