@@ -1,7 +1,14 @@
 "use client";
 
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 
 const PEOPLE = [
   { id: "alex", name: "Alex", color: "163 33% 35%" },
@@ -14,42 +21,208 @@ const PEOPLE = [
 function AnimatedMoney({
   className,
   decimals = 0,
+  skipAnimation,
   value,
 }: {
   className?: string;
   decimals?: number;
+  /** During range drag, jump the number without tweening to cut main-thread work (INP). */
+  skipAnimation?: boolean;
   value: number;
 }) {
   const raw = useMotionValue(value);
   const label = useTransform(raw, (latest) => `$${latest.toFixed(decimals)}`);
 
   useEffect(() => {
+    if (skipAnimation) {
+      raw.set(value);
+      return;
+    }
     const controls = animate(raw, value, {
       duration: 0.16,
       ease: [0.16, 1, 0.3, 1],
     });
 
     return controls.stop;
-  }, [raw, value]);
+  }, [raw, skipAnimation, value]);
 
   return <motion.span className={className}>{label}</motion.span>;
 }
+
+type VizProps = {
+  included: Set<string>;
+  total: number;
+};
+
+const ExpenseSplitterViz = memo(function ExpenseSplitterViz({
+  included,
+  total,
+}: VizProps) {
+  const payer = PEOPLE[1];
+  const share = total / Math.max(included.size, 1);
+  const payerIndex = PEOPLE.findIndex((person) => person.id === payer.id);
+  const payerX = ((payerIndex + 0.5) / PEOPLE.length) * 100;
+  const activePeople = PEOPLE.filter((person) => included.has(person.id));
+
+  return (
+    <div className="relative min-h-[24rem] rounded-2xl border border-border/60 bg-background/25 p-4 sm:p-5">
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <defs>
+          <marker
+            id="split-arrow"
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path
+              d="M 0 0 L 10 5 L 0 10 z"
+              fill="hsl(var(--primary) / 0.75)"
+            />
+          </marker>
+        </defs>
+        {PEOPLE.map((person, index) => {
+          if (!included.has(person.id) || person.id === payer.id) return null;
+          const x = ((index + 0.5) / PEOPLE.length) * 100;
+          return (
+            <motion.path
+              key={person.id}
+              d={`M ${x} 70 C ${x} 48, ${payerX} 48, ${payerX} 26`}
+              fill="none"
+              stroke="hsl(var(--primary) / 0.42)"
+              strokeWidth="1.5"
+              strokeDasharray="5 6"
+              markerEnd="url(#split-arrow)"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              exit={{ pathLength: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            />
+          );
+        })}
+      </svg>
+
+      <div className="relative z-10 flex h-20 items-center justify-around">
+        {PEOPLE.map((person) => {
+          const on = included.has(person.id);
+          return (
+            <motion.div
+              key={person.id}
+              animate={{
+                opacity: on ? 1 : 0.32,
+                scale: person.id === payer.id ? 1.08 : 1,
+              }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center gap-1 text-[11px] font-medium"
+              style={{
+                color: on
+                  ? `hsl(${person.color})`
+                  : "hsl(var(--muted-foreground))",
+              }}
+            >
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold"
+                style={{
+                  borderColor: `hsl(${person.color} / ${on ? 0.65 : 0.24})`,
+                  backgroundColor: `hsl(${person.color} / ${on ? 0.15 : 0.05})`,
+                }}
+              >
+                {person.name.slice(0, 1)}
+              </span>
+              {person.id === payer.id ? "paid" : person.name}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="relative z-10 mt-8 flex h-56 items-end gap-3 sm:gap-4">
+        {PEOPLE.map((person) => {
+          const on = included.has(person.id);
+          const barValue = on ? share : 0;
+          const pct = on
+            ? Math.min(92, Math.max(20, (barValue / 520) * 100))
+            : 6;
+          return (
+            <div
+              key={person.id}
+              className="flex flex-1 flex-col items-center gap-2"
+            >
+              <div className="relative flex h-full w-full items-end overflow-hidden rounded-xl border border-border/45 bg-muted/55">
+                <motion.div
+                  className="w-full rounded-xl"
+                  initial={false}
+                  animate={{ height: `${pct}%`, opacity: on ? 1 : 0.22 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    background: `linear-gradient(to top, hsl(${person.color}), hsl(${person.color} / 0.78))`,
+                    boxShadow: `0 -10px 26px -6px hsl(${person.color} / 0.65)`,
+                  }}
+                />
+                {on && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute inset-x-0 bottom-2 text-center text-[11px] font-bold text-white drop-shadow"
+                  >
+                    ${barValue.toFixed(0)}
+                  </motion.span>
+                )}
+              </div>
+              <span
+                className="text-[11px] font-medium"
+                style={{
+                  color: on
+                    ? `hsl(${person.color})`
+                    : "hsl(var(--muted-foreground))",
+                }}
+              >
+                {person.name}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="relative z-10 mt-4 text-xs text-muted-foreground">
+        {activePeople.length - 1} settle-up path
+        {activePeople.length === 2 ? "" : "s"} to {payer.name}
+      </div>
+    </div>
+  );
+});
 
 export function ExpenseSplitter() {
   const [total, setTotal] = useState(920);
   const [included, setIncluded] = useState<Set<string>>(
     new Set(PEOPLE.map((p) => p.id)),
   );
+  const [costDragging, setCostDragging] = useState(false);
+
+  const vizTotal = useDeferredValue(total);
 
   const payer = PEOPLE[1];
   const share = useMemo(
     () => total / Math.max(included.size, 1),
     [included.size, total],
   );
-  const activePeople = useMemo(
-    () => PEOPLE.filter((person) => included.has(person.id)),
-    [included],
-  );
+
+  useEffect(() => {
+    if (!costDragging) return;
+    const end = () => setCostDragging(false);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    return () => {
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+  }, [costDragging]);
 
   function toggle(id: string) {
     setIncluded((prev) => {
@@ -63,8 +236,6 @@ export function ExpenseSplitter() {
     });
   }
 
-  const payerIndex = PEOPLE.findIndex((person) => person.id === payer.id);
-  const payerX = ((payerIndex + 0.5) / PEOPLE.length) * 100;
   const totalPct = ((total - 100) / (2000 - 100)) * 100;
   const rangeStyle = { "--range-progress": `${totalPct}%` } as CSSProperties;
 
@@ -94,6 +265,7 @@ export function ExpenseSplitter() {
                 <span>Trip cost</span>
                 <AnimatedMoney
                   value={total}
+                  skipAnimation={costDragging}
                   className="font-sans text-2xl font-bold text-foreground"
                 />
               </label>
@@ -106,8 +278,12 @@ export function ExpenseSplitter() {
                   max="2000"
                   step="20"
                   value={total}
-                  onInput={(e) => setTotal(Number(e.currentTarget.value))}
-                  onChange={(e) => setTotal(Number(e.target.value))}
+                  onInput={(e) => {
+                    setTotal(Number(e.currentTarget.value));
+                  }}
+                  onPointerDown={() => setCostDragging(true)}
+                  onPointerUp={() => setCostDragging(false)}
+                  onPointerCancel={() => setCostDragging(false)}
                   className="landing-range-input"
                 />
               </div>
@@ -158,6 +334,7 @@ export function ExpenseSplitter() {
               <AnimatedMoney
                 value={share}
                 decimals={2}
+                skipAnimation={costDragging}
                 className="mt-1 block font-sans text-3xl font-bold text-primary sm:text-4xl"
               />
               <p className="mt-2 text-xs text-muted-foreground">
@@ -167,137 +344,7 @@ export function ExpenseSplitter() {
             </div>
           </div>
 
-          <div className="relative min-h-[24rem] rounded-2xl border border-border/60 bg-background/25 p-4 sm:p-5">
-            <svg
-              className="absolute inset-0 h-full w-full"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden
-            >
-              <defs>
-                <marker
-                  id="split-arrow"
-                  viewBox="0 0 10 10"
-                  refX="8"
-                  refY="5"
-                  markerWidth="5"
-                  markerHeight="5"
-                  orient="auto-start-reverse"
-                >
-                  <path
-                    d="M 0 0 L 10 5 L 0 10 z"
-                    fill="hsl(var(--primary) / 0.75)"
-                  />
-                </marker>
-              </defs>
-              {PEOPLE.map((person, index) => {
-                if (!included.has(person.id) || person.id === payer.id)
-                  return null;
-                const x = ((index + 0.5) / PEOPLE.length) * 100;
-                return (
-                  <motion.path
-                    key={person.id}
-                    d={`M ${x} 70 C ${x} 48, ${payerX} 48, ${payerX} 26`}
-                    fill="none"
-                    stroke="hsl(var(--primary) / 0.42)"
-                    strokeWidth="1.5"
-                    strokeDasharray="5 6"
-                    markerEnd="url(#split-arrow)"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    exit={{ pathLength: 0, opacity: 0 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  />
-                );
-              })}
-            </svg>
-
-            <div className="relative z-10 flex h-20 items-center justify-around">
-              {PEOPLE.map((person) => {
-                const on = included.has(person.id);
-                return (
-                  <motion.div
-                    key={person.id}
-                    animate={{
-                      opacity: on ? 1 : 0.32,
-                      scale: person.id === payer.id ? 1.08 : 1,
-                    }}
-                    transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col items-center gap-1 text-[11px] font-medium"
-                    style={{
-                      color: on
-                        ? `hsl(${person.color})`
-                        : "hsl(var(--muted-foreground))",
-                    }}
-                  >
-                    <span
-                      className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold"
-                      style={{
-                        borderColor: `hsl(${person.color} / ${on ? 0.65 : 0.24})`,
-                        backgroundColor: `hsl(${person.color} / ${on ? 0.15 : 0.05})`,
-                      }}
-                    >
-                      {person.name.slice(0, 1)}
-                    </span>
-                    {person.id === payer.id ? "paid" : person.name}
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="relative z-10 mt-8 flex h-56 items-end gap-3 sm:gap-4">
-              {PEOPLE.map((person) => {
-                const on = included.has(person.id);
-                const barValue = on ? share : 0;
-                const pct = on
-                  ? Math.min(92, Math.max(20, (barValue / 520) * 100))
-                  : 6;
-                return (
-                  <div
-                    key={person.id}
-                    className="flex flex-1 flex-col items-center gap-2"
-                  >
-                    <div className="relative flex h-full w-full items-end overflow-hidden rounded-xl border border-border/45 bg-muted/55">
-                      <motion.div
-                        className="w-full rounded-xl"
-                        initial={false}
-                        animate={{ height: `${pct}%`, opacity: on ? 1 : 0.22 }}
-                        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                        style={{
-                          background: `linear-gradient(to top, hsl(${person.color}), hsl(${person.color} / 0.78))`,
-                          boxShadow: `0 -10px 26px -6px hsl(${person.color} / 0.65)`,
-                        }}
-                      />
-                      {on && (
-                        <motion.span
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="absolute inset-x-0 bottom-2 text-center text-[11px] font-bold text-white drop-shadow"
-                        >
-                          ${barValue.toFixed(0)}
-                        </motion.span>
-                      )}
-                    </div>
-                    <span
-                      className="text-[11px] font-medium"
-                      style={{
-                        color: on
-                          ? `hsl(${person.color})`
-                          : "hsl(var(--muted-foreground))",
-                      }}
-                    >
-                      {person.name}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="relative z-10 mt-4 text-xs text-muted-foreground">
-              {activePeople.length - 1} settle-up path
-              {activePeople.length === 2 ? "" : "s"} to {payer.name}
-            </div>
-          </div>
+          <ExpenseSplitterViz included={included} total={vizTotal} />
         </div>
       </div>
     </motion.section>

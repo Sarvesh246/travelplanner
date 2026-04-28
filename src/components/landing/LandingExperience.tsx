@@ -83,12 +83,10 @@ function JourneySpine({
   const pathRef = useRef<SVGPathElement>(null);
   const travelerRef = useRef<HTMLDivElement>(null);
   const displayedProgressRef = useRef(0.015);
+  const travelerRafRef = useRef<number | null>(null);
   const geometryFrameRef = useRef<number | null>(null);
-  const svgMetricsRef = useRef<{
-    height: number;
-    topDocument: number;
-    width: number;
-  } | null>(null);
+  /** Size only — updated on resize; top/left come from a fresh `getBoundingClientRect` each frame. */
+  const svgMetricsRef = useRef<{ height: number; width: number } | null>(null);
   const displayedPathProgress = useMotionValue(0.015);
   const spineDataRef = useRef<ReturnType<typeof buildSpineSamples> | null>(null);
   const rawProgress = useElementScrollProgress(targetRef, 0, 0.5);
@@ -116,38 +114,31 @@ function JourneySpine({
     if (!svg) return;
 
     const rect = svg.getBoundingClientRect();
-    svgMetricsRef.current = {
-      height: rect.height,
-      topDocument: runtime.scrollY.get() + rect.top,
-      width: rect.width,
-    };
-  }, [runtime.scrollY]);
+    if (rect.width <= 0 || rect.height <= 0) return;
 
-  const scheduleSvgGeometryMeasure = useCallback(() => {
-    if (geometryFrameRef.current !== null) return;
-    geometryFrameRef.current = window.requestAnimationFrame(measureSvgGeometry);
-  }, [measureSvgGeometry]);
+    svgMetricsRef.current = { width: rect.width, height: rect.height };
+  }, []);
 
-  const getCachedSvgRect = useCallback(() => {
-    let metrics = svgMetricsRef.current;
-    if (!metrics || metrics.width === 0 || metrics.height === 0) {
-      measureSvgGeometry();
-      metrics = svgMetricsRef.current;
-    }
-    if (!metrics) return null;
+  const getCachedSvgRect = useCallback((): DOMRect | null => {
+    const svg = pathRef.current?.ownerSVGElement;
+    if (!svg) return null;
 
-    return new DOMRect(
-      0,
-      metrics.topDocument - runtime.scrollY.get(),
-      metrics.width,
-      metrics.height,
-    );
-  }, [measureSvgGeometry, runtime.scrollY]);
+    const fresh = svg.getBoundingClientRect();
+    const cached = svgMetricsRef.current;
+    const w = cached?.width ?? fresh.width;
+    const h = cached?.height ?? fresh.height;
+    if (w <= 0 || h <= 0) return null;
+
+    return new DOMRect(fresh.left, fresh.top, w, h);
+  }, []);
 
   const updateTravelerPoint = useCallback(() => {
     const path = pathRef.current;
     const node = travelerRef.current;
     if (!path || !node) return;
+
+    const rect = getCachedSvgRect();
+    if (!rect) return;
 
     let spine = spineDataRef.current;
     if (!spine) {
@@ -156,12 +147,7 @@ function JourneySpine({
     }
     const { totalLength, samples } = spine;
 
-    const rect = getCachedSvgRect();
-    if (!rect) return;
-
-    const scrollY = runtime.scrollY.get();
-    const viewportHeight = runtime.viewportHeight.get();
-    const viewportCenterY = viewportHeight / 2;
+    const viewportCenterY = runtime.viewportHeight.get() / 2;
 
     const centerProgress = progressForScreenY(samples, rect, viewportCenterY);
     const desiredProgress = Math.max(
@@ -174,26 +160,33 @@ function JourneySpine({
     displayedPathProgress.set(point.progress);
 
     const travelerX = (point.x / 100) * rect.width;
-    // Pin the dot vertically to viewport center; convert to column-relative coords
-    // (the column shares its top edge with the SVG's document-top).
-    const svgTopDocument =
-      svgMetricsRef.current?.topDocument ?? scrollY + rect.top;
-    const travelerY = scrollY + viewportCenterY - svgTopDocument;
+    // Column-relative Y for viewport-vertical-center — uses same `rect.top` as progress math (fresh each call).
+    const travelerY = viewportCenterY - rect.top;
     node.style.transform = `translate3d(${travelerX}px, ${travelerY}px, 0) translate(-50%, -50%)`;
-  }, [
-    displayedPathProgress,
-    getCachedSvgRect,
-    runtime.scrollY,
-    runtime.viewportHeight,
-  ]);
+  }, [displayedPathProgress, getCachedSvgRect, runtime.viewportHeight]);
+
+  const scheduleSvgGeometryMeasure = useCallback(() => {
+    if (geometryFrameRef.current !== null) return;
+    geometryFrameRef.current = window.requestAnimationFrame(() => {
+      measureSvgGeometry();
+      updateTravelerPoint();
+    });
+  }, [measureSvgGeometry, updateTravelerPoint]);
+
+  const scheduleTravelerUpdate = useCallback(() => {
+    if (!showTraveler) return;
+    if (travelerRafRef.current !== null) return;
+    travelerRafRef.current = window.requestAnimationFrame(() => {
+      travelerRafRef.current = null;
+      updateTravelerPoint();
+    });
+  }, [showTraveler, updateTravelerPoint]);
 
   useEffect(() => {
     if (!showTraveler) return;
     measureSvgGeometry();
     updateTravelerPoint();
-    const initialFrame = window.requestAnimationFrame(() => {
-      updateTravelerPoint();
-    });
+    const initialFrame = window.requestAnimationFrame(updateTravelerPoint);
 
     const svg = pathRef.current?.ownerSVGElement;
     const observer = svg ? new ResizeObserver(scheduleSvgGeometryMeasure) : null;
@@ -201,6 +194,10 @@ function JourneySpine({
 
     return () => {
       window.cancelAnimationFrame(initialFrame);
+      if (travelerRafRef.current !== null) {
+        window.cancelAnimationFrame(travelerRafRef.current);
+        travelerRafRef.current = null;
+      }
       if (geometryFrameRef.current !== null) {
         window.cancelAnimationFrame(geometryFrameRef.current);
         geometryFrameRef.current = null;
@@ -209,24 +206,15 @@ function JourneySpine({
     };
   }, [
     measureSvgGeometry,
-    rawProgress,
     scheduleSvgGeometryMeasure,
     showTraveler,
     updateTravelerPoint,
   ]);
 
-  useMotionValueEvent(rawProgress, "change", () => {
-    if (!showTraveler) return;
-    updateTravelerPoint();
-  });
-  useMotionValueEvent(runtime.viewportWidth, "change", () => {
-    if (!showTraveler) return;
-    scheduleSvgGeometryMeasure();
-  });
-  useMotionValueEvent(runtime.viewportHeight, "change", () => {
-    if (!showTraveler) return;
-    scheduleSvgGeometryMeasure();
-  });
+  useMotionValueEvent(rawProgress, "change", scheduleTravelerUpdate);
+  useMotionValueEvent(runtime.scrollY, "change", scheduleTravelerUpdate);
+  useMotionValueEvent(runtime.viewportWidth, "change", scheduleSvgGeometryMeasure);
+  useMotionValueEvent(runtime.viewportHeight, "change", scheduleSvgGeometryMeasure);
 
   return (
     <>
