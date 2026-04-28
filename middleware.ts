@@ -8,6 +8,15 @@ interface CookieToSet {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
+  // Recover OAuth flows that land on the wrong route but still include the auth code.
+  if (searchParams.has("code") && pathname !== "/auth/callback") {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    return NextResponse.redirect(callbackUrl);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -38,8 +47,6 @@ export async function middleware(request: NextRequest) {
 
   /** Stale or missing refresh token — treat as signed out; avoid redirect loops as logged-in */
   const userOrNull = authError ? null : user;
-
-  const { pathname } = request.nextUrl;
 
   const protectedRoutes = ["/dashboard", "/trips"];
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
