@@ -9,6 +9,7 @@ import { removeMember, updateMemberRole } from "@/actions/members";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
 import { MemberRole } from "@prisma/client";
+import { cn } from "@/lib/utils";
 
 interface MemberCardProps {
   member: {
@@ -48,7 +49,12 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
 
   return (
     <>
-      <div className="app-surface app-hover-lift flex items-center gap-3 rounded-xl px-4 py-3">
+      <div
+        className={cn(
+          "app-surface app-hover-lift flex items-center gap-3 overflow-visible rounded-xl px-4 py-3",
+          menuOpen && "z-30"
+        )}
+      >
         <UserAvatar name={member.user.name} avatarUrl={member.user.avatarUrl} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -67,7 +73,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
               <MoreHorizontal className="w-4 h-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
+              <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-border bg-popover py-1 shadow-lg">
                 {canManage && member.role !== "ADMIN" && (
                   <button
                     onClick={() => handleRoleChange("ADMIN")}
