@@ -10,6 +10,14 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    /** px breakpoints match arbitrary `min-[NNNpx]` / `max-[…]` variants (avoids rem/px mixed-unit warnings). */
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       colors: {
         border: "hsl(var(--border))",

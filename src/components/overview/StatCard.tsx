@@ -19,7 +19,7 @@ export function StatCard({ label, value, icon, iconColor, href, className }: Sta
     <motion.div
       variants={scaleIn}
       className={cn(
-        "app-surface min-w-0 rounded-2xl p-4 min-[24rem]:p-5 transition-all",
+        "app-surface min-w-0 rounded-2xl p-4 min-[384px]:p-5 transition-all",
         href && "app-hover-lift cursor-pointer",
         className
       )}

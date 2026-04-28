@@ -31,7 +31,7 @@ export function OverviewClient({ stats, tripId }: OverviewClientProps) {
       variants={staggerContainer}
       initial="initial"
       animate="animate"
-      className="grid grid-cols-1 gap-3 min-[24rem]:grid-cols-2 min-[24rem]:gap-4 sm:grid-cols-3"
+      className="grid grid-cols-1 gap-3 min-[384px]:grid-cols-2 min-[384px]:gap-4 sm:grid-cols-3"
     >
       <StatCard
         label="Members"
