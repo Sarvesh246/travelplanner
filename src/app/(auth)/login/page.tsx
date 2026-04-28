@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion";
+
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  "auth-failed":
+    "We couldn't complete sign-in. Please try again, or use a different method.",
+};
 
 export default function LoginPage() {
   return (
@@ -29,6 +34,16 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
+  const errorCode = searchParams.get("error");
+  const reportedErrorRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!errorCode || reportedErrorRef.current === errorCode) return;
+    reportedErrorRef.current = errorCode;
+    const message = LOGIN_ERROR_MESSAGES[errorCode];
+    if (message) toast.error(message);
+  }, [errorCode]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

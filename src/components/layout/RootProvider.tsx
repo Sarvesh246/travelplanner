@@ -7,6 +7,7 @@ import { AppThemeProvider } from "@/components/layout/AppThemeProvider";
 import { AppWorkspaceOverlays } from "@/components/layout/AppWorkspaceOverlays";
 import { InvalidSessionRecovery } from "@/components/layout/InvalidSessionRecovery";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { SyncStatusToast } from "@/components/layout/SyncStatusToast";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 
 /**
@@ -69,6 +70,9 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
             so the rest of the app can stream while it hydrates. */}
         <Suspense fallback={null}>
           <NavigationProgress />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SyncStatusToast />
         </Suspense>
         <Toaster
           position="bottom-right"
