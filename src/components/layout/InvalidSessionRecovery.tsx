@@ -10,7 +10,6 @@ function isRecoverableSessionError(err: { message?: string; name?: string } | nu
   if (!err?.message) return false;
   const m = err.message.toLowerCase();
   return (
-    m.includes("refresh") ||
     m.includes("refresh token not found") ||
     m.includes("invalid jwt") ||
     (m.includes("jwt expired") && m.includes("session"))
@@ -65,23 +64,36 @@ export function InvalidSessionRecovery() {
       if (!hasSupabaseRefreshTokenCookie()) {
         return;
       }
-
-      const supabase = createClient();
-
-      const { error: sessionError } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (sessionError && isRecoverableSessionError(sessionError)) {
-        await supabase.auth.signOut({ scope: "local" });
-        if (cancelled) return;
-        router.replace(
-          `/login?${new URLSearchParams({ next: pathname, reason: "session" }).toString()}`
-        );
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        // Do not force sign-out while offline; let reconnect recover naturally.
         return;
       }
 
-      const { error: userError } = await supabase.auth.getUser();
+      const supabase = createClient();
+
+      const firstSession = await supabase.auth.getSession();
       if (cancelled) return;
-      if (userError && isRecoverableSessionError(userError)) {
+
+      // Avoid aggressive sign-outs on transient startup/mobile timing issues.
+      if (!firstSession.error && firstSession.data.session) return;
+
+      // Retry once shortly after hydration to give token refresh time to settle.
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (cancelled) return;
+
+      const [sessionResult, userResult] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase.auth.getUser(),
+      ]);
+      if (cancelled) return;
+
+      const hasSession = Boolean(sessionResult.data.session);
+      const hasUser = Boolean(userResult.data.user);
+      const sessionRecoverable = isRecoverableSessionError(sessionResult.error);
+      const userRecoverable = isRecoverableSessionError(userResult.error);
+
+      // Only force local sign-out when both checks still fail after retry.
+      if (!hasSession && !hasUser && sessionRecoverable && userRecoverable) {
         await supabase.auth.signOut({ scope: "local" });
         if (cancelled) return;
         router.replace(
