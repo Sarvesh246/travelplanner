@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { RoleBadge } from "./RoleBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -21,15 +22,16 @@ interface MemberCardProps {
   tripId: string;
 }
 
+const itemCls =
+  "flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2 text-sm outline-none data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+
 export function MemberCard({ member, tripId }: MemberCardProps) {
   const { currentUser, canManage } = useTripContext();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const isMe = member.userId === currentUser.id;
   const isOwnerMember = member.role === "OWNER";
 
   async function handleRoleChange(role: MemberRole) {
-    setMenuOpen(false);
     try {
       await updateMemberRole(tripId, member.userId, role);
       toast.success("Role updated");
@@ -51,8 +53,8 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
     <>
       <div
         className={cn(
-          "app-surface app-hover-lift flex items-center gap-3 overflow-visible rounded-xl px-4 py-3",
-          menuOpen && "z-30"
+          "app-surface app-hover-lift flex items-center gap-3 rounded-xl px-4 py-3",
+          "!overflow-visible"
         )}
       >
         <UserAvatar name={member.user.name} avatarUrl={member.user.avatarUrl} size="md" />
@@ -65,47 +67,55 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
         </div>
         <RoleBadge role={member.role} />
         {canManage && !isMe && !isOwnerMember && (
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-border bg-popover py-1 shadow-lg">
-                {canManage && member.role !== "ADMIN" && (
-                  <button
-                    onClick={() => handleRoleChange("ADMIN")}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
-                  >
-                    <Shield className="w-3.5 h-3.5" /> Make Admin
-                  </button>
-                )}
-                {canManage && member.role !== "MEMBER" && (
-                  <button
-                    onClick={() => handleRoleChange("MEMBER")}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
-                  >
-                    <User className="w-3.5 h-3.5" /> Make Member
-                  </button>
-                )}
-                {canManage && member.role !== "VIEWER" && (
-                  <button
-                    onClick={() => handleRoleChange("VIEWER")}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5" /> Make Viewer
-                  </button>
-                )}
+          <div
+            className="shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
                 <button
-                  onClick={() => { setMenuOpen(false); setConfirmRemove(true); }}
-                  className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors"
+                  type="button"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                  aria-label="Member actions"
                 >
-                  <UserMinus className="w-3.5 h-3.5" /> Remove
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
-              </div>
-            )}
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className="z-[120] min-w-[12rem] overflow-hidden rounded-xl border border-border bg-popover py-1 text-popover-foreground shadow-lg"
+                  sideOffset={8}
+                  align="end"
+                  collisionPadding={12}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  {canManage && member.role !== "ADMIN" && (
+                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("ADMIN")}>
+                      <Shield className="w-3.5 h-3.5 shrink-0" /> Make Admin
+                    </DropdownMenu.Item>
+                  )}
+                  {canManage && member.role !== "MEMBER" && (
+                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("MEMBER")}>
+                      <User className="w-3.5 h-3.5 shrink-0" /> Make Member
+                    </DropdownMenu.Item>
+                  )}
+                  {canManage && member.role !== "VIEWER" && (
+                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("VIEWER")}>
+                      <Eye className="w-3.5 h-3.5 shrink-0" /> Make Viewer
+                    </DropdownMenu.Item>
+                  )}
+                  <DropdownMenu.Item
+                    className={cn(itemCls, "text-destructive data-[highlighted]:bg-destructive/10")}
+                    onSelect={() => setConfirmRemove(true)}
+                  >
+                    <UserMinus className="w-3.5 h-3.5 shrink-0" /> Remove
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </div>
         )}
       </div>
@@ -114,7 +124,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
         open={confirmRemove}
         onOpenChange={setConfirmRemove}
         title={`Remove ${member.user.name}?`}
-        description="They'll lose access to this trip immediately."
+        description={"They'll lose access to this trip immediately."}
         confirmLabel="Remove"
         onConfirm={handleRemove}
       />
