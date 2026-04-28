@@ -54,7 +54,6 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
       <div className="p-4 border-b border-sidebar-border/80">
         <div className="flex items-center gap-2.5">
           <div className="relative w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]">
-            <span className="app-waypoint absolute -right-1 -top-1 h-2 w-2" aria-hidden />
             <Plane className="w-4 h-4 text-primary rotate-45" />
           </div>
           <p

@@ -371,7 +371,7 @@ function LandingExperienceBody() {
             </span>
           </Link>
           <nav className="flex shrink-0 items-center gap-1.5 min-[400px]:gap-3">
-            <ThemeToggle />
+            <ThemeToggle className="landing-glass h-10 w-10 rounded-xl border border-border/75 bg-card/84 text-foreground shadow-[0_12px_30px_-18px_hsl(var(--foreground)/0.55),0_0_0_1px_hsl(var(--background)/0.28)] backdrop-blur-xl hover:bg-card/92 hover:text-foreground" />
             <Link
               href={ROUTES.login}
               className="inline-flex min-h-10 items-center justify-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors hover:bg-muted min-[400px]:px-4"

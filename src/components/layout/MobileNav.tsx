@@ -17,7 +17,7 @@ const navItems = (tripId: string) => [
   { href: ROUTES.tripSupplies(tripId), label: "Supplies", mobileLabel: "Gear", icon: Package },
   { href: ROUTES.tripExpenses(tripId), label: "Expenses", mobileLabel: "Costs", icon: Receipt },
   { href: ROUTES.tripVotes(tripId), label: "Votes", mobileLabel: "Votes", icon: Vote },
-  { href: ROUTES.tripMembers(tripId), label: "Members", mobileLabel: "Crew", icon: Users },
+  { href: ROUTES.tripMembers(tripId), label: "Members", mobileLabel: "Members", icon: Users },
 ];
 
 export function MobileNav({ tripId }: MobileNavProps) {
