@@ -29,7 +29,9 @@ export function OverviewHeroEditor({
     <div className="space-y-3">
       <InlineEdit
         value={name}
-        onSave={(next) => updateTrip(tripId, { name: next })}
+        onSave={async (next) => {
+          await updateTrip(tripId, { name: next });
+        }}
         displayClassName="min-w-0 text-balance text-2xl font-bold tracking-tight"
       />
 
