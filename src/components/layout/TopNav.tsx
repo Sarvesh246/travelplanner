@@ -149,46 +149,52 @@ export function TopNav({ user, onCommandPaletteOpen }: TopNavProps) {
           {menuOpen && (
             <div
               role="menu"
-              className="app-glass absolute right-0 top-full z-50 mt-2 max-h-[min(70vh,28rem)] w-[min(16rem,calc(100vw-1rem))] max-w-[calc(100dvw-1rem)] overflow-y-auto rounded-xl py-1 text-left shadow-lg animate-in fade-in slide-in-from-top-1 duration-150"
+              className="absolute right-0 top-full z-[90] mt-2 isolate max-h-[min(70vh,28rem)] w-[min(16rem,calc(100vw-1rem))] max-w-[calc(100dvw-1rem)] overflow-hidden rounded-2xl border border-border/90 bg-card/96 py-1 text-left shadow-[0_28px_70px_-34px_hsl(var(--primary)/0.58),0_18px_42px_-24px_hsl(var(--foreground)/0.42)] animate-in fade-in slide-in-from-top-1 duration-150"
             >
-              <div className="mb-1 border-b border-border px-2.5 py-2.5">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,hsl(var(--card)/0.96),hsl(var(--card)/0.92))] backdrop-blur-3xl backdrop-saturate-150"
+              />
+              <div className="relative z-10 mb-1 border-b border-border/90 bg-card/72 px-2.5 py-2.5">
                 <p className="text-sm font-medium truncate">{user.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
-              <MenuItem
-                href={ROUTES.dashboard}
-                onClick={() => setMenuOpen(false)}
-                icon={<LayoutDashboard className="w-3.5 h-3.5" />}
-                label="My trips"
-                shortcut="G D"
-                chord
-              />
-              <MenuItem
-                href={ROUTES.newTrip}
-                onClick={() => setMenuOpen(false)}
-                icon={<Plus className="w-3.5 h-3.5" />}
-                label="New trip"
-                shortcut="N"
-              />
-              <MenuItem
-                as="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  handleOpenPalette();
-                }}
-                icon={<Search className="w-3.5 h-3.5" />}
-                label="Search…"
-                shortcut={`${modLabel} K`}
-              />
-              <div className="my-1 border-t border-border" />
-              <button
-                role="menuitem"
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Sign out</span>
-              </button>
+              <div className="relative z-10">
+                <MenuItem
+                  href={ROUTES.dashboard}
+                  onClick={() => setMenuOpen(false)}
+                  icon={<LayoutDashboard className="w-3.5 h-3.5" />}
+                  label="My trips"
+                  shortcut="G D"
+                  chord
+                />
+                <MenuItem
+                  href={ROUTES.newTrip}
+                  onClick={() => setMenuOpen(false)}
+                  icon={<Plus className="w-3.5 h-3.5" />}
+                  label="New trip"
+                  shortcut="N"
+                />
+                <MenuItem
+                  as="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleOpenPalette();
+                  }}
+                  icon={<Search className="w-3.5 h-3.5" />}
+                  label="Search…"
+                  shortcut={`${modLabel} K`}
+                />
+                <div className="my-1 border-t border-border/90" />
+                <button
+                  role="menuitem"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign out</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

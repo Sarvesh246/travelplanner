@@ -358,7 +358,7 @@ function LandingExperienceBody() {
         </div>
 
         <header
-          className="absolute inset-x-0 top-0 z-30 mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-6"
+          className="absolute inset-x-0 top-0 z-30 mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-2 px-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))] sm:px-6 sm:pt-[max(1rem,env(safe-area-inset-top,0px))]"
           data-ready={isReady}
         >
           <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -393,7 +393,7 @@ function LandingExperienceBody() {
           data-ready={isReady}
         >
           <JourneySpine targetRef={mainRef} />
-          <section className="landing-hero-section relative z-20 mx-auto flex min-h-svh w-full flex-col items-center justify-center px-4 pb-12 pt-24 sm:px-6 sm:pb-14">
+          <section className="landing-hero-section relative z-20 mx-auto flex min-h-svh w-full flex-col items-center justify-center px-4 pb-12 pt-[calc(7rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-14 sm:pt-[calc(6.5rem+env(safe-area-inset-top,0px))]">
             <div className="absolute inset-0 -z-0">
               <Suspense fallback={null}>
                 <HeroScene onReady={markHeroPipelineReady} />

@@ -7,6 +7,34 @@ interface CookieToSet {
   options?: CookieOptions;
 }
 
+function isRecoverableAuthError(err: { message?: string; name?: string } | null) {
+  if (!err?.message) return false;
+  const message = err.message.toLowerCase();
+  return (
+    message.includes("refresh") ||
+    message.includes("refresh token not found") ||
+    message.includes("invalid jwt") ||
+    (message.includes("jwt expired") && message.includes("session"))
+  );
+}
+
+function clearSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+) {
+  const authCookieNames = request.cookies
+    .getAll()
+    .map((cookie) => cookie.name)
+    .filter(
+      (name) => name.startsWith("sb-") && name.includes("-auth-token"),
+    );
+
+  for (const name of authCookieNames) {
+    request.cookies.delete(name);
+    response.cookies.delete(name);
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
@@ -47,6 +75,9 @@ export async function middleware(request: NextRequest) {
 
   /** Stale or missing refresh token — treat as signed out; avoid redirect loops as logged-in */
   const userOrNull = authError ? null : user;
+  if (isRecoverableAuthError(authError)) {
+    clearSupabaseAuthCookies(request, supabaseResponse);
+  }
 
   const protectedRoutes = ["/dashboard", "/trips"];
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
