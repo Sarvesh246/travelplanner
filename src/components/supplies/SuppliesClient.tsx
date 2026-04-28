@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -14,6 +15,7 @@ import { SupplyDetailPanel } from "./SupplyDetailPanel";
 import { useTripContext } from "@/components/trip/TripContext";
 import { bulkDeleteSupplyItems, bulkMarkBought, restoreSupplyItem } from "@/actions/supplies";
 import { toast } from "sonner";
+import { supplyAnchorForId, parseSupplyHash } from "@/lib/deep-link-hash";
 import type { SupplyItemSerialized } from "./types";
 
 interface SuppliesClientProps {
@@ -23,6 +25,8 @@ interface SuppliesClientProps {
 }
 
 export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const { canEdit } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -62,6 +66,44 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
     });
     setBulkIds([]);
   }
+
+  function scrollSupplyRowIntoView(id: string) {
+    requestAnimationFrame(() => {
+      const prefers =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById(`supply-row-${id}`)?.scrollIntoView({
+        behavior: prefers ? "instant" : "smooth",
+        block: "nearest",
+      });
+    });
+  }
+
+  function revealSupply(id: string, opts?: { syncUrl?: boolean }) {
+    setSelectedItemId(id);
+    if (opts?.syncUrl) {
+      const next = `${pathname}#${supplyAnchorForId(id)}`;
+      if (typeof window !== "undefined" && `${window.location.pathname}${window.location.hash}` !== next) {
+        router.replace(next, { scroll: false });
+      }
+    }
+    scrollSupplyRowIntoView(id);
+  }
+
+  useEffect(() => {
+    function sync() {
+      if (typeof window === "undefined") return;
+      const id = parseSupplyHash(window.location.hash);
+      if (!id) return;
+      if (!items.some((it) => it.id === id)) return;
+      setSelectedItemId(id);
+      scrollSupplyRowIntoView(id);
+    }
+
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [items]);
 
   function handleTableRoving(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
@@ -156,6 +198,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
               </div>
             ) : null}
             <SupplyTable
+              tripId={tripId}
               items={items}
               currency={currency}
               selectedItemId={effectiveSelectedItemId}
@@ -181,6 +224,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         open={addOpen}
         onOpenChange={setAddOpen}
         tripId={tripId}
+        onSupplyCreated={(id) => revealSupply(id, { syncUrl: true })}
       />
 
       {canEdit ? (

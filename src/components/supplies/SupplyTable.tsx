@@ -6,6 +6,7 @@ import { SupplyRow } from "./SupplyRow";
 import type { SupplyItemSerialized } from "./types";
 
 interface SupplyTableProps {
+  tripId: string;
   items: SupplyItemSerialized[];
   currency: string;
   selectedItemId?: string | null;
@@ -16,6 +17,7 @@ interface SupplyTableProps {
 }
 
 export function SupplyTable({
+  tripId,
   items,
   currency,
   selectedItemId,
@@ -53,15 +55,18 @@ export function SupplyTable({
             <span className="w-6" />
           </div>
 
-          <motion.div
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-            className="app-surface rounded-2xl divide-y divide-border/70 overflow-hidden"
-          >
+          <div className="overflow-x-auto rounded-2xl [-webkit-overflow-scrolling:touch]">
+            <div className="min-w-[640px]">
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+                className="app-surface divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 shadow-sm"
+              >
             {categoryItems.map((item) => (
-              <motion.div key={item.id} variants={listItem}>
+              <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>
                 <SupplyRow
+                  tripId={tripId}
                   item={item}
                   currency={currency}
                   selected={selectedItemId === item.id}
@@ -71,7 +76,9 @@ export function SupplyTable({
                 />
               </motion.div>
             ))}
-          </motion.div>
+              </motion.div>
+            </div>
+          </div>
         </section>
       ))}
     </div>

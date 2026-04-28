@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Trash2, CheckCircle2 } from "lucide-react";
+import { MoreHorizontal, Trash2, CheckCircle2, Link2 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { SUPPLY_STATUS_COLORS } from "@/lib/constants";
+import { SUPPLY_STATUS_COLORS, ROUTES } from "@/lib/constants";
+import { supplyAnchorForId } from "@/lib/deep-link-hash";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTripContext } from "@/components/trip/TripContext";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import type { SupplyItemSerialized } from "./types";
 
 interface SupplyRowProps {
+  tripId: string;
   item: SupplyItemSerialized;
   currency: string;
   selected?: boolean;
@@ -26,6 +28,7 @@ interface SupplyRowProps {
 }
 
 export function SupplyRow({
+  tripId,
   item,
   currency,
   selected = false,
@@ -60,6 +63,20 @@ export function SupplyRow({
       toast.success("Marked as covered");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  }
+
+  async function copySupplyDeepLink(e: React.MouseEvent) {
+    e.stopPropagation();
+    setMenuOpen(false);
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      await navigator.clipboard.writeText(
+        `${origin}${ROUTES.tripSupplies(tripId)}#${supplyAnchorForId(item.id)}`,
+      );
+      toast.success("Link copied", { description: "Anyone with trip access can open this item after signing in." });
+    } catch {
+      toast.error("Could not copy link");
     }
   }
 
@@ -159,7 +176,14 @@ export function SupplyRow({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-40 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
+                  <div className="absolute right-0 top-full mt-1 w-44 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => void copySupplyDeepLink(e)}
+                      className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors"
+                    >
+                      <Link2 className="w-3.5 h-3.5 shrink-0" /> Copy trip link
+                    </button>
                     {item.status !== "COVERED" && (
                       <button onClick={handleMarkBought} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Mark covered
@@ -177,6 +201,15 @@ export function SupplyRow({
 
         {canEdit ? (
           <div className="pointer-events-none absolute right-12 top-1/2 z-[5] hidden -translate-y-1/2 items-center gap-1 md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
+            <button
+              type="button"
+              title="Copy link"
+              aria-label={`Copy trip link for ${item.name}`}
+              className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+              onClick={(e) => void copySupplyDeepLink(e)}
+            >
+              <Link2 className="h-4 w-4" />
+            </button>
             {item.status !== "COVERED" && (
               <button
                 type="button"

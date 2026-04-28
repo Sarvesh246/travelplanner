@@ -133,7 +133,7 @@ function SortableStop({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div id={`trip-stop-${stop.id}`} ref={setNodeRef} style={style}>
       <StopCard
         tripId={tripId}
         stop={stop}

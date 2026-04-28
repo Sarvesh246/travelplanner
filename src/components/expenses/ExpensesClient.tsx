@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { StickyActionBar } from "@/components/layout/StickyActionBar";
 import { Plus } from "lucide-react";
@@ -10,6 +11,7 @@ import { ExpenseCategoryChart } from "./ExpenseCategoryChart";
 import { AddExpenseDialog } from "./AddExpenseDialog";
 import { ExpenseDetailPanel } from "./ExpenseDetailPanel";
 import { useTripContext } from "@/components/trip/TripContext";
+import { parseExpenseHash, expenseAnchorForId } from "@/lib/deep-link-hash";
 import type { MemberBalance, Settlement } from "@/lib/balance-calculator";
 import type { ExpenseSerialized } from "./types";
 
@@ -28,9 +30,49 @@ export function ExpensesClient({
   balances,
   settlements,
 }: ExpensesClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { canEdit } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null);
+
+  function scrollExpenseRowIntoView(id: string) {
+    requestAnimationFrame(() => {
+      const prefers =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById(`expense-row-${id}`)?.scrollIntoView({
+        behavior: prefers ? "instant" : "smooth",
+        block: "nearest",
+      });
+    });
+  }
+
+  function revealExpense(id: string, opts?: { syncUrl?: boolean }) {
+    setSelectedExpenseId(id);
+    if (opts?.syncUrl) {
+      const next = `${pathname}#${expenseAnchorForId(id)}`;
+      if (typeof window !== "undefined" && `${window.location.pathname}${window.location.hash}` !== next) {
+        router.replace(next, { scroll: false });
+      }
+    }
+    scrollExpenseRowIntoView(id);
+  }
+
+  useEffect(() => {
+    function sync() {
+      if (typeof window === "undefined") return;
+      const id = parseExpenseHash(window.location.hash);
+      if (!id) return;
+      if (!expenses.some((e) => e.id === id)) return;
+      setSelectedExpenseId(id);
+      scrollExpenseRowIntoView(id);
+    }
+
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [expenses]);
 
   const total = expenses.reduce((sum, e) => sum + e.totalAmount, 0);
   const effectiveSelectedExpenseId =
@@ -88,6 +130,7 @@ export function ExpensesClient({
         onOpenChange={setAddOpen}
         tripId={tripId}
         currency={currency}
+        onExpenseCreated={(id) => revealExpense(id, { syncUrl: true })}
       />
 
       {canEdit ? (

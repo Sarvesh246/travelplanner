@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight, Map } from "lucide-react";
+import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight, Map, Link2 } from "lucide-react";
 import { formatDateRange } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { toast } from "sonner";
 import type { StopSerialized } from "./types";
 import type { HTMLAttributes, DOMAttributes } from "react";
 
@@ -35,6 +36,17 @@ export function StopCard({
   onButtonRef,
   dragHandleProps,
 }: StopCardProps) {
+  async function copyStopPageLink(e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      await navigator.clipboard.writeText(`${origin}${ROUTES.tripStop(tripId, stop.id)}`);
+      toast.success("Stop link copied", { description: "Share with anyone who has trip access." });
+    } catch {
+      toast.error("Could not copy link");
+    }
+  }
+
   return (
     <div className="relative">
       <span
@@ -99,7 +111,16 @@ export function StopCard({
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground/60 shrink-0 self-center group-hover:text-muted-foreground transition-colors md:hidden" />
         </button>
-        <div className="pointer-events-none absolute inset-y-0 right-2 z-[1] hidden w-14 items-center justify-center md:flex">
+        <div className="pointer-events-none absolute inset-y-0 right-2 z-[1] hidden w-auto items-center justify-end gap-1.5 pr-0 md:flex">
+          <button
+            type="button"
+            title="Copy link to stop page"
+            aria-label={`Copy link for ${stop.name}`}
+            className="pointer-events-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-primary/35 hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+            onClick={(e) => void copyStopPageLink(e)}
+          >
+            <Link2 className="h-4 w-4" />
+          </button>
           <Link
             href={ROUTES.tripStop(tripId, stop.id)}
             title="Open stop map view"

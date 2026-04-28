@@ -389,6 +389,7 @@
   }
 
   .app-top-nav[data-collapsed="true"] .app-top-nav__mobile-search {
+    flex: 0 0 auto;
     width: 2.5rem;
     padding-inline: 0;
     background: transparent;

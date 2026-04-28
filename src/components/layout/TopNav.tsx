@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, LogOut, LayoutDashboard, Plus, Pencil } from "lucide-react";
+import { Search, LogOut, LayoutDashboard, Plus, Pencil, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -17,8 +17,10 @@ import { useLoading } from "@/hooks/useLoading";
 import { ROUTES } from "@/lib/constants";
 import { Kbd } from "@/components/shared/Kbd";
 import { AppBackButton } from "@/components/layout/AppBackButton";
+import { TripNavigationTipsDialog } from "@/components/layout/TripNavigationTipsDialog";
 import { useStandaloneMode } from "@/hooks/useStandaloneMode";
 import { updateTrip } from "@/actions/trips";
+import { cn } from "@/lib/utils";
 
 interface TopNavProps {
   user: { name: string; email: string; avatarUrl?: string | null };
@@ -29,6 +31,7 @@ interface TopNavProps {
 export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
   const { startLoading, stopLoading } = useLoading();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [tripTipsOpen, setTripTipsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -47,6 +50,8 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
   const showBackButton =
     pathname !== ROUTES.dashboard &&
     (standalone || pathname.startsWith("/trips/"));
+
+  const showTripTips = /^\/trips\/(?!new$)[^/]+/.test(pathname);
 
   const fallbackHref = (() => {
     if (pathname === ROUTES.newTrip) return ROUTES.dashboard;
@@ -124,6 +129,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
   }
 
   return (
+    <>
     <header
       data-collapsed={collapsed ? "true" : "false"}
       className="app-top-nav sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] min-w-0 items-center gap-1.5 border-b border-border/70 bg-background/[0.82] pl-[max(0.625rem,env(safe-area-inset-left,0px))] pr-[max(0.625rem,env(safe-area-inset-right,0px))] pt-[max(0px,env(safe-area-inset-top,0px))] shadow-[0_10px_34px_-30px_hsl(var(--primary)/0.65)] backdrop-blur-xl transition-[min-height,background-color,box-shadow,padding] duration-300 sm:gap-3 sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))]"
@@ -166,16 +172,28 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
           onClick={handleOpenPalette}
           title="Search (/)"
           aria-label="Open command palette"
-          className="app-top-nav__mobile-search inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-transparent px-0 text-muted-foreground transition-[background-color,border-color,box-shadow,color,width] duration-200 hover:bg-muted/80 hover:text-foreground focus-ring md:hidden"
+          className={cn(
+            "app-top-nav__mobile-search inline-flex h-10 min-w-0 items-center justify-center rounded-xl border border-transparent px-0 text-muted-foreground transition-[background-color,border-color,box-shadow,color,width] duration-200 hover:bg-muted/80 hover:text-foreground focus-ring md:hidden",
+            collapsed
+              ? "max-md:flex-none max-md:shrink-0 max-md:w-10 max-md:justify-center max-md:order-[3]"
+              : "flex-1",
+          )}
         >
           <Search className="h-4 w-4" />
           <span className="app-top-nav__mobile-search-label ml-2 hidden text-sm font-medium">Search</span>
         </button>
 
-        <MotionToggle className="hidden h-10 w-10 shrink-0 min-[420px]:inline-flex" />
-        <ThemeToggle className="h-10 w-10 shrink-0" />
+        <MotionToggle
+          className={cn(
+            "hidden h-10 w-10 shrink-0 min-[420px]:inline-flex",
+            collapsed && "max-md:order-[1]",
+          )}
+        />
+        <ThemeToggle
+          className={cn("h-10 w-10 shrink-0", collapsed && "max-md:order-[2]")}
+        />
 
-        <div className="relative shrink-0" ref={menuRef}>
+        <div className={cn("relative shrink-0", collapsed && "max-md:order-[4]")} ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -238,6 +256,17 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
                   label="Search…"
                   shortcut={`${modLabel} K`}
                 />
+                {showTripTips ? (
+                  <MenuItem
+                    as="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setTripTipsOpen(true);
+                    }}
+                    icon={<Lightbulb className="w-3.5 h-3.5" />}
+                    label="Trip navigation tips"
+                  />
+                ) : null}
                 <div className="my-1 border-t border-border/90" />
                 <button
                   role="menuitem"
@@ -253,6 +282,9 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
         </div>
       </div>
     </header>
+
+      <TripNavigationTipsDialog open={tripTipsOpen} onOpenChange={setTripTipsOpen} />
+  </>
   );
 }
 

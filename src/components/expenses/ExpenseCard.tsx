@@ -1,17 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, ExternalLink, Trash2, MoreHorizontal, Tag, Users, CircleDollarSign, ChevronDown } from "lucide-react";
+import {
+  Receipt,
+  ExternalLink,
+  Trash2,
+  MoreHorizontal,
+  Tag,
+  Users,
+  CircleDollarSign,
+  ChevronDown,
+  Link2,
+} from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { AvatarGroup } from "@/components/shared/AvatarGroup";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTripContext } from "@/components/trip/TripContext";
 import { deleteExpense, markSharePaid, restoreExpense } from "@/actions/expenses";
+import { ROUTES } from "@/lib/constants";
+import { expenseAnchorForId } from "@/lib/deep-link-hash";
 import { toast } from "sonner";
 import type { ExpenseSerialized } from "./types";
 
 interface ExpenseCardProps {
+  tripId: string;
   expense: ExpenseSerialized;
   currency: string;
   selected?: boolean;
@@ -24,7 +37,13 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
 };
 
-export function ExpenseCard({ expense, currency, selected = false, onSelect }: ExpenseCardProps) {
+export function ExpenseCard({
+  tripId,
+  expense,
+  currency,
+  selected = false,
+  onSelect,
+}: ExpenseCardProps) {
   const { canEdit, currentUser } = useTripContext();
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,6 +58,19 @@ export function ExpenseCard({ expense, currency, selected = false, onSelect }: E
       toast.success(myShare.hasPaid ? "Marked unpaid" : "Marked paid");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  }
+
+  async function copyExpenseDeepLink(e: React.MouseEvent) {
+    e.stopPropagation();
+    setMenuOpen(false);
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const url = `${origin}${ROUTES.tripExpenses(tripId)}#${expenseAnchorForId(expense.id)}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied", { description: "Anyone with trip access can open it after signing in." });
+    } catch {
+      toast.error("Could not copy link");
     }
   }
 
@@ -102,7 +134,7 @@ export function ExpenseCard({ expense, currency, selected = false, onSelect }: E
                 </p>
               </div>
             </div>
-            {canEdit && (
+            {canEdit ? (
               <div className="relative z-[6]">
                 <button
                   type="button"
@@ -115,15 +147,54 @@ export function ExpenseCard({ expense, currency, selected = false, onSelect }: E
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
-                      <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors">
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
+                      <button
+                        type="button"
+                        onClick={(e) => void copyExpenseDeepLink(e)}
+                        className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors"
+                      >
+                        <Link2 className="w-3.5 h-3.5 shrink-0" /> Copy trip link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setConfirmDelete(true);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors"
+                      >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
                     </div>
                   </>
                 )}
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => void copyExpenseDeepLink(e)}
+                className="relative z-[6] flex md:hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/80 hover:text-primary transition-colors"
+                aria-label="Copy link to expense"
+              >
+                <Link2 className="w-4 h-4" />
+              </button>
             )}
+
+            <div className="pointer-events-none absolute right-14 top-4 z-[5] hidden items-center md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
+              <button
+                type="button"
+                title="Copy link to this expense"
+                aria-label={`Copy expense link for ${expense.title}`}
+                className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void copyExpenseDeepLink(e);
+                }}
+              >
+                <Link2 className="h-4 w-4" />
+              </button>
+            </div>
 
             {canEdit ? (
               <div className="pointer-events-none absolute right-11 top-4 z-[5] hidden items-center gap-1 md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">

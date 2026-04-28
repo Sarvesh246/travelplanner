@@ -181,25 +181,51 @@ function CommandPaletteInner() {
           </Command.Group>
         </Command.List>
 
-        <div className="hidden min-[500px]:flex min-[500px]:flex-row min-[500px]:items-center min-[500px]:justify-between min-[500px]:gap-4 min-[500px]:border-t min-[500px]:border-border min-[500px]:bg-muted/40 min-[500px]:px-4 min-[500px]:py-2.5 min-[500px]:text-[11px] min-[500px]:text-muted-foreground">
-          <div className="flex flex-wrap items-center gap-2 min-[500px]:gap-3">
+        <div className="hidden min-[500px]:flex min-[500px]:flex-col min-[500px]:gap-2 min-[500px]:border-t min-[500px]:border-border min-[500px]:bg-muted/40 min-[500px]:px-4 min-[500px]:py-2.5 min-[500px]:text-[11px] min-[500px]:text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2 min-[500px]:gap-3">
+              <span className="flex items-center gap-1.5">
+                <Kbd keys="↑" />
+                <Kbd keys="↓" />
+                <span>navigate</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Kbd keys="↵" />
+                <span>select</span>
+              </span>
+            </div>
             <span className="flex items-center gap-1.5">
-              <Kbd keys="↑" />
-              <Kbd keys="↓" />
-              <span>navigate</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Kbd keys="↵" />
-              <span>select</span>
+              <Kbd keys={isMac ? "⌘ K" : "Ctrl K"} />
+              <span>toggle</span>
             </span>
           </div>
-          <span className="flex items-center gap-1.5">
-            <Kbd keys={isMac ? "⌘ K" : "Ctrl K"} />
-            <span>toggle</span>
-          </span>
+          {tripId ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/50 pt-2 text-[10px]">
+              <span className="min-w-max font-medium uppercase tracking-wide text-muted-foreground/85">
+                Trip pages
+              </span>
+              <span className="inline-flex flex-wrap gap-x-2 gap-y-1">
+                <TripShortcutHint ks="G O" label="overview" />
+                <TripShortcutHint ks="G I" label="route" />
+                <TripShortcutHint ks="G S" label="gear" />
+                <TripShortcutHint ks="G E" label="costs" />
+                <TripShortcutHint ks="G V" label="votes" />
+                <TripShortcutHint ks="G M" label="members" />
+              </span>
+            </div>
+          ) : null}
         </div>
       </Command>
     </div>
+  );
+}
+
+function TripShortcutHint({ ks, label }: { ks: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Kbd keys={ks} asChord />
+      <span>{label}</span>
+    </span>
   );
 }
 

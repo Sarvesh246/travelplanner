@@ -89,8 +89,16 @@ export function ExpenseList({
       onKeyDown={handleKeyDown}
     >
       {expenses.map((expense) => (
-        <motion.div key={expense.id} variants={listItem} ref={(el) => { refs.current[expense.id] = el; }}>
+        <motion.div
+          key={expense.id}
+          id={`expense-row-${expense.id}`}
+          variants={listItem}
+          ref={(el) => {
+            refs.current[expense.id] = el;
+          }}
+        >
           <ExpenseCard
+            tripId={tripId}
             expense={expense}
             currency={currency}
             selected={selectedExpenseId === expense.id}

@@ -52,17 +52,22 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
 
       {/* Trip name */}
       <div className="p-4 border-b border-sidebar-border/80">
-        <div className="flex items-center gap-2.5">
-          <div className="relative w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]">
+        <Link
+          href={ROUTES.tripOverview(tripId)}
+          prefetch
+          className="group flex items-center gap-2.5 rounded-lg outline-none ring-offset-transparent transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--sidebar-accent)/0.88)] hover:bg-[hsl(var(--sidebar-fg)/0.06)]"
+          title={`${tripName} · Trip overview`}
+        >
+          <div className="relative w-8 h-8 shrink-0 rounded-lg bg-primary/20 flex items-center justify-center shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]">
             <Plane className="w-4 h-4 text-primary rotate-45" />
           </div>
-          <p
-            className="font-semibold text-sm leading-tight truncate"
+          <span
+            className="min-w-0 flex-1 font-semibold text-sm leading-tight truncate group-hover:text-[hsl(var(--sidebar-accent-fg))]"
             style={{ color: "hsl(var(--sidebar-fg))" }}
           >
             {tripName}
-          </p>
-        </div>
+          </span>
+        </Link>
       </div>
 
       {/* Nav items */}

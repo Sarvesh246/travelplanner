@@ -7,14 +7,21 @@ import { SUPPLY_CATEGORIES } from "@/lib/constants";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createSupplyItem } from "@/actions/supplies";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface AddSupplyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tripId: string;
+  onSupplyCreated?: (itemId: string) => void;
 }
 
-export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogProps) {
+export function AddSupplyDialog({
+  open,
+  onOpenChange,
+  tripId,
+  onSupplyCreated,
+}: AddSupplyDialogProps) {
   const { members } = useTripContext();
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>(SUPPLY_CATEGORIES[0]);
@@ -22,6 +29,7 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
   const [estimatedCost, setEstimatedCost] = useState(0);
   const [whoBringsId, setWhoBringsId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   function reset() {
     setName("");
@@ -36,16 +44,26 @@ export function AddSupplyDialog({ open, onOpenChange, tripId }: AddSupplyDialogP
     if (!name.trim()) return;
     setLoading(true);
     try {
-      await createSupplyItem(tripId, {
-        name: name.trim(),
+      const trimmed = name.trim();
+      const { item } = await createSupplyItem(tripId, {
+        name: trimmed,
         category,
         quantityNeeded,
         estimatedCost: estimatedCost > 0 ? estimatedCost : undefined,
         whoBringsId: whoBringsId || undefined,
       });
-      toast.success("Item added");
+      await router.refresh();
       reset();
       onOpenChange(false);
+      toast.success(`Added “${trimmed}”`, {
+        description: "Listed in your supplies below.",
+        action: onSupplyCreated
+          ? {
+              label: "View",
+              onClick: () => onSupplyCreated(item.id),
+            }
+          : undefined,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally {

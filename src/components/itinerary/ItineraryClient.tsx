@@ -10,8 +10,10 @@ import { ROUTES } from "@/lib/constants";
 import { StopList } from "./StopList";
 import { StopDetailPanel } from "./StopDetailPanel";
 import { StopDetailView } from "./StopDetailView";
+import { ItineraryFloatingControls } from "./ItineraryFloatingControls";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createStop } from "@/actions/itinerary";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLoading } from "@/hooks/useLoading";
 import type { StopSerialized } from "./types";
@@ -141,7 +143,21 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         open={addOpen}
         onOpenChange={setAddOpen}
         tripId={tripId}
+        onLocateStop={(stopId) => {
+          setSelectedStopId(stopId);
+          requestAnimationFrame(() => {
+            const prefers =
+              typeof window !== "undefined" &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            document.getElementById(`trip-stop-${stopId}`)?.scrollIntoView({
+              behavior: prefers ? "instant" : "smooth",
+              block: "center",
+            });
+          });
+        }}
       />
+
+      <ItineraryFloatingControls stops={stops} />
 
       <StopDetailPanel
         stop={selectedStop}
@@ -171,11 +187,14 @@ function AddStopDialog({
   open,
   onOpenChange,
   tripId,
+  onLocateStop,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tripId: string;
+  onLocateStop?: (stopId: string) => void;
 }) {
+  const router = useRouter();
   const { startLoading, stopLoading } = useLoading();
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
@@ -194,7 +213,7 @@ function AddStopDialog({
     setLoading(true);
     startLoading("Adding stop...");
     try {
-      await createStop(tripId, {
+      const { stop } = await createStop(tripId, {
         name: name.trim(),
         country: country.trim() || undefined,
         latitude: selectedLocation?.lat,
@@ -203,13 +222,22 @@ function AddStopDialog({
         arrivalDate: arrivalDate || undefined,
         departureDate: departureDate || undefined,
       });
-      toast.success("Stop added");
+      await router.refresh();
       setName("");
       setCountry("");
       setSelectedLocation(null);
       setArrivalDate("");
       setDepartureDate("");
       onOpenChange(false);
+      toast.success(`Added “${stop.name}”`, {
+        description: "Your route list is updated below.",
+        action: onLocateStop
+          ? {
+              label: "View",
+              onClick: () => onLocateStop(stop.id),
+            }
+          : undefined,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add stop");
     } finally {

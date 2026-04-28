@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SplitEditor, type SplitEditorRow } from "./SplitEditor";
 import type { SplitMode } from "@/lib/expense-splits";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useLoading } from "@/hooks/useLoading";
 
 interface AddExpenseDialogProps {
@@ -17,9 +18,16 @@ interface AddExpenseDialogProps {
   onOpenChange: (open: boolean) => void;
   tripId: string;
   currency: string;
+  onExpenseCreated?: (expenseId: string) => void;
 }
 
-export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddExpenseDialogProps) {
+export function AddExpenseDialog({
+  open,
+  onOpenChange,
+  tripId,
+  currency,
+  onExpenseCreated,
+}: AddExpenseDialogProps) {
   const { startLoading, stopLoading } = useLoading();
   const { members, currentUser } = useTripContext();
 
@@ -43,6 +51,7 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
   const [rows, setRows] = useState<SplitEditorRow[]>(defaultRows);
   const [receipt, setReceipt] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const memberLookup = members.map((m) => ({
     userId: m.userId,
@@ -94,8 +103,9 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
     try {
       const receiptUrl = receipt ? await uploadReceipt(receipt) : undefined;
 
-      await createExpense(tripId, {
-        title: title.trim(),
+      const displayTitle = title.trim();
+      const { expense } = await createExpense(tripId, {
+        title: displayTitle,
         category,
         totalAmount,
         splitMode: mode,
@@ -109,9 +119,18 @@ export function AddExpenseDialog({ open, onOpenChange, tripId, currency }: AddEx
         })),
       });
 
-      toast.success("Expense logged");
+      await router.refresh();
       reset();
       onOpenChange(false);
+      toast.success("Expense logged", {
+        description: displayTitle,
+        action: onExpenseCreated
+          ? {
+              label: "View",
+              onClick: () => onExpenseCreated(expense.id),
+            }
+          : undefined,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
