@@ -36,4 +36,4 @@ prisma/*.db-journal
 .codex-dev.out.log
 .playwright-cli/
 test-results/
-output/playwright/
+output/
