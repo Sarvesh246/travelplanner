@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { cn } from "@/lib/utils";
 
 interface CurrencyInputProps {
@@ -9,6 +13,14 @@ interface CurrencyInputProps {
   placeholder?: string;
   className?: string;
   label?: string;
+  presence?: {
+    surfaceId: string;
+    surfaceLabel: string;
+    resourceId: string;
+    resourceLabel: string;
+    fieldKey: string;
+    fieldLabel: string;
+  };
 }
 
 export function CurrencyInput({
@@ -18,17 +30,23 @@ export function CurrencyInput({
   placeholder = "0.00",
   className,
   label,
+  presence,
 }: CurrencyInputProps) {
+  const presenceField = useTripEditingPresenceField(presence ?? null);
   const symbol =
-    currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : currency;
+    currency === "USD"
+      ? "$"
+      : currency === "EUR"
+        ? "\u20AC"
+        : currency === "GBP"
+          ? "\u00A3"
+          : currency;
 
   return (
     <div>
-      {label && (
-        <label className="text-sm font-medium block mb-1.5">{label}</label>
-      )}
+      {label && <label className="mb-1.5 block text-sm font-medium">{label}</label>}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
           {symbol}
         </span>
         <input
@@ -36,14 +54,20 @@ export function CurrencyInput({
           min="0"
           step="0.01"
           value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          onChange={(e) => {
+            presenceField.activate();
+            onChange(parseFloat(e.target.value) || 0);
+          }}
+          onFocus={presenceField.activate}
+          onBlur={presenceField.clear}
           placeholder={placeholder}
           className={cn(
-            "w-full rounded-lg border border-input bg-background pl-8 pr-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow",
+            "w-full rounded-lg border border-input bg-background pl-8 pr-3 py-2.5 text-sm placeholder:text-muted-foreground transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring",
             className
           )}
         />
       </div>
+      {presence ? <EditingPresenceNotice editors={presenceField.fieldEditors} /> : null}
     </div>
   );
 }

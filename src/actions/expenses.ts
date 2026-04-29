@@ -53,6 +53,12 @@ function revalidateExpenseViews(tripId: string) {
   revalidatePath(`/trips/${tripId}/overview`);
 }
 
+function changedFieldKeys<T extends Record<string, unknown>>(input: Partial<T>) {
+  return Object.keys(input).filter(
+    (key) => input[key as keyof T] !== undefined
+  );
+}
+
 export async function createExpense(tripId: string, input: CreateExpenseInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
@@ -223,7 +229,7 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
     targetId: expenseId,
     summary: `Updated expense ${input.title?.trim() || existing.title}`,
     metadata: {
-      changedFields: Object.keys(input),
+      changedFields: changedFieldKeys(input),
       splitMode: nextSplitMode,
       totalAmount: nextTotal,
       paidById: nextPaidById,
@@ -289,4 +295,16 @@ export async function markSharePaid(shareId: string, hasPaid: boolean) {
   });
 
   revalidateExpenseViews(share.expense.tripId);
+  await logAuditEvent({
+    action: "expense.share-paid.updated",
+    actorUserId: user.id,
+    tripId: share.expense.tripId,
+    targetId: share.expenseId,
+    targetUserId: share.userId,
+    summary: `${hasPaid ? "Marked" : "Unmarked"} share as paid for ${share.expense.title}`,
+    metadata: {
+      shareId,
+      hasPaid,
+    },
+  });
 }

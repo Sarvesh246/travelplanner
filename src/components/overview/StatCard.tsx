@@ -25,7 +25,7 @@ export function StatCard({ label, value, icon, iconColor, href, className }: Sta
       )}
     >
       <div className="flex h-full items-start justify-between gap-3">
-        <div className="flex min-h-full min-w-0 flex-1 flex-col justify-between">
+        <div className="flex min-w-0 flex-1 flex-col items-start">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">{label}</p>
           <p className="text-[1.7rem] font-bold leading-none sm:text-[1.9rem]">{value}</p>
         </div>

@@ -4,6 +4,7 @@ import { TripSidebar } from "@/components/layout/TripSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { TopNav } from "@/components/layout/TopNav";
 import { TripShellClient } from "@/components/layout/TripShellClient";
+import { TripEditingPresenceProvider } from "@/components/collaboration/TripEditingPresenceProvider";
 import { TripProvider } from "@/components/trip/TripContext";
 import { ViewerReadOnlyBanner } from "@/components/trip/ViewerReadOnlyBanner";
 import { TripSwipeHint } from "@/components/layout/TripSwipeHint";
@@ -63,29 +64,31 @@ export default async function TripLayout({
         user: m.user,
       }))}
     >
-      <div className="app-workspace-shell flex min-h-dvh flex-col bg-background md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden">
-        <TopNav
-          user={profile}
-          trip={{ id: trip.id, name: trip.name, canManage: ["OWNER", "ADMIN"].includes(membership.role) }}
-        />
-        {/* md+: lock row height under the header so only <main> scrolls; sidebar stays put */}
-        <div className="flex min-h-0 flex-1 overflow-hidden md:min-h-0">
-          <TripSidebar tripId={tripId} tripName={trip.name} />
-          <main
-            data-trip-main-scroll=""
-            className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
-          >
-            <TripShellClient tripId={tripId} userId={dbUser.id}>
-              <div className="mx-auto max-w-[72rem] px-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] pt-3 min-[400px]:px-4 min-[400px]:pt-4 sm:px-6 sm:pt-6 md:pb-6 md:pt-6">
-                <TripSwipeHint />
-                <ViewerReadOnlyBanner />
-                {children}
-              </div>
-            </TripShellClient>
-          </main>
+      <TripEditingPresenceProvider>
+        <div className="app-workspace-shell flex min-h-dvh flex-col bg-background md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden">
+          <TopNav
+            user={profile}
+            trip={{ id: trip.id, name: trip.name, canManage: ["OWNER", "ADMIN"].includes(membership.role) }}
+          />
+          {/* md+: lock row height under the header so only <main> scrolls; sidebar stays put */}
+          <div className="flex min-h-0 flex-1 overflow-hidden md:min-h-0">
+            <TripSidebar tripId={tripId} tripName={trip.name} />
+            <main
+              data-trip-main-scroll=""
+              className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
+            >
+              <TripShellClient tripId={tripId} userId={dbUser.id}>
+                <div className="mx-auto max-w-[72rem] px-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] pt-3 min-[400px]:px-4 min-[400px]:pt-4 sm:px-6 sm:pt-6 md:pb-6 md:pt-6">
+                  <TripSwipeHint />
+                  <ViewerReadOnlyBanner />
+                  {children}
+                </div>
+              </TripShellClient>
+            </main>
+          </div>
+          <MobileNav tripId={tripId} />
         </div>
-        <MobileNav tripId={tripId} />
-      </div>
+      </TripEditingPresenceProvider>
     </TripProvider>
   );
 }

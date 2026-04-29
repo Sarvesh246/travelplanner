@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { activityToClientJson, stayToClientJson, stopToClientJson } from "@/lib/serialize/prisma-json";
 import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
+import { logAuditEvent } from "@/lib/observability/audit";
 
 function revalidateItinerary(tripId: string) {
   revalidatePath(`/trips/${tripId}/itinerary`);
@@ -16,6 +17,12 @@ function revalidateStopPage(tripId: string, stopId: string) {
 function revalidateItineraryAndStop(tripId: string, stopId: string) {
   revalidateItinerary(tripId);
   revalidateStopPage(tripId, stopId);
+}
+
+function changedFieldKeys<T extends Record<string, unknown>>(input: Partial<T>) {
+  return Object.keys(input).filter(
+    (key) => input[key as keyof T] !== undefined
+  );
 }
 
 // ── Stops ────────────────────────────────────────────────────────────────────
@@ -57,6 +64,17 @@ export async function createStop(
   });
 
   revalidateItineraryAndStop(tripId, stop.id);
+  await logAuditEvent({
+    action: "stop.created",
+    actorUserId: user.id,
+    tripId,
+    targetId: stop.id,
+    summary: `Added stop ${stop.name}`,
+    metadata: {
+      country: stop.country,
+      hasDates: Boolean(stop.arrivalDate || stop.departureDate),
+    },
+  });
   return { stop: stopToClientJson(stop) };
 }
 
@@ -82,6 +100,16 @@ export async function updateStop(
   });
 
   revalidateItineraryAndStop(stop.tripId, stopId);
+  await logAuditEvent({
+    action: "stop.updated",
+    actorUserId: user.id,
+    tripId: stop.tripId,
+    targetId: stopId,
+    summary: `Updated stop ${updated.name}`,
+    metadata: {
+      changedFields: changedFieldKeys(data),
+    },
+  });
   return { stop: stopToClientJson(updated) };
 }
 
@@ -94,6 +122,13 @@ export async function deleteStop(stopId: string) {
   await prisma.stop.update({ where: { id: stopId }, data: { deletedAt: new Date() } });
   revalidateItinerary(stop.tripId);
   revalidateStopPage(stop.tripId, stopId);
+  await logAuditEvent({
+    action: "stop.deleted",
+    actorUserId: user.id,
+    tripId: stop.tripId,
+    targetId: stopId,
+    summary: `Deleted stop ${stop.name}`,
+  });
 }
 
 export async function restoreStop(stopId: string) {
@@ -105,6 +140,13 @@ export async function restoreStop(stopId: string) {
   await prisma.stop.update({ where: { id: stopId }, data: { deletedAt: null } });
   revalidateItinerary(stop.tripId);
   revalidateStopPage(stop.tripId, stopId);
+  await logAuditEvent({
+    action: "stop.restored",
+    actorUserId: user.id,
+    tripId: stop.tripId,
+    targetId: stopId,
+    summary: `Restored stop ${stop.name}`,
+  });
 }
 
 export async function reorderStops(tripId: string, orderedIds: string[]) {
@@ -118,6 +160,15 @@ export async function reorderStops(tripId: string, orderedIds: string[]) {
   );
 
   revalidatePath(`/trips/${tripId}/itinerary`);
+  await logAuditEvent({
+    action: "stop.reordered",
+    actorUserId: user.id,
+    tripId,
+    summary: `Reordered ${orderedIds.length} stops`,
+    metadata: {
+      orderedStopIds: orderedIds,
+    },
+  });
 }
 
 // ── Stays ────────────────────────────────────────────────────────────────────
@@ -147,6 +198,17 @@ export async function createStay(
   });
 
   revalidateItineraryAndStop(stop.tripId, stopId);
+  await logAuditEvent({
+    action: "stay.created",
+    actorUserId: user.id,
+    tripId: stop.tripId,
+    targetId: stay.id,
+    summary: `Added stay ${stay.name}`,
+    metadata: {
+      stopId,
+      stopName: stop.name,
+    },
+  });
   return { stay: stayToClientJson(stay) };
 }
 
@@ -176,6 +238,17 @@ export async function updateStay(
   });
 
   revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
+  await logAuditEvent({
+    action: "stay.updated",
+    actorUserId: user.id,
+    tripId: stay.stop.tripId,
+    targetId: stayId,
+    summary: `Updated stay ${updated.name}`,
+    metadata: {
+      stopId: stay.stopId,
+      changedFields: changedFieldKeys(data),
+    },
+  });
   return { stay: stayToClientJson(updated) };
 }
 
@@ -187,6 +260,16 @@ export async function deleteStay(stayId: string) {
 
   await prisma.stay.update({ where: { id: stayId }, data: { deletedAt: new Date() } });
   revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
+  await logAuditEvent({
+    action: "stay.deleted",
+    actorUserId: user.id,
+    tripId: stay.stop.tripId,
+    targetId: stayId,
+    summary: `Deleted stay ${stay.name}`,
+    metadata: {
+      stopId: stay.stopId,
+    },
+  });
 }
 
 // ── Activities ───────────────────────────────────────────────────────────────
@@ -215,6 +298,17 @@ export async function createActivity(
   });
 
   revalidateItineraryAndStop(stop.tripId, stopId);
+  await logAuditEvent({
+    action: "activity.created",
+    actorUserId: user.id,
+    tripId: stop.tripId,
+    targetId: activity.id,
+    summary: `Added activity ${activity.name}`,
+    metadata: {
+      stopId,
+      stopName: stop.name,
+    },
+  });
   return { activity: activityToClientJson(activity) };
 }
 
@@ -243,6 +337,17 @@ export async function updateActivity(
   });
 
   revalidateItineraryAndStop(activity.stop.tripId, activity.stopId);
+  await logAuditEvent({
+    action: "activity.updated",
+    actorUserId: user.id,
+    tripId: activity.stop.tripId,
+    targetId: activityId,
+    summary: `Updated activity ${updated.name}`,
+    metadata: {
+      stopId: activity.stopId,
+      changedFields: changedFieldKeys(data),
+    },
+  });
   return { activity: activityToClientJson(updated) };
 }
 
@@ -254,4 +359,14 @@ export async function deleteActivity(activityId: string) {
 
   await prisma.activity.update({ where: { id: activityId }, data: { deletedAt: new Date() } });
   revalidateItineraryAndStop(activity.stop.tripId, activity.stopId);
+  await logAuditEvent({
+    action: "activity.deleted",
+    actorUserId: user.id,
+    tripId: activity.stop.tripId,
+    targetId: activityId,
+    summary: `Deleted activity ${activity.name}`,
+    metadata: {
+      stopId: activity.stopId,
+    },
+  });
 }

@@ -8,12 +8,32 @@ import {
   assertCanManage,
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
+import { logAuditEvent } from "@/lib/observability/audit";
 
 interface CreateCommentInput {
   entityType: CommentableType;
   entityId: string;
   body: string;
   threadParentId?: string;
+}
+
+function commentEntityLabel(entityType: CommentableType) {
+  switch (entityType) {
+    case "TRIP":
+      return "trip";
+    case "STOP":
+      return "stop";
+    case "STAY":
+      return "stay";
+    case "ACTIVITY":
+      return "activity";
+    case "EXPENSE":
+      return "expense";
+    case "SUPPLY_ITEM":
+      return "supply item";
+    case "VOTE":
+      return "poll";
+  }
 }
 
 // Look up the parent trip for a given entity so we can check membership and revalidate.
@@ -107,6 +127,18 @@ export async function createComment(input: CreateCommentInput) {
   });
 
   revalidateForEntity(tripId, input.entityType);
+  await logAuditEvent({
+    action: "comment.created",
+    actorUserId: user.id,
+    tripId,
+    targetId: comment.id,
+    summary: `Added comment on ${commentEntityLabel(input.entityType)}`,
+    metadata: {
+      entityType: input.entityType,
+      entityId: input.entityId,
+      threadParentId: input.threadParentId ?? null,
+    },
+  });
   return { comment };
 }
 
@@ -124,6 +156,18 @@ export async function updateComment(commentId: string, body: string) {
   await prisma.comment.update({
     where: { id: commentId },
     data: { body: body.trim(), editedAt: new Date() },
+  });
+
+  await logAuditEvent({
+    action: "comment.updated",
+    actorUserId: user.id,
+    tripId,
+    targetId: commentId,
+    summary: `Edited comment on ${commentEntityLabel(comment.entityType)}`,
+    metadata: {
+      entityType: comment.entityType,
+      entityId: comment.entityId,
+    },
   });
 
   if (comment.tripId) revalidateForEntity(comment.tripId, comment.entityType);
@@ -144,6 +188,19 @@ export async function deleteComment(commentId: string) {
   await prisma.comment.update({
     where: { id: commentId },
     data: { deletedAt: new Date() },
+  });
+
+  await logAuditEvent({
+    action: "comment.deleted",
+    actorUserId: user.id,
+    tripId,
+    targetId: commentId,
+    summary: `Deleted comment on ${commentEntityLabel(comment.entityType)}`,
+    metadata: {
+      entityType: comment.entityType,
+      entityId: comment.entityId,
+      deletedByManager: comment.authorId !== user.id,
+    },
   });
 
   if (comment.tripId) revalidateForEntity(comment.tripId, comment.entityType);

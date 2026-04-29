@@ -290,7 +290,7 @@ export function TripSearchDialog({ open, onOpenChange, tripId }: TripSearchDialo
               Tap the dimmed backdrop or use <span className="font-medium text-foreground/85">Close</span> above. Selecting a row opens that part of this trip.
             </p>
             <p className="hidden text-[11px] leading-snug text-muted-foreground md:block">
-              Shortcuts:&nbsp;<kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">g</kbd>{" "}
+              Shortcuts:&nbsp;<kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">b</kbd>{" "}
               then&nbsp;
               <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">a</kbd> Activity ·{" "}
               <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd> closes.

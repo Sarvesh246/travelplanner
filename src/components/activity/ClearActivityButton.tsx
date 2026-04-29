@@ -24,7 +24,7 @@ export function ClearActivityButton({ tripId }: { tripId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-xl border border-destructive/35 bg-destructive/10 px-3.5 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/16"
+        className="inline-flex items-center gap-2 rounded-xl border border-destructive/35 bg-destructive/10 px-3.5 py-2 text-sm font-semibold text-destructive transition-[background-color,border-color,box-shadow,transform] duration-200 hover:border-destructive/55 hover:bg-destructive/18 hover:shadow-[0_10px_24px_-18px_hsl(var(--destructive))] active:scale-[0.99]"
       >
         <Trash2 className="h-4 w-4" />
         Clear activity

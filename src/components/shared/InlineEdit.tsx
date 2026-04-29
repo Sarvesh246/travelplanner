@@ -2,6 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Loader2, Check, AlertCircle, Pencil } from "lucide-react";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { cn } from "@/lib/utils";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -18,6 +22,14 @@ interface InlineEditProps {
   showEditIcon?: boolean;
   /** Accessible name for the edit control (used as aria-label and title). */
   editLabel?: string;
+  presence?: {
+    surfaceId: string;
+    surfaceLabel: string;
+    resourceId: string;
+    resourceLabel: string;
+    fieldKey: string;
+    fieldLabel: string;
+  };
 }
 
 export function InlineEdit({
@@ -30,16 +42,24 @@ export function InlineEdit({
   displayClassName,
   showEditIcon = false,
   editLabel = "Edit",
+  presence,
 }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
+  const presenceField = useTripEditingPresenceField(presence ?? null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+
+  useEffect(() => {
+    if (!editing) {
+      presenceField?.clear();
+    }
+  }, [editing, presenceField]);
 
   useEffect(() => {
     return () => {
@@ -129,6 +149,7 @@ export function InlineEdit({
           onClick={() => {
             setDraft(value);
             setEditing(true);
+            presenceField?.activate();
           }}
           aria-label={editLabel}
           title={editLabel}
@@ -150,6 +171,12 @@ export function InlineEdit({
           ) : null}
         </button>
         {statusUi}
+        {presence ? (
+          <EditingPresenceNotice
+            editors={presenceField.fieldEditors}
+            className="ml-1"
+          />
+        ) : null}
       </span>
     );
   }
@@ -158,18 +185,39 @@ export function InlineEdit({
     ref: inputRef as React.Ref<HTMLInputElement>,
     value: draft,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setDraft(e.target.value),
-    onBlur: () => void handleSave(),
+      {
+        setDraft(e.target.value);
+        presenceField?.activate();
+      },
+    onBlur: () => {
+      presenceField?.clear();
+      void handleSave();
+    },
     onKeyDown: handleKeyDown,
+    onFocus: () => presenceField?.activate(),
+    onSelect: () => presenceField?.activate(),
     className: cn(
       "w-full text-sm bg-background border border-ring rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none",
       className
     ),
   };
 
-  return multiline ? (
-    <textarea {...(sharedProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} rows={3} />
-  ) : (
-    <input {...(sharedProps as React.InputHTMLAttributes<HTMLInputElement>)} type="text" />
+  return (
+    <div className="space-y-1.5">
+      {multiline ? (
+        <textarea
+          {...(sharedProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+          rows={3}
+        />
+      ) : (
+        <input
+          {...(sharedProps as React.InputHTMLAttributes<HTMLInputElement>)}
+          type="text"
+        />
+      )}
+      {presence ? (
+        <EditingPresenceNotice editors={presenceField.fieldEditors} />
+      ) : null}
+    </div>
   );
 }

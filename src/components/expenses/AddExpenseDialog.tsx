@@ -3,6 +3,10 @@
 import { useState, useMemo } from "react";
 import { X, Loader2, Receipt, Upload } from "lucide-react";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { EXPENSE_CATEGORIES } from "@/lib/constants";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createExpense } from "@/actions/expenses";
@@ -58,6 +62,39 @@ export function AddExpenseDialog({
     name: m.user.name,
     avatarUrl: m.user.avatarUrl,
   }));
+  const surfaceId = `expense-dialog:${tripId}`;
+  const titlePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add expense",
+    resourceId: "new-expense",
+    resourceLabel: "New expense",
+    fieldKey: "title",
+    fieldLabel: "expense title",
+  });
+  const datePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add expense",
+    resourceId: "new-expense",
+    resourceLabel: "New expense",
+    fieldKey: "date",
+    fieldLabel: "expense date",
+  });
+  const categoryPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add expense",
+    resourceId: "new-expense",
+    resourceLabel: "New expense",
+    fieldKey: "category",
+    fieldLabel: "category",
+  });
+  const payerPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add expense",
+    resourceId: "new-expense",
+    resourceLabel: "New expense",
+    fieldKey: "paid-by",
+    fieldLabel: "paid by",
+  });
 
   function reset() {
     setTitle("");
@@ -159,15 +196,26 @@ export function AddExpenseDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="max-h-[min(78dvh,36rem)] space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
+          <EditingPresenceNotice
+            editors={titlePresence.surfaceEditors}
+            mode="surface"
+            className="mt-0"
+          />
           <div>
             <label className="text-sm font-medium block mb-1.5">Title *</label>
             <input
               autoFocus
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                titlePresence.activate();
+                setTitle(e.target.value);
+              }}
+              onFocus={titlePresence.activate}
+              onBlur={titlePresence.clear}
               placeholder="Groceries, Dinner, Airbnb…"
               className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <EditingPresenceNotice editors={titlePresence.fieldEditors} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -176,15 +224,29 @@ export function AddExpenseDialog({
               value={totalAmount}
               onChange={setTotalAmount}
               currency={currency}
+              presence={{
+                surfaceId,
+                surfaceLabel: "Add expense",
+                resourceId: "new-expense",
+                resourceLabel: "New expense",
+                fieldKey: "amount",
+                fieldLabel: "amount",
+              }}
             />
             <div>
               <label className="text-sm font-medium block mb-1.5">Date</label>
               <input
                 type="date"
                 value={expenseDate}
-                onChange={(e) => setExpenseDate(e.target.value)}
+                onChange={(e) => {
+                  datePresence.activate();
+                  setExpenseDate(e.target.value);
+                }}
+                onFocus={datePresence.activate}
+                onBlur={datePresence.clear}
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <EditingPresenceNotice editors={datePresence.fieldEditors} />
             </div>
           </div>
 
@@ -193,25 +255,37 @@ export function AddExpenseDialog({
               <label className="text-sm font-medium block mb-1.5">Category</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  categoryPresence.activate();
+                  setCategory(e.target.value);
+                }}
+                onFocus={categoryPresence.activate}
+                onBlur={categoryPresence.clear}
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {EXPENSE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+              <EditingPresenceNotice editors={categoryPresence.fieldEditors} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">Paid by</label>
               <select
                 value={paidById}
-                onChange={(e) => setPaidById(e.target.value)}
+                onChange={(e) => {
+                  payerPresence.activate();
+                  setPaidById(e.target.value);
+                }}
+                onFocus={payerPresence.activate}
+                onBlur={payerPresence.clear}
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {members.map((m) => (
                   <option key={m.userId} value={m.userId}>{m.user.name}</option>
                 ))}
               </select>
+              <EditingPresenceNotice editors={payerPresence.fieldEditors} />
             </div>
           </div>
 

@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { X, Plus, Loader2, Vote as VoteIcon, Trash2 } from "lucide-react";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { createVote } from "@/actions/votes";
 import { toast } from "sonner";
 import { VoteTopicType } from "@prisma/client";
@@ -41,6 +45,39 @@ export function CreateVoteDialog({ open, onOpenChange, tripId }: CreateVoteDialo
   const [deadline, setDeadline] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>([newOption(), newOption()]);
   const [loading, setLoading] = useState(false);
+  const surfaceId = `vote-dialog:${tripId}`;
+  const titlePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Create poll",
+    resourceId: "new-vote",
+    resourceLabel: "New poll",
+    fieldKey: "question",
+    fieldLabel: "question",
+  });
+  const descriptionPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Create poll",
+    resourceId: "new-vote",
+    resourceLabel: "New poll",
+    fieldKey: "description",
+    fieldLabel: "description",
+  });
+  const topicPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Create poll",
+    resourceId: "new-vote",
+    resourceLabel: "New poll",
+    fieldKey: "topic",
+    fieldLabel: "topic",
+  });
+  const deadlinePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Create poll",
+    resourceId: "new-vote",
+    resourceLabel: "New poll",
+    fieldKey: "deadline",
+    fieldLabel: "deadline",
+  });
 
   const useDateRange = topicType === "DATES";
 
@@ -118,26 +155,39 @@ export function CreateVoteDialog({ open, onOpenChange, tripId }: CreateVoteDialo
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <EditingPresenceNotice editors={titlePresence.surfaceEditors} mode="surface" className="mt-0" />
           <div>
             <label className="text-sm font-medium block mb-1.5">Question *</label>
             <input
               autoFocus
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                titlePresence.activate();
+                setTitle(e.target.value);
+              }}
+              onFocus={titlePresence.activate}
+              onBlur={titlePresence.clear}
               placeholder="Where should we go in October?"
               className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <EditingPresenceNotice editors={titlePresence.fieldEditors} />
           </div>
 
           <div>
             <label className="text-sm font-medium block mb-1.5">Description</label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                descriptionPresence.activate();
+                setDescription(e.target.value);
+              }}
+              onFocus={descriptionPresence.activate}
+              onBlur={descriptionPresence.clear}
               rows={2}
               placeholder="Add context for voters (optional)"
               className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
+            <EditingPresenceNotice editors={descriptionPresence.fieldEditors} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -145,22 +195,34 @@ export function CreateVoteDialog({ open, onOpenChange, tripId }: CreateVoteDialo
               <label className="text-sm font-medium block mb-1.5">Topic</label>
               <select
                 value={topicType}
-                onChange={(e) => setTopicType(e.target.value as VoteTopicType)}
+                onChange={(e) => {
+                  topicPresence.activate();
+                  setTopicType(e.target.value as VoteTopicType);
+                }}
+                onFocus={topicPresence.activate}
+                onBlur={topicPresence.clear}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {TOPIC_OPTIONS.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
+              <EditingPresenceNotice editors={topicPresence.fieldEditors} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">Deadline</label>
               <input
                 type="datetime-local"
                 value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
+                onChange={(e) => {
+                  deadlinePresence.activate();
+                  setDeadline(e.target.value);
+                }}
+                onFocus={deadlinePresence.activate}
+                onBlur={deadlinePresence.clear}
                 className="h-10 md:h-auto w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <EditingPresenceNotice editors={deadlinePresence.fieldEditors} />
             </div>
           </div>
 

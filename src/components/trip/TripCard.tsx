@@ -163,7 +163,7 @@ function TripCardImpl({
                 setDeleteOpen(true);
               }}
               className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/92 text-destructive shadow backdrop-blur-sm opacity-100 transition-[opacity,background-color] hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-              title="Delete trip..."
+              title="Delete trip"
               aria-label={`Delete ${trip.name}`}
             >
               <Trash2 className="h-4 w-4" />

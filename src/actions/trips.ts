@@ -131,7 +131,7 @@ export async function updateTrip(
     action: "trip.updated",
     actorUserId: user.id,
     tripId,
-    summary: "Updated trip details",
+    summary: `Updated trip ${trip.name}`,
     metadata: {
       changedFields: Object.keys(data),
       status: data.status ?? null,

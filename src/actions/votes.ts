@@ -8,6 +8,7 @@ import {
   assertCanManage,
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
+import { logAuditEvent } from "@/lib/observability/audit";
 
 interface VoteOptionInput {
   label: string;
@@ -60,6 +61,19 @@ export async function createVote(tripId: string, input: CreateVoteInput) {
   });
 
   revalidatePath(`/trips/${tripId}/votes`);
+  await logAuditEvent({
+    action: "vote.created",
+    actorUserId: user.id,
+    tripId,
+    targetId: vote.id,
+    summary: `Created poll ${vote.title}`,
+    metadata: {
+      topicType: vote.topicType,
+      optionCount: input.options.length,
+      allowMultiple: vote.allowMultiple,
+      isAnonymous: vote.isAnonymous,
+    },
+  });
   return { vote };
 }
 
@@ -99,6 +113,20 @@ export async function castVote(voteId: string, optionIds: string[]) {
   });
 
   revalidatePath(`/trips/${vote.tripId}/votes`);
+  await logAuditEvent({
+    action: "vote.cast",
+    actorUserId: user.id,
+    tripId: vote.tripId,
+    targetId: voteId,
+    summary:
+      sanitized.length > 0
+        ? `Voted on poll ${vote.title}`
+        : `Cleared vote on poll ${vote.title}`,
+    metadata: {
+      selectedOptionIds: sanitized,
+      selectedCount: sanitized.length,
+    },
+  });
 }
 
 export async function closeVote(voteId: string) {
@@ -113,6 +141,13 @@ export async function closeVote(voteId: string) {
   });
 
   revalidatePath(`/trips/${vote.tripId}/votes`);
+  await logAuditEvent({
+    action: "vote.closed",
+    actorUserId: user.id,
+    tripId: vote.tripId,
+    targetId: voteId,
+    summary: `Closed poll ${vote.title}`,
+  });
 }
 
 export async function deleteVote(voteId: string) {
@@ -123,4 +158,11 @@ export async function deleteVote(voteId: string) {
 
   await prisma.vote.delete({ where: { id: voteId } });
   revalidatePath(`/trips/${vote.tripId}/votes`);
+  await logAuditEvent({
+    action: "vote.deleted",
+    actorUserId: user.id,
+    tripId: vote.tripId,
+    targetId: voteId,
+    summary: `Deleted poll ${vote.title}`,
+  });
 }

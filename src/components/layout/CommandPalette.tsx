@@ -114,7 +114,7 @@ function CommandPaletteInner() {
               icon={<LayoutDashboard className="w-4 h-4" />}
               label="Dashboard"
               onSelect={() => go(ROUTES.dashboard)}
-              shortcut="G D"
+              shortcut="B D"
               chord
             />
             {tripId && (
@@ -123,49 +123,49 @@ function CommandPaletteInner() {
                   icon={<Plane className="w-4 h-4" />}
                   label="Trip overview"
                   onSelect={() => go(ROUTES.tripOverview(tripId))}
-                  shortcut="G O"
+                  shortcut="B O"
                   chord
                 />
                 <CommandItem
                   icon={<Map className="w-4 h-4" />}
                   label="Itinerary"
                   onSelect={() => go(ROUTES.tripItinerary(tripId))}
-                  shortcut="G I"
+                  shortcut="B I"
                   chord
                 />
                 <CommandItem
                   icon={<Package className="w-4 h-4" />}
                   label="Supplies"
                   onSelect={() => go(ROUTES.tripSupplies(tripId))}
-                  shortcut="G S"
+                  shortcut="B S"
                   chord
                 />
                 <CommandItem
                   icon={<Receipt className="w-4 h-4" />}
                   label="Expenses"
                   onSelect={() => go(ROUTES.tripExpenses(tripId))}
-                  shortcut="G E"
+                  shortcut="B E"
                   chord
                 />
                 <CommandItem
                   icon={<Vote className="w-4 h-4" />}
                   label="Votes"
                   onSelect={() => go(ROUTES.tripVotes(tripId))}
-                  shortcut="G V"
+                  shortcut="B V"
                   chord
                 />
                 <CommandItem
                   icon={<Users className="w-4 h-4" />}
                   label="Members"
                   onSelect={() => go(ROUTES.tripMembers(tripId))}
-                  shortcut="G M"
+                  shortcut="B M"
                   chord
                 />
                 <CommandItem
                   icon={<History className="w-4 h-4" />}
                   label="Activity"
                   onSelect={() => go(ROUTES.tripActivity(tripId))}
-                  shortcut="G A"
+                  shortcut="B A"
                   chord
                 />
               </>

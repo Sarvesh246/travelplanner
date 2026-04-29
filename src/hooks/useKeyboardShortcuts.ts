@@ -24,9 +24,9 @@ function isEditableTarget(target: EventTarget | null): boolean {
  * - / or ? ...................... open palette
  * - N ........................... new trip
  * - T ........................... toggle theme
- * - G then D / H ................ dashboard
- * - G then N .................... new trip
- * - G then O/I/S/E/V/M/A ....... trip overview/itinerary/supplies/expenses/votes/members/activity
+ * - B then D / H ................ dashboard
+ * - B then N .................... new trip
+ * - B then O/I/S/E/V/M/A ....... trip overview/itinerary/supplies/expenses/votes/members/activity
  *                                 (trip-scoped keys only work inside /trips/:id)
  *
  * Shortcuts requiring sequences time out after ~900 ms.
@@ -95,8 +95,8 @@ export function useKeyboardShortcuts() {
       const key = e.key.toLowerCase();
       const tripId = tripIdFromPath();
 
-      // "G then X" sequences
-      if (pending === "g") {
+      // "B then X" sequences
+      if (pending === "b") {
         let route: string | null = null;
         switch (key) {
           case "d":
@@ -136,8 +136,8 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      if (key === "g") {
-        pending = "g";
+      if (key === "b") {
+        pending = "b";
         if (timer !== null) window.clearTimeout(timer);
         timer = window.setTimeout(clearPending, 900);
         return;

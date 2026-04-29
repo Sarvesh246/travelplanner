@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Copy, Loader2, Trash2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { deleteTrip } from "@/actions/trips";
@@ -29,6 +29,7 @@ export function DeleteTripDialog({
   redirectTo = null,
 }: DeleteTripDialogProps) {
   const [typed, setTyped] = useState("");
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -36,6 +37,7 @@ export function DeleteTripDialog({
 
   function closeDialog() {
     if (loading) return;
+    setCopied(false);
     setTyped("");
     onOpenChange(false);
   }
@@ -63,6 +65,17 @@ export function DeleteTripDialog({
   }, [open, portalTarget]);
 
   const canConfirm = typed.trim() === tripName.trim() && !loading;
+
+  async function handleCopyTripName() {
+    try {
+      await navigator.clipboard.writeText(tripName);
+      setCopied(true);
+      toast.success("Trip name copied");
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy the trip name");
+    }
+  }
 
   async function handleDelete(e?: React.FormEvent<HTMLFormElement>) {
     e?.preventDefault();
@@ -136,8 +149,25 @@ export function DeleteTripDialog({
             htmlFor="delete-trip-confirm"
             className="mt-6 block text-sm font-medium leading-6"
           >
-            To confirm, type{" "}
-            <span className="break-all font-mono text-foreground">{tripName}</span>.
+            <span>To confirm, type the trip name exactly.</span>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="break-all rounded-xl border border-border bg-muted/55 px-3 py-2 font-mono text-foreground">
+                {tripName}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyTripName}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Copied" : "Copy name"}
+              </button>
+            </div>
           </label>
           <input
             id="delete-trip-confirm"

@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { X, Loader2, Package } from "lucide-react";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { SUPPLY_CATEGORIES } from "@/lib/constants";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createSupplyItem } from "@/actions/supplies";
@@ -30,6 +34,39 @@ export function AddSupplyDialog({
   const [whoBringsId, setWhoBringsId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const surfaceId = `supply-dialog:${tripId}`;
+  const namePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add supply item",
+    resourceId: "new-supply",
+    resourceLabel: "New supply item",
+    fieldKey: "name",
+    fieldLabel: "item name",
+  });
+  const categoryPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add supply item",
+    resourceId: "new-supply",
+    resourceLabel: "New supply item",
+    fieldKey: "category",
+    fieldLabel: "category",
+  });
+  const quantityPresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add supply item",
+    resourceId: "new-supply",
+    resourceLabel: "New supply item",
+    fieldKey: "quantity",
+    fieldLabel: "quantity needed",
+  });
+  const assigneePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add supply item",
+    resourceId: "new-supply",
+    resourceLabel: "New supply item",
+    fieldKey: "who-brings",
+    fieldLabel: "who brings",
+  });
 
   function reset() {
     setName("");
@@ -91,15 +128,22 @@ export function AddSupplyDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="max-h-[min(72dvh,30rem)] space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
+          <EditingPresenceNotice editors={namePresence.surfaceEditors} mode="surface" className="mt-0" />
           <div>
             <label className="text-sm font-medium block mb-1.5">Item name *</label>
             <input
               autoFocus
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                namePresence.activate();
+                setName(e.target.value);
+              }}
+              onFocus={namePresence.activate}
+              onBlur={namePresence.clear}
               placeholder="Tent, Sunscreen, First-aid kit…"
               className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <EditingPresenceNotice editors={namePresence.fieldEditors} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -107,13 +151,19 @@ export function AddSupplyDialog({
               <label className="text-sm font-medium block mb-1.5">Category</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  categoryPresence.activate();
+                  setCategory(e.target.value);
+                }}
+                onFocus={categoryPresence.activate}
+                onBlur={categoryPresence.clear}
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {SUPPLY_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+              <EditingPresenceNotice editors={categoryPresence.fieldEditors} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">Quantity needed</label>
@@ -121,9 +171,15 @@ export function AddSupplyDialog({
                 type="number"
                 min={0}
                 value={quantityNeeded}
-                onChange={(e) => setQuantityNeeded(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => {
+                  quantityPresence.activate();
+                  setQuantityNeeded(parseInt(e.target.value, 10) || 0);
+                }}
+                onFocus={quantityPresence.activate}
+                onBlur={quantityPresence.clear}
                 className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <EditingPresenceNotice editors={quantityPresence.fieldEditors} />
             </div>
           </div>
 
@@ -131,13 +187,26 @@ export function AddSupplyDialog({
             value={estimatedCost}
             onChange={setEstimatedCost}
             label="Estimated cost (each)"
+            presence={{
+              surfaceId,
+              surfaceLabel: "Add supply item",
+              resourceId: "new-supply",
+              resourceLabel: "New supply item",
+              fieldKey: "estimated-cost",
+              fieldLabel: "estimated cost",
+            }}
           />
 
           <div>
             <label className="text-sm font-medium block mb-1.5">Who brings?</label>
             <select
               value={whoBringsId}
-              onChange={(e) => setWhoBringsId(e.target.value)}
+              onChange={(e) => {
+                assigneePresence.activate();
+                setWhoBringsId(e.target.value);
+              }}
+              onFocus={assigneePresence.activate}
+              onBlur={assigneePresence.clear}
               className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base sm:min-h-10 sm:text-sm touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Unassigned</option>
@@ -145,6 +214,7 @@ export function AddSupplyDialog({
                 <option key={m.userId} value={m.userId}>{m.user.name}</option>
               ))}
             </select>
+            <EditingPresenceNotice editors={assigneePresence.fieldEditors} />
           </div>
 
           <button

@@ -11,6 +11,10 @@ import { StayCard } from "./StayCard";
 import { DayTimeline } from "./DayTimeline";
 import { createStay, createActivity, deleteStop, restoreStop } from "@/actions/itinerary";
 import { useTripContext } from "@/components/trip/TripContext";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
 import { OsmMapEmbed, StopMapPlaceholder } from "./OsmMapEmbed";
@@ -306,6 +310,15 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
   const [totalPrice, setTotalPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const fieldPrefix = `stay-${stopId}`;
+  const surfaceId = `stop-stay:${stopId}`;
+  const namePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add stay",
+    resourceId: `stay:${stopId}`,
+    resourceLabel: "New stay",
+    fieldKey: "name",
+    fieldLabel: "stay name",
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -330,16 +343,23 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
 
   return (
     <form onSubmit={handleSubmit} className="bg-muted/40 rounded-xl p-4 space-y-3 border border-border">
+      <EditingPresenceNotice editors={namePresence.surfaceEditors} mode="surface" className="mt-0" />
       <input
         id={`${fieldPrefix}-name`}
         name="stay-name"
         aria-label="Stay name"
         autoFocus
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          namePresence.activate();
+          setName(e.target.value);
+        }}
+        onFocus={namePresence.activate}
+        onBlur={namePresence.clear}
         placeholder="Stay name (e.g. Park Hyatt)"
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
+      <EditingPresenceNotice editors={namePresence.fieldEditors} />
       <input
         id={`${fieldPrefix}-address`}
         name="stay-address"
@@ -409,6 +429,15 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
   const [estimatedCost, setEstimatedCost] = useState("");
   const [loading, setLoading] = useState(false);
   const fieldPrefix = `activity-${stopId}`;
+  const surfaceId = `stop-activity:${stopId}`;
+  const namePresence = useTripEditingPresenceField({
+    surfaceId,
+    surfaceLabel: "Add activity",
+    resourceId: `activity:${stopId}`,
+    resourceLabel: "New activity",
+    fieldKey: "name",
+    fieldLabel: "activity name",
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -432,16 +461,23 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
 
   return (
     <form onSubmit={handleSubmit} className="bg-muted/40 rounded-xl p-4 space-y-3 border border-border">
+      <EditingPresenceNotice editors={namePresence.surfaceEditors} mode="surface" className="mt-0" />
       <input
         id={`${fieldPrefix}-name`}
         name="activity-name"
         aria-label="Activity name"
         autoFocus
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          namePresence.activate();
+          setName(e.target.value);
+        }}
+        onFocus={namePresence.activate}
+        onBlur={namePresence.clear}
         placeholder="Activity name (e.g. Fushimi Inari)"
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
+      <EditingPresenceNotice editors={namePresence.fieldEditors} />
       <div className="grid grid-cols-2 gap-2">
         <input
           id={`${fieldPrefix}-scheduled-date`}

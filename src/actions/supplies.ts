@@ -9,6 +9,7 @@ import {
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
 import { issueUndoToken } from "@/actions/undo";
+import { logAuditEvent } from "@/lib/observability/audit";
 
 function computeStatus(needed: number, owned: number): SupplyItemStatus {
   if (needed <= 0) return "NOT_NEEDED";
@@ -51,6 +52,12 @@ function revalidateSupplyViews(tripId: string) {
   revalidatePath(`/trips/${tripId}/overview`);
 }
 
+function changedFieldKeys<T extends Record<string, unknown>>(input: Partial<T>) {
+  return Object.keys(input).filter(
+    (key) => input[key as keyof T] !== undefined
+  );
+}
+
 export async function createSupplyItem(tripId: string, input: CreateSupplyInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
@@ -85,6 +92,18 @@ export async function createSupplyItem(tripId: string, input: CreateSupplyInput)
   });
 
   revalidateSupplyViews(tripId);
+  await logAuditEvent({
+    action: "supply.created",
+    actorUserId: user.id,
+    tripId,
+    targetId: item.id,
+    summary: `Added supply item ${item.name}`,
+    metadata: {
+      quantityNeeded,
+      whoBringsId,
+      category: item.category,
+    },
+  });
   return { item };
 }
 
@@ -163,6 +182,19 @@ export async function updateSupplyItem(
   });
 
   revalidateSupplyViews(existing.tripId);
+  await logAuditEvent({
+    action: "supply.updated",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: itemId,
+    summary: `Updated supply item ${updated.name}`,
+    metadata: {
+      changedFields: changedFieldKeys(input),
+      status: updated.status,
+      whoBringsId: updated.whoBringsId,
+      whoBoughtId: updated.whoBoughtId,
+    },
+  });
   let undoTokenId: string | undefined;
   if (options?.recordUndo !== false) {
     const { tokenId } = await issueUndoToken({
@@ -187,6 +219,13 @@ export async function deleteSupplyItem(itemId: string) {
     data: { deletedAt: new Date() },
   });
   revalidateSupplyViews(existing.tripId);
+  await logAuditEvent({
+    action: "supply.deleted",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: itemId,
+    summary: `Deleted supply item ${existing.name}`,
+  });
 }
 
 export async function restoreSupplyItem(itemId: string) {
@@ -200,6 +239,13 @@ export async function restoreSupplyItem(itemId: string) {
     data: { deletedAt: null },
   });
   revalidateSupplyViews(existing.tripId);
+  await logAuditEvent({
+    action: "supply.restored",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: itemId,
+    summary: `Restored supply item ${existing.name}`,
+  });
 }
 
 export async function assignBringer(itemId: string, userId: string | null) {
@@ -226,6 +272,16 @@ export async function markBought(itemId: string, actualCost?: number | null) {
   });
 
   revalidateSupplyViews(existing.tripId);
+  await logAuditEvent({
+    action: "supply.marked-bought",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: itemId,
+    summary: `Marked supply item ${existing.name} as bought`,
+    metadata: {
+      actualCost: actualCost ?? null,
+    },
+  });
   return { item: updated };
 }
 
@@ -258,6 +314,15 @@ export async function bulkMarkBought(itemIds: string[]) {
   );
 
   revalidateSupplyViews(tripId);
+  await logAuditEvent({
+    action: "supply.bulk-marked-bought",
+    actorUserId: user.id,
+    tripId,
+    summary: `Marked ${items.length} supply items as bought`,
+    metadata: {
+      itemIds: items.map((item) => item.id),
+    },
+  });
 }
 
 export async function bulkDeleteSupplyItems(itemIds: string[]) {
@@ -280,4 +345,13 @@ export async function bulkDeleteSupplyItems(itemIds: string[]) {
   });
 
   revalidateSupplyViews(tripId);
+  await logAuditEvent({
+    action: "supply.bulk-deleted",
+    actorUserId: user.id,
+    tripId,
+    summary: `Deleted ${items.length} supply items`,
+    metadata: {
+      itemIds: items.map((item) => item.id),
+    },
+  });
 }

@@ -148,7 +148,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
         href={ROUTES.dashboard}
         className="flex min-w-0 shrink items-center gap-2 rounded-md focus-ring"
         aria-label="Beacon dashboard"
-        title="Dashboard (G D)"
+        title="Dashboard (B D)"
         prefetch
       >
         <BeaconLogo className="h-9 w-9" gradientId="beaconGradient-topnav" />
@@ -233,7 +233,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
                   onClick={() => setMenuOpen(false)}
                   icon={<LayoutDashboard className="w-3.5 h-3.5" />}
                   label="My trips"
-                  shortcut="G D"
+                  shortcut="B D"
                   chord
                 />
                 <MenuItem

@@ -4,6 +4,10 @@ import { useState } from "react";
 import { MessageSquare, Send, Trash2, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import {
+  useTripEditingPresenceField,
+} from "@/components/collaboration/TripEditingPresenceProvider";
+import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { createComment, deleteComment } from "@/actions/comments";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
@@ -30,6 +34,14 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const commentPresence = useTripEditingPresenceField({
+    surfaceId: `comments:${entityType}:${entityId}`,
+    surfaceLabel: "Comments",
+    resourceId: entityId,
+    resourceLabel: "Comment thread",
+    fieldKey: "comment-body",
+    fieldLabel: "comment",
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,22 +107,30 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
       {canEdit && (
         <form onSubmit={handleSubmit} className="flex items-start gap-2">
           <UserAvatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size="xs" />
-          <div className="flex-1 flex items-center gap-2 bg-muted/40 rounded-xl pl-3 pr-1.5 py-1">
-            <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
-            <input
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Add a comment…"
-              className="flex-1 bg-transparent text-xs focus:outline-none placeholder:text-muted-foreground"
-            />
-            <button
-              type="submit"
-              disabled={submitting || !body.trim()}
-              className="w-6 h-6 rounded-md flex items-center justify-center text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
-              aria-label="Post comment"
-            >
-              {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-            </button>
+          <div className="flex-1">
+            <EditingPresenceNotice editors={commentPresence.fieldEditors} className="mb-2 mt-0" />
+            <div className="flex items-center gap-2 bg-muted/40 rounded-xl pl-3 pr-1.5 py-1">
+              <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
+              <input
+                value={body}
+                onChange={(e) => {
+                  commentPresence.activate();
+                  setBody(e.target.value);
+                }}
+                onFocus={commentPresence.activate}
+                onBlur={commentPresence.clear}
+                placeholder="Add a comment…"
+                className="flex-1 bg-transparent text-xs focus:outline-none placeholder:text-muted-foreground"
+              />
+              <button
+                type="submit"
+                disabled={submitting || !body.trim()}
+                className="w-6 h-6 rounded-md flex items-center justify-center text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
+                aria-label="Post comment"
+              >
+                {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+              </button>
+            </div>
           </div>
         </form>
       )}
