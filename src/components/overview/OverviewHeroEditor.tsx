@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarDays, WalletCards } from "lucide-react";
+import { addDays } from "date-fns/addDays";
+import { nextSaturday } from "date-fns/nextSaturday";
 import { InlineEdit } from "@/components/shared/InlineEdit";
 import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
@@ -26,9 +29,20 @@ export function OverviewHeroEditor({
   hasManualEstimate: boolean;
   currency: string;
 }) {
+  const router = useRouter();
   const [localStart, setLocalStart] = useState(startDate ?? "");
   const [localEnd, setLocalEnd] = useState(endDate ?? "");
   const { canManage } = useTripContext();
+
+  const tzLabel = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+        .formatToParts(new Date())
+        .find((p) => p.type === "timeZoneName")?.value ?? "";
+    } catch {
+      return "";
+    }
+  }, []);
 
   function saveManualEstimate(value: string) {
     const trimmed = value.trim();
@@ -45,8 +59,30 @@ export function OverviewHeroEditor({
     void updateTrip(tripId, { estimatedCostOverride: parsed });
   }
 
+  async function applyQuickRange(kind: "weekend7" | "plusWeek") {
+    const now = new Date();
+    let startStr: string;
+    let endStr: string;
+    if (kind === "weekend7") {
+      const sat = nextSaturday(now);
+      const sun = addDays(sat, 1);
+      startStr = sat.toISOString().slice(0, 10);
+      endStr = sun.toISOString().slice(0, 10);
+    } else {
+      const anchor = localStart ? new Date(localStart + "T12:00:00") : now;
+      const s = addDays(anchor, 7);
+      const e = localEnd ? addDays(new Date(localEnd + "T12:00:00"), 7) : addDays(s, 3);
+      startStr = s.toISOString().slice(0, 10);
+      endStr = e.toISOString().slice(0, 10);
+    }
+    setLocalStart(startStr);
+    setLocalEnd(endStr);
+    await updateTrip(tripId, { startDate: startStr, endDate: endStr });
+    router.refresh();
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" id="trip-dates">
       <InlineEdit
         value={name}
         onSave={async (next) => {
@@ -57,6 +93,33 @@ export function OverviewHeroEditor({
         editLabel="Edit trip name"
         displayClassName="min-w-0 text-balance text-2xl font-bold tracking-tight"
       />
+
+      {tzLabel ? (
+        <p className="text-[11px] text-muted-foreground">
+          Dates render in{" "}
+          <span className="font-semibold uppercase tracking-[0.14em] text-foreground">{tzLabel}</span> — teammates
+          in other zones see aligned calendar days rather than simultaneous local midnight.
+        </p>
+      ) : null}
+
+      {canManage && (
+        <div className="-mt-1 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-border/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors duration-300 hover:bg-primary/15 hover:border-primary/35 hover:text-primary"
+            onClick={() => void applyQuickRange("weekend7")}
+          >
+            Next Sat–Sun
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-border/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors duration-300 hover:bg-primary/15 hover:border-primary/35 hover:text-primary"
+            onClick={() => void applyQuickRange("plusWeek")}
+          >
+            Dates + one week
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="flex items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2 text-sm">

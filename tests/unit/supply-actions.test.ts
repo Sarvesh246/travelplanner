@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   assertCanContribute: vi.fn(),
   assertActiveTripMembers: vi.fn(),
   revalidatePath: vi.fn(),
+  issueUndoToken: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
@@ -23,6 +24,9 @@ vi.mock("@/lib/auth/trip-permissions", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
 }));
+vi.mock("@/actions/undo", () => ({
+  issueUndoToken: mocks.issueUndoToken,
+}));
 
 import { createSupplyItem, updateSupplyItem } from "@/actions/supplies";
 
@@ -32,11 +36,26 @@ describe("supply actions", () => {
     mocks.getAuthUser.mockResolvedValue({ id: "user-1" });
     mocks.assertCanContribute.mockResolvedValue({ role: "MEMBER" });
     mocks.assertActiveTripMembers.mockResolvedValue(new Set(["user-2"]));
+    mocks.issueUndoToken.mockResolvedValue({
+      tokenId: "tok-undo",
+      expiresAt: new Date().toISOString(),
+    });
     mocks.prisma.supplyItem.findUnique.mockResolvedValue({
       id: "item-1",
       tripId: "trip-1",
+      name: "Camp stove",
+      category: null,
+      description: null,
+      notes: null,
       quantityNeeded: 2,
       quantityOwned: 0,
+      quantityRemaining: 2,
+      estimatedCost: null,
+      actualCost: null,
+      whoBringsId: null,
+      whoBoughtId: null,
+      status: "NEEDED",
+      createdById: "user-1",
     });
   });
 

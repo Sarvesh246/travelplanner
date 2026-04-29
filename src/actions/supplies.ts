@@ -8,6 +8,7 @@ import {
   assertCanContribute,
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
+import { issueUndoToken } from "@/actions/undo";
 
 function computeStatus(needed: number, owned: number): SupplyItemStatus {
   if (needed <= 0) return "NOT_NEEDED";
@@ -101,7 +102,11 @@ interface UpdateSupplyInput {
   notes?: string;
 }
 
-export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput) {
+export async function updateSupplyItem(
+  itemId: string,
+  input: UpdateSupplyInput,
+  options?: { recordUndo?: boolean }
+) {
   const user = await getAuthUser();
   const existing = await prisma.supplyItem.findUnique({ where: { id: itemId } });
   if (!existing) throw new Error("Item not found");
@@ -123,6 +128,22 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
   const remaining = Math.max(0, needed - owned);
   const autoStatus = input.status ?? computeStatus(needed, owned);
 
+  const snapshot = {
+    name: existing.name,
+    category: existing.category,
+    description: existing.description,
+    notes: existing.notes,
+    quantityNeeded: existing.quantityNeeded,
+    quantityOwned: existing.quantityOwned,
+    quantityRemaining: existing.quantityRemaining,
+    estimatedCost:
+      existing.estimatedCost != null ? Number(existing.estimatedCost) : null,
+    actualCost: existing.actualCost != null ? Number(existing.actualCost) : null,
+    whoBringsId: existing.whoBringsId,
+    whoBoughtId: existing.whoBoughtId,
+    status: existing.status,
+  };
+
   const updated = await prisma.supplyItem.update({
     where: { id: itemId },
     data: {
@@ -142,7 +163,17 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
   });
 
   revalidateSupplyViews(existing.tripId);
-  return { item: updated };
+  let undoTokenId: string | undefined;
+  if (options?.recordUndo !== false) {
+    const { tokenId } = await issueUndoToken({
+      tripId: existing.tripId,
+      kind: "SUPPLY_RESTORE",
+      payload: { itemId, snapshot },
+    });
+    undoTokenId = tokenId;
+  }
+
+  return { item: updated, undoTokenId };
 }
 
 export async function deleteSupplyItem(itemId: string) {

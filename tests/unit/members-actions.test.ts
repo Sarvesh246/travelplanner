@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   publishTripMembershipEvent: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  issueUndoToken: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
@@ -51,6 +52,9 @@ vi.mock("@/lib/supabase/trip-membership-realtime", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
+}));
+vi.mock("@/actions/undo", () => ({
+  issueUndoToken: mocks.issueUndoToken,
 }));
 
 import {
@@ -89,6 +93,10 @@ describe("member invite actions", () => {
       updatedAt: new Date("2026-04-28T12:00:00.000Z"),
     });
     mocks.prisma.trip.findUnique.mockResolvedValue({ name: "Trail Weekend" });
+    mocks.issueUndoToken.mockResolvedValue({
+      tokenId: "tok-undo",
+      expiresAt: new Date("2026-04-28T12:01:00.000Z").toISOString(),
+    });
   });
 
   it("creates an invite and returns only client-safe fields", async () => {

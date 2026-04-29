@@ -15,6 +15,7 @@ import {
   restoreSupplyItem,
 } from "@/actions/supplies";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undo-toast";
 import type { SupplyItemSerialized } from "./types";
 
 interface SupplyRowProps {
@@ -42,7 +43,7 @@ export function SupplyRow({
 
   async function updateQty(field: "quantityNeeded" | "quantityOwned", value: number) {
     try {
-      await updateSupplyItem(item.id, { [field]: Math.max(0, value) });
+      await updateSupplyItem(item.id, { [field]: Math.max(0, value) }, { recordUndo: false });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update the quantity. Please try again.");
     }
@@ -50,7 +51,10 @@ export function SupplyRow({
 
   async function updateBringer(userId: string | null) {
     try {
-      await updateSupplyItem(item.id, { whoBringsId: userId });
+      const result = await updateSupplyItem(item.id, { whoBringsId: userId });
+      if (result.undoTokenId) {
+        toastWithUndo("Assignment updated", result.undoTokenId);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not assign this item. Please try again.");
     }

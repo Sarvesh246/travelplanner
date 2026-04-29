@@ -176,6 +176,7 @@ function TripCardImpl({
                 ref={fileRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
+                aria-label={`Choose cover image for ${trip.name}`}
                 className="sr-only"
                 onChange={onFileChange}
               />
@@ -211,7 +212,7 @@ function TripCardImpl({
                     disabled={statusBusy}
                     className="inline-flex items-center gap-0.5 rounded-full border border-white/10 bg-black/35 py-1 pl-2 pr-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/45 disabled:opacity-60"
                     title="Change trip status"
-                    aria-label="Change trip status"
+                    aria-label={`Change trip status: ${statusLabel}`}
                   >
                     {statusLabel}
                     {statusBusy ? (

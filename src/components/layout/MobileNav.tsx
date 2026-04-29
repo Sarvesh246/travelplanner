@@ -12,6 +12,7 @@ import {
   Users,
   EllipsisVertical,
   ChevronRight,
+  History,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ const MORE_ITEMS = (tripId: string): TripNavTab[] =>
   [
     { href: ROUTES.tripVotes(tripId), label: "Votes", mobileLabel: "Votes", icon: Vote },
     { href: ROUTES.tripMembers(tripId), label: "Members", mobileLabel: "Members", icon: Users },
+    { href: ROUTES.tripActivity(tripId), label: "Activity", mobileLabel: "Log", icon: History },
   ];
 
 export function MobileNav({ tripId }: MobileNavProps) {

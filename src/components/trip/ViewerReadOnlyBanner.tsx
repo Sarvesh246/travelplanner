@@ -9,14 +9,17 @@ export function ViewerReadOnlyBanner() {
 
   return (
     <div
-      className="app-glass mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground"
+      className="mb-4 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-3 text-sm shadow-sm backdrop-blur-sm transition-colors duration-300 dark:bg-primary/[0.1]"
       role="status"
     >
-      <Eye className="w-4 h-4 shrink-0" aria-hidden />
-      <span>
-        You have read-only access to this trip. You can view everything, but you cannot add or edit
-        content.
-      </span>
+      <Eye className="w-5 h-5 shrink-0 text-primary mt-0.5" aria-hidden />
+      <div className="min-w-0 space-y-0.5">
+        <p className="font-semibold text-foreground">Viewer mode</p>
+        <p className="text-muted-foreground leading-snug">
+          You can review the full plan and discuss in context — editing, inviting, voting, expenses, and
+          supplies remain available to collaborators with edit access.
+        </p>
+      </div>
     </div>
   );
 }

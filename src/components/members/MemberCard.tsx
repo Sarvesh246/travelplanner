@@ -9,6 +9,7 @@ import { MoreHorizontal, UserMinus, Shield, User, Eye } from "lucide-react";
 import { removeMember, updateMemberRole } from "@/actions/members";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undo-toast";
 import { MemberRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
@@ -42,8 +43,8 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
 
   async function handleRemove() {
     try {
-      await removeMember(tripId, member.userId);
-      toast.success(`${member.user.name} removed`);
+      const res = await removeMember(tripId, member.userId);
+      toastWithUndo(`${member.user.name} removed`, res.undoTokenId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not remove this member. Please try again.");
     }

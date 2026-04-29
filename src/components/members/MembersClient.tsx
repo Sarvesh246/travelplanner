@@ -7,9 +7,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { MemberCard } from "./MemberCard";
 import { InviteDialog } from "./InviteDialog";
 import { RoleBadge } from "./RoleBadge";
-import { revokeInvite } from "@/actions/members";
+import { bulkRevokeInvites, revokeInvite } from "@/actions/members";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
+import { toastBulkUndo, toastWithUndo } from "@/lib/undo-toast";
 import { UserPlus, Clock, Copy, X } from "lucide-react";
 import { MemberRole } from "@prisma/client";
 import { ROUTES } from "@/lib/constants";
@@ -37,13 +38,31 @@ interface MembersClientProps {
 export function MembersClient({ tripId, members, pendingInvites }: MembersClientProps) {
   const { canManage } = useTripContext();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [pickedInvites, setPickedInvites] = useState<string[]>([]);
+
+  function togglePickInvite(id: string) {
+    setPickedInvites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   async function handleRevoke(inviteId: string) {
     try {
-      await revokeInvite(inviteId);
-      toast.success("Invite revoked");
+      const res = await revokeInvite(inviteId);
+      setPickedInvites((prev) => prev.filter((x) => x !== inviteId));
+      toastWithUndo("Invite revoked", res.undoTokenId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not revoke this invite. Please try again.");
+    }
+  }
+
+  async function revokePickedInvites() {
+    if (pickedInvites.length === 0) return;
+    try {
+      const ids = [...pickedInvites];
+      const res = await bulkRevokeInvites(tripId, ids);
+      setPickedInvites([]);
+      toastBulkUndo(`${ids.length} invite${ids.length === 1 ? "" : "s"} revoked`, res.undoTokenIds);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not revoke invites.");
     }
   }
 
@@ -93,16 +112,39 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
 
       {pendingInvites.length > 0 && (
         <div className="mt-8">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mb-4 flex flex-col gap-3 min-[560px]:flex-row min-[560px]:items-center min-[560px]:justify-between">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Pending invites
           </h3>
+          {pickedInvites.length > 0 && canManage ? (
+            <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-[hsl(var(--card)/0.96)] px-4 py-3 shadow-md backdrop-blur-md min-[560px]:w-auto md:bg-card/92">
+              <span className="text-sm font-medium">{pickedInvites.length} invite{pickedInvites.length === 1 ? "" : "s"} selected</span>
+              <button
+                type="button"
+                onClick={() => void revokePickedInvites()}
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-destructive px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-destructive/90"
+              >
+                Revoke all
+              </button>
+            </div>
+          ) : null}
+          </div>
           <div className="space-y-2">
             {pendingInvites.map((invite) => (
               <div
                 key={invite.id}
                 className="app-glass flex items-center gap-3 rounded-xl border-dashed px-4 py-3"
               >
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                {canManage ? (
+                  <input
+                    type="checkbox"
+                    checked={pickedInvites.includes(invite.id)}
+                    onChange={() => togglePickInvite(invite.id)}
+                    className="h-4 w-4 shrink-0 rounded border-input self-center"
+                    aria-label={`Select invite for ${invite.email}`}
+                  />
+                ) : null}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
                   <Clock className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <button

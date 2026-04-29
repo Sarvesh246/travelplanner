@@ -142,6 +142,93 @@ export async function updateTrip(
   return { trip: tripToClientJson(trip) };
 }
 
+/**
+ * Copies trip metadata, stops, and supply templates into a new trip owned by the current user.
+ * Expenses and votes are not copied—useful as a repeatable planning scaffold.
+ */
+export async function duplicateTrip(sourceTripId: string) {
+  const user = await getAuthUser();
+  await assertCanView(sourceTripId, user.id);
+
+  const src = await prisma.trip.findFirst({
+    where: { id: sourceTripId, deletedAt: null },
+    include: {
+      stops: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
+      supplyItems: { where: { deletedAt: null }, take: 500 },
+    },
+  });
+  if (!src) throw new Error("Trip not found");
+
+  const trimmed = src.name.trim();
+  const baseName = trimmed.length > 92 ? `${trimmed.slice(0, 89)}…` : trimmed;
+
+  const newTrip = await prisma.trip.create({
+    data: {
+      name: `${baseName} (copy)`,
+      description: src.description,
+      currency: src.currency,
+      status: "PLANNING",
+      budgetTarget: src.budgetTarget,
+      estimatedCostOverride: null,
+      startDate: null,
+      endDate: null,
+      members: {
+        create: { userId: user.id, role: "OWNER" },
+      },
+      stops: {
+        create: src.stops.map((s) => ({
+          name: s.name,
+          country: s.country,
+          description: s.description,
+          latitude: s.latitude,
+          longitude: s.longitude,
+          placeId: s.placeId,
+          sortOrder: s.sortOrder,
+          arrivalDate: null,
+          departureDate: null,
+          status: "DRAFT" as const,
+        })),
+      },
+    },
+  });
+
+  if (src.supplyItems.length > 0) {
+    await prisma.supplyItem.createMany({
+      data: src.supplyItems.map((si) => ({
+        tripId: newTrip.id,
+        createdById: user.id,
+        name: si.name,
+        category: si.category,
+        description: si.description,
+        quantityNeeded: si.quantityNeeded,
+        quantityOwned: 0,
+        quantityRemaining: Math.max(0, si.quantityNeeded),
+        estimatedCost: si.estimatedCost,
+        actualCost: null,
+        status: "NEEDED" as const,
+        whoBringsId: null,
+        whoBoughtId: null,
+        notes: si.notes,
+      })),
+    });
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/trips/${newTrip.id}/overview`);
+  revalidateTag(`trip-${newTrip.id}`, "max");
+
+  await logAuditEvent({
+    action: "trip.duplicated",
+    actorUserId: user.id,
+    tripId: newTrip.id,
+    targetId: sourceTripId,
+    summary: `Duplicated trip into ${newTrip.name}`,
+    metadata: { sourceTripId },
+  });
+
+  return { tripId: newTrip.id };
+}
+
 const TRIP_COVERS_BUCKET = "trip-covers";
 
 /**

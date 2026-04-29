@@ -11,6 +11,7 @@ import {
   Receipt,
   Vote,
   Users,
+  History,
   Plus,
   Moon,
   Sun,
@@ -146,6 +147,13 @@ function CommandPaletteInner() {
                   label="Members"
                   onSelect={() => go(ROUTES.tripMembers(tripId))}
                   shortcut="G M"
+                  chord
+                />
+                <CommandItem
+                  icon={<History className="w-4 h-4" />}
+                  label="Activity"
+                  onSelect={() => go(ROUTES.tripActivity(tripId))}
+                  shortcut="G A"
                   chord
                 />
               </>

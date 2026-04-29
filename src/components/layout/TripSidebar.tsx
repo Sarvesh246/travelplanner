@@ -11,6 +11,7 @@ import {
   Users,
   ChevronLeft,
   Plane,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
@@ -28,6 +29,7 @@ const navItems = (tripId: string) => [
   { href: ROUTES.tripExpenses(tripId), label: "Expenses", icon: Receipt },
   { href: ROUTES.tripVotes(tripId), label: "Votes", icon: Vote },
   { href: ROUTES.tripMembers(tripId), label: "Members", icon: Users },
+  { href: ROUTES.tripActivity(tripId), label: "Activity", icon: History },
 ];
 
 export function TripSidebar({ tripId, tripName }: TripSidebarProps) {

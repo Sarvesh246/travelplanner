@@ -144,7 +144,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
       <Link
         href={ROUTES.dashboard}
         className="flex min-w-0 shrink items-center gap-2 rounded-md focus-ring"
-        aria-label="Go to dashboard"
+        aria-label="Beacon dashboard"
         title="Dashboard (G D)"
         prefetch
       >
@@ -159,7 +159,6 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
           type="button"
           onClick={handleOpenPalette}
           title={`Search commands (${isMac ? "⌘K" : "Ctrl K"} or /)`}
-          aria-label="Open command palette"
           className="app-glass hidden h-9 min-h-10 min-w-0 w-full max-w-md flex-1 items-center gap-2 rounded-lg px-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/25 hover:bg-card/90 hover:text-foreground focus-ring md:inline-flex"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />

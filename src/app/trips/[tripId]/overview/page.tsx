@@ -6,6 +6,9 @@ import { CalendarDays, Plane, WalletCards } from "lucide-react";
 import { OverviewClient } from "@/components/overview/OverviewClient";
 import { OverviewShareButton } from "@/components/overview/OverviewShareButton";
 import { OverviewHeroEditor } from "@/components/overview/OverviewHeroEditor";
+import { OverviewQuickAdds } from "@/components/overview/OverviewQuickAdds";
+import { OverviewDuplicateButton } from "@/components/overview/OverviewDuplicateButton";
+import { OverviewContextHints } from "@/components/overview/OverviewContextHints";
 import { computeEstimatedTripCost } from "@/lib/trip-metrics";
 
 export const metadata = { title: "Overview" };
@@ -107,7 +110,8 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 currency={trip.currency}
               />
             </div>
-            <div className="flex shrink-0 items-center justify-stretch min-[520px]:justify-end">
+            <div className="flex shrink-0 flex-col gap-3 items-stretch min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-end">
+              <OverviewDuplicateButton tripId={tripId} />
               <OverviewShareButton />
             </div>
           </div>
@@ -159,6 +163,10 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
           </div>
         </div>
       </section>
+
+      <OverviewContextHints tripId={tripId} />
+
+      <OverviewQuickAdds tripId={tripId} />
 
       <div className="flex items-center gap-3">
         <h2 className="text-base font-semibold">Trip summary</h2>

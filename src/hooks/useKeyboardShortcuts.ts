@@ -26,7 +26,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
  * - T ........................... toggle theme
  * - G then D / H ................ dashboard
  * - G then N .................... new trip
- * - G then O/I/S/E/V/M .......... trip overview/itinerary/supplies/expenses/votes/members
+ * - G then O/I/S/E/V/M/A ....... trip overview/itinerary/supplies/expenses/votes/members/activity
  *                                 (trip-scoped keys only work inside /trips/:id)
  *
  * Shortcuts requiring sequences time out after ~900 ms.
@@ -123,6 +123,9 @@ export function useKeyboardShortcuts() {
             break;
           case "m":
             if (tripId) route = ROUTES.tripMembers(tripId);
+            break;
+          case "a":
+            if (tripId) route = ROUTES.tripActivity(tripId);
             break;
         }
         if (route) {

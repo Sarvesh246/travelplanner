@@ -13,6 +13,7 @@ export const ROUTES = {
   tripExpenses: (id: string) => `/trips/${id}/expenses`,
   tripVotes: (id: string) => `/trips/${id}/votes`,
   tripMembers: (id: string) => `/trips/${id}/members`,
+  tripActivity: (id: string) => `/trips/${id}/activity`,
   invite: (token: string) => `/invite/${token}`,
 } as const;
 

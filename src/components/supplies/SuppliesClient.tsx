@@ -13,6 +13,7 @@ import { SupplyTable } from "./SupplyTable";
 import { AddSupplyDialog } from "./AddSupplyDialog";
 import { SupplyDetailPanel } from "./SupplyDetailPanel";
 import { useTripContext } from "@/components/trip/TripContext";
+import { readTripUiPrefs, writeTripUiPrefs } from "@/lib/trip-ui-preferences";
 import { bulkDeleteSupplyItems, bulkMarkBought, restoreSupplyItem } from "@/actions/supplies";
 import { toast } from "sonner";
 import { supplyAnchorForId, parseSupplyHash } from "@/lib/deep-link-hash";
@@ -27,23 +28,40 @@ interface SuppliesClientProps {
 export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { canEdit } = useTripContext();
+  const { canEdit, currentUser } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [bulkIds, setBulkIds] = useState<string[]>([]);
 
+  const [mine, setMine] = useState(() => readTripUiPrefs(tripId).supplyMine ?? false);
+  const [statusSel, setStatusSel] = useState<string>("");
+  useEffect(() => {
+    writeTripUiPrefs(tripId, { supplyMine: mine });
+  }, [tripId, mine]);
+
+  const filteredItems = useMemo(() => {
+    let list = items;
+    if (mine) {
+      list = list.filter(
+        (i) => i.whoBringsId === currentUser.id || i.whoBought?.id === currentUser.id
+      );
+    }
+    if (statusSel) list = list.filter((i) => i.status === statusSel);
+    return list;
+  }, [currentUser.id, items, mine, statusSel]);
+
   const stats = useMemo(() => {
-    const total = items.length;
-    const covered = items.filter((i) => i.status === "COVERED" || i.status === "NOT_NEEDED").length;
-    const estimated = items.reduce((sum, i) => sum + (i.estimatedCost ?? 0) * i.quantityNeeded, 0);
-    const actual = items.reduce((sum, i) => sum + (i.actualCost ?? 0), 0);
+    const total = filteredItems.length;
+    const covered = filteredItems.filter((i) => i.status === "COVERED" || i.status === "NOT_NEEDED").length;
+    const estimated = filteredItems.reduce((sum, i) => sum + (i.estimatedCost ?? 0) * i.quantityNeeded, 0);
+    const actual = filteredItems.reduce((sum, i) => sum + (i.actualCost ?? 0), 0);
     return { total, covered, estimated, actual };
-  }, [items]);
+  }, [filteredItems]);
   const effectiveSelectedItemId =
-    selectedItemId && items.some((item) => item.id === selectedItemId)
+    selectedItemId && filteredItems.some((item) => item.id === selectedItemId)
       ? selectedItemId
-      : items[0]?.id ?? null;
-  const selectedItem = items.find((item) => item.id === effectiveSelectedItemId) ?? null;
+      : filteredItems[0]?.id ?? null;
+  const selectedItem = filteredItems.find((item) => item.id === effectiveSelectedItemId) ?? null;
 
   async function handleBulkCover() {
     if (bulkIds.length === 0) return;
@@ -107,11 +125,11 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
 
   function handleTableRoving(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    const index = items.findIndex((item) => item.id === selectedItemId);
+    const index = filteredItems.findIndex((item) => item.id === selectedItemId);
     if (index < 0) return;
     e.preventDefault();
-    const nextIndex = e.key === "ArrowDown" ? Math.min(items.length - 1, index + 1) : Math.max(0, index - 1);
-    const next = items[nextIndex];
+    const nextIndex = e.key === "ArrowDown" ? Math.min(filteredItems.length - 1, index + 1) : Math.max(0, index - 1);
+    const next = filteredItems[nextIndex];
     if (next) setSelectedItemId(next.id);
   }
 
@@ -120,7 +138,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
       <PageHeader
         eyebrow="Pack list"
         title="Supplies"
-        description={`${items.length} item${items.length !== 1 ? "s" : ""} tracked`}
+        description={`Showing ${filteredItems.length} of ${items.length} item${items.length !== 1 ? "s" : ""}`}
         actions={
           canEdit && (
             <button
@@ -171,6 +189,24 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
           <div className="space-y-3" onKeyDown={handleTableRoving}>
+            <div className="sticky top-14 z-[8] flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border/60 bg-[hsl(var(--card)/0.92)] p-3 text-xs backdrop-blur-md md:text-sm">
+              <label className="flex items-center gap-2 font-medium text-muted-foreground">
+                <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My packing
+              </label>
+              <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                Status
+                <select
+                  value={statusSel}
+                  onChange={(e) => setStatusSel(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2 py-1.5 ml-2 text-xs font-semibold capitalize normal-case"
+                >
+                  <option value="">All</option>
+                  {["NEEDED", "PARTIALLY_COVERED", "COVERED", "NOT_NEEDED"].map((s) => (
+                    <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
             {bulkIds.length > 0 ? (
               <div className="app-surface flex flex-wrap items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5 text-sm">
                 <span className="font-medium">{bulkIds.length} selected</span>
@@ -199,7 +235,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
             ) : null}
             <SupplyTable
               tripId={tripId}
-              items={items}
+              items={filteredItems}
               currency={currency}
               selectedItemId={effectiveSelectedItemId}
               selectedBulkIds={bulkIds}
@@ -208,7 +244,9 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
                 setBulkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
               }
               onToggleBulkAll={() =>
-                setBulkIds((prev) => (prev.length === items.length ? [] : items.map((item) => item.id)))
+                setBulkIds((prev) =>
+                  prev.length === filteredItems.length ? [] : filteredItems.map((item) => item.id)
+                )
               }
             />
           </div>

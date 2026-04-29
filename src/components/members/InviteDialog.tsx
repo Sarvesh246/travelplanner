@@ -34,10 +34,23 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
     onOpenChange(false);
   }, [onOpenChange]);
 
+  const requestClose = useCallback(() => {
+    if (inviteLink) {
+      closeDialog();
+      return;
+    }
+    if (email.trim().length > 0 && !loading && !inviteLink) {
+      if (typeof window !== "undefined" && !window.confirm("Discard unsent invite draft?")) {
+        return;
+      }
+    }
+    closeDialog();
+  }, [inviteLink, email, loading, closeDialog]);
+
   useEffect(() => {
     if (!open) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") closeDialog();
+      if (e.key === "Escape") requestClose();
     }
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
@@ -45,7 +58,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [closeDialog, open]);
+  }, [closeDialog, open, requestClose]);
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -94,12 +107,12 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeDialog} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => requestClose()} />
       <div className="relative mt-auto flex max-h-[min(94dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:mt-0 sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
           <h2 className="font-semibold text-base">Invite members</h2>
           <button
-            onClick={closeDialog}
+            onClick={() => requestClose()}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
           >
             <X className="w-4 h-4" />

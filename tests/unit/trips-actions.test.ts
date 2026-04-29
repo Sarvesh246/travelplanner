@@ -39,7 +39,6 @@ vi.mock("next/cache", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: vi.fn() }));
-
 import { createTrip, updateTrip } from "@/actions/trips";
 
 describe("trip actions", () => {

@@ -13,6 +13,7 @@ import { logAuditEvent } from "@/lib/observability/audit";
 import { reportServerError } from "@/lib/observability/errors";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { publishTripMembershipEvent } from "@/lib/supabase/trip-membership-realtime";
+import { issueUndoToken } from "@/actions/undo";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -286,6 +287,7 @@ export async function removeMember(tripId: string, targetUserId: string) {
     where: { tripId_userId: { tripId, userId: targetUserId } },
   });
   if (target?.role === "OWNER") throw new Error("Cannot remove the owner");
+  if (!target) throw new Error("Member not found");
 
   await prisma.tripMember.update({
     where: { tripId_userId: { tripId, userId: targetUserId } },
@@ -309,6 +311,13 @@ export async function removeMember(tripId: string, targetUserId: string) {
 
   revalidatePath(`/trips/${tripId}/members`);
   revalidateTag(`trip-${tripId}`, "max");
+
+  const { tokenId } = await issueUndoToken({
+    tripId,
+    kind: "MEMBER_RESTORE",
+    payload: { memberId: target.id },
+  });
+  return { undoTokenId: tokenId };
 }
 
 export async function leaveTrip(tripId: string) {
@@ -368,4 +377,70 @@ export async function revokeInvite(inviteId: string) {
 
   revalidatePath(`/trips/${invite.tripId}/members`);
   revalidateTag(`trip-${invite.tripId}`, "max");
+
+  const { tokenId } = await issueUndoToken({
+    tripId: invite.tripId,
+    kind: "INVITE_RESTORE",
+    payload: { inviteId },
+  });
+  return { undoTokenId: tokenId };
+}
+
+export async function bulkRevokeInvites(tripId: string, inviteIds: string[]) {
+  const user = await getAuthUser();
+  await assertCanManage(tripId, user.id);
+  const ids = [...new Set(inviteIds)].filter(Boolean);
+  if (ids.length === 0) return { undoTokenIds: [] as string[] };
+
+  const invites = await prisma.tripInvite.findMany({
+    where: { id: { in: ids }, tripId, status: "PENDING" },
+  });
+  if (invites.length === 0) return { undoTokenIds: [] as string[] };
+
+  await prisma.tripInvite.updateMany({
+    where: { id: { in: invites.map((i) => i.id) } },
+    data: { status: "REVOKED" },
+  });
+
+  for (const inv of invites) {
+    await logAuditEvent({
+      action: "trip.invite.revoked",
+      actorUserId: user.id,
+      tripId,
+      targetUserId: inv.recipientId,
+      targetId: inv.id,
+      summary: "Revoked a pending invite (bulk)",
+      metadata: { email: inv.email, role: inv.role, bulk: true },
+    });
+  }
+
+  revalidatePath(`/trips/${tripId}/members`);
+  revalidateTag(`trip-${tripId}`, "max");
+
+  const undoTokenIds: string[] = [];
+  for (const inv of invites) {
+    const { tokenId } = await issueUndoToken({
+      tripId,
+      kind: "INVITE_RESTORE",
+      payload: { inviteId: inv.id },
+    });
+    undoTokenIds.push(tokenId);
+  }
+  return { undoTokenIds };
+}
+
+export async function bulkUpdateMemberRoles(tripId: string, targetUserIds: string[], role: MemberRole) {
+  const user = await getAuthUser();
+  const myMembership = await assertCanManage(tripId, user.id);
+
+  const targets = [...new Set(targetUserIds)].filter((id) => id && id !== user.id);
+  if (targets.length === 0) return;
+
+  if (role === "OWNER" && myMembership.role !== "OWNER") {
+    throw new Error("Only owners can assign owner role");
+  }
+
+  for (const targetUserId of targets) {
+    await updateMemberRole(tripId, targetUserId, role);
+  }
 }

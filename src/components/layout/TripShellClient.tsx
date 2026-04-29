@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { TripSearchDialog } from "@/components/trip/TripSearchDialog";
 import {
   getTripMembershipChannelName,
   type TripMembershipRealtimeEvent,
@@ -23,6 +24,7 @@ const SWIPE_SECTIONS = [
   "expenses",
   "votes",
   "members",
+  "activity",
 ] as const;
 
 function getSectionHref(tripId: string, section: (typeof SWIPE_SECTIONS)[number]) {
@@ -39,6 +41,8 @@ function getSectionHref(tripId: string, section: (typeof SWIPE_SECTIONS)[number]
       return ROUTES.tripVotes(tripId);
     case "members":
       return ROUTES.tripMembers(tripId);
+    case "activity":
+      return ROUTES.tripActivity(tripId);
   }
 }
 
@@ -49,6 +53,7 @@ function getCurrentSection(pathname: string, tripId: string) {
   const section = match[2];
   if (!section || section === "overview") return "overview";
   if (section === "stops") return null;
+  if (section === "activity") return "activity";
   return SWIPE_SECTIONS.includes(section as (typeof SWIPE_SECTIONS)[number])
     ? (section as (typeof SWIPE_SECTIONS)[number])
     : null;
@@ -66,6 +71,7 @@ function isInteractiveTarget(target: EventTarget | null) {
 export function TripShellClient({ tripId, userId, children }: TripShellClientProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [searchOpen, setSearchOpen] = useState(false);
   const [accessRevoked, setAccessRevoked] = useState(false);
   const redirectingRef = useRef(false);
   const touchRef = useRef<{
@@ -205,7 +211,22 @@ export function TripShellClient({ tripId, userId, children }: TripShellClientPro
           </div>
         </div>
       ) : (
-        children
+        <>
+          {children}
+          <TripSearchDialog open={searchOpen} onOpenChange={setSearchOpen} tripId={tripId} />
+          <button
+            type="button"
+            data-no-swipe=""
+            aria-label="Search this trip"
+            onClick={() => setSearchOpen(true)}
+            className="fixed bottom-[calc(4.85rem+env(safe-area-inset-bottom))] left-4 z-40 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/35 bg-[hsl(var(--card)/0.96)] shadow-[0_10px_32px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors duration-200 hover:bg-primary/15 hover:border-primary/55 md:right-8 md:left-auto md:top-[calc(env(safe-area-inset-top,0)+4.85rem)] md:bottom-auto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary" aria-hidden>
+              <circle cx={11} cy={11} r={8} />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </button>
+        </>
       )}
     </div>
   );

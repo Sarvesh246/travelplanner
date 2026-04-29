@@ -484,6 +484,22 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+/// Short-lived server-side undo payload (consumer must match actorUserId).
+model UndoToken {
+  id          String    @id @default(cuid())
+  actorUserId String
+  tripId      String
+  kind        String
+  payload     Json
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([actorUserId, tripId])
+  @@index([expiresAt])
+  @@map("undo_tokens")
+}
+
 model AppErrorLog {
   id        String   @id @default(cuid())
   source    String
