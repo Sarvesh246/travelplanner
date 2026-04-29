@@ -396,6 +396,18 @@ export async function deleteTrip(tripId: string) {
   revalidateTag(`trip-${tripId}`, "max");
 }
 
+export async function clearTripActivity(tripId: string) {
+  const user = await getAuthUser();
+  await assertCanManage(tripId, user.id);
+
+  await prisma.auditLog.deleteMany({
+    where: { tripId },
+  });
+
+  revalidatePath(`/trips/${tripId}/activity`);
+  revalidateTag(`trip-${tripId}`, "max");
+}
+
 export async function getTripWithMembers(tripId: string) {
   const user = await getAuthUser();
 

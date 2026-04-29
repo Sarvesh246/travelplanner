@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { assertCanView } from "@/lib/auth/trip-permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ClearActivityButton } from "@/components/activity/ClearActivityButton";
 
 export const metadata = { title: "Activity" };
 
@@ -16,7 +17,7 @@ export default async function TripActivityPage({ params }: { params: Promise<{ t
 
   const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
   if (!dbUser) redirect("/login");
-  await assertCanView(tripId, dbUser.id);
+  const membership = await assertCanView(tripId, dbUser.id);
 
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
@@ -53,6 +54,11 @@ export default async function TripActivityPage({ params }: { params: Promise<{ t
         eyebrow="Trip history"
         title="Activity"
         description="Recent role changes, invites, shared costs, and plan updates visible to trip members for context."
+        actions={
+          ["OWNER", "ADMIN"].includes(membership.role) ? (
+            <ClearActivityButton tripId={tripId} />
+          ) : undefined
+        }
       />
 
       <section className="app-surface max-w-5xl divide-y divide-border rounded-2xl overflow-hidden border border-border/70">
