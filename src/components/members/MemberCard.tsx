@@ -36,7 +36,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
       await updateMemberRole(tripId, member.userId, role);
       toast.success("Role updated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update role");
+      toast.error(err instanceof Error ? err.message : "Could not update this role. Please try again.");
     }
   }
 
@@ -45,7 +45,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
       await removeMember(tripId, member.userId);
       toast.success(`${member.user.name} removed`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove member");
+      toast.error(err instanceof Error ? err.message : "Could not remove this member. Please try again.");
     }
   }
 
@@ -94,17 +94,17 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
                 >
                   {canManage && member.role !== "ADMIN" && (
                     <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("ADMIN")}>
-                      <Shield className="w-3.5 h-3.5 shrink-0" /> Make Admin
+                      <Shield className="w-3.5 h-3.5 shrink-0" /> Make admin
                     </DropdownMenu.Item>
                   )}
                   {canManage && member.role !== "MEMBER" && (
                     <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("MEMBER")}>
-                      <User className="w-3.5 h-3.5 shrink-0" /> Make Member
+                      <User className="w-3.5 h-3.5 shrink-0" /> Make member
                     </DropdownMenu.Item>
                   )}
                   {canManage && member.role !== "VIEWER" && (
                     <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("VIEWER")}>
-                      <Eye className="w-3.5 h-3.5 shrink-0" /> Make Viewer
+                      <Eye className="w-3.5 h-3.5 shrink-0" /> Make viewer
                     </DropdownMenu.Item>
                   )}
                   <DropdownMenu.Item

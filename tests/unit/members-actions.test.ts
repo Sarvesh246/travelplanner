@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   assertCanManage: vi.fn(),
   sendInviteEmail: vi.fn(),
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
@@ -33,6 +34,7 @@ vi.mock("@/lib/email/send-invite", () => ({
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
 }));
 
 import {

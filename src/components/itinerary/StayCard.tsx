@@ -31,7 +31,7 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
       await updateStay(stay.id, { status });
       toast.success(`Marked ${status.toLowerCase()}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update");
+      toast.error(err instanceof Error ? err.message : "Could not update this stay. Please try again.");
     } finally {
       setPendingStatus(null);
     }
@@ -43,7 +43,7 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
       await deleteStay(stay.id);
       toast.success("Stay removed");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete");
+      toast.error(err instanceof Error ? err.message : "Could not remove this stay. Please try again.");
     }
   }
 

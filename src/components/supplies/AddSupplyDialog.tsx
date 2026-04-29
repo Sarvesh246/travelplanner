@@ -65,7 +65,7 @@ export function AddSupplyDialog({
           : undefined,
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not add this item. Please try again.");
     } finally {
       setLoading(false);
     }

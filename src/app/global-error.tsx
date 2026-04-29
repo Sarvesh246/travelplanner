@@ -15,16 +15,16 @@ export default function GlobalError({
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center">
-          <h1 className="text-xl font-semibold">Unexpected application error</h1>
+          <h1 className="text-xl font-semibold">Beacon needs a quick reset</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            A critical error occurred. Try resetting the app or return to the home page.
+            Try reloading this view, or return home and start from a fresh trailhead.
           </p>
           <div className="mt-5 flex items-center justify-center gap-3">
             <button
               onClick={reset}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              Reset app
+              Try again
             </button>
             <Link
               href="/"

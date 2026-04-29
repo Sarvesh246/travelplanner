@@ -39,7 +39,7 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
       await createComment({ entityType, entityId, body: body.trim() });
       setBody("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not post that comment. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -50,7 +50,7 @@ export function CommentThread({ entityType, entityId, comments, compact }: Comme
     try {
       await deleteComment(id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not delete that comment. Please try again.");
     } finally {
       setPendingDelete(null);
     }

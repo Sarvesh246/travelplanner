@@ -6,32 +6,61 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { tripToClientJson } from "@/lib/serialize/prisma-json";
+import { CURRENCIES } from "@/lib/constants";
 import {
   assertCanManage,
   assertCanView,
   assertOwner,
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
+import { TripStatus } from "@prisma/client";
+
+const currencyCodes = CURRENCIES.map((currency) => currency.code) as [string, ...string[]];
+
+function parseDateInput(value: string | null | undefined, label: string) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${label} is not a valid date`);
+  }
+  return date;
+}
+
+function assertDateOrder(startDate: Date | undefined, endDate: Date | undefined) {
+  if (startDate && endDate && startDate > endDate) {
+    throw new Error("End date must be after the start date");
+  }
+}
 
 const createTripSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().optional(),
+  name: z.string().trim().min(1, "Trip name is required").max(100, "Trip name is too long"),
+  description: z.string().trim().max(1000, "Description is too long").optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  currency: z.string().default("USD"),
-  budgetTarget: z.number().optional(),
+  currency: z.enum(currencyCodes).default("USD"),
+  budgetTarget: z.number().finite().nonnegative("Budget must be 0 or more").optional(),
+});
+
+const updateTripSchema = createTripSchema.partial().extend({
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  status: z.nativeEnum(TripStatus).optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
 });
 
 export async function createTrip(input: z.infer<typeof createTripSchema>) {
   const user = await getAuthUser();
   const data = createTripSchema.parse(input);
+  const startDate = parseDateInput(data.startDate, "Start date");
+  const endDate = parseDateInput(data.endDate, "End date");
+  assertDateOrder(startDate, endDate);
 
   const trip = await prisma.trip.create({
     data: {
       name: data.name,
-      description: data.description,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      description: data.description || undefined,
+      startDate,
+      endDate,
       currency: data.currency,
       budgetTarget: data.budgetTarget,
       members: {
@@ -47,22 +76,34 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
 
 export async function updateTrip(
   tripId: string,
-  input: Partial<z.infer<typeof createTripSchema>> & { status?: string; coverImageUrl?: string }
+  input: z.infer<typeof updateTripSchema>
 ) {
   const user = await getAuthUser();
   await assertCanManage(tripId, user.id);
+  const data = updateTripSchema.parse(input);
+  const startDate = parseDateInput(data.startDate, "Start date");
+  const endDate = parseDateInput(data.endDate, "End date");
+
+  if (startDate || endDate) {
+    const existing = await prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { startDate: true, endDate: true },
+    });
+    if (!existing) throw new Error("Trip not found");
+    assertDateOrder(startDate ?? existing.startDate ?? undefined, endDate ?? existing.endDate ?? undefined);
+  }
 
   const trip = await prisma.trip.update({
     where: { id: tripId },
     data: {
-      ...(input.name && { name: input.name }),
-      ...(input.description !== undefined && { description: input.description }),
-      ...(input.startDate && { startDate: new Date(input.startDate) }),
-      ...(input.endDate && { endDate: new Date(input.endDate) }),
-      ...(input.currency && { currency: input.currency }),
-      ...(input.budgetTarget !== undefined && { budgetTarget: input.budgetTarget }),
-      ...(input.status && { status: input.status as never }),
-      ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl }),
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description || null }),
+      ...(data.startDate !== undefined && { startDate: startDate ?? null }),
+      ...(data.endDate !== undefined && { endDate: endDate ?? null }),
+      ...(data.currency !== undefined && { currency: data.currency }),
+      ...(data.budgetTarget !== undefined && { budgetTarget: data.budgetTarget }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
     },
   });
 

@@ -92,7 +92,7 @@ export function CreateVoteDialog({ open, onOpenChange, tripId }: CreateVoteDialo
       reset();
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not create this poll. Please try again.");
     } finally {
       setLoading(false);
     }

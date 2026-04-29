@@ -43,6 +43,7 @@ export default async function MembersPage({ params }: { params: Promise<{ tripId
         id: inv.id,
         email: inv.email ?? "",
         role: inv.role,
+        token: inv.token,
         expiresAt: inv.expiresAt?.toISOString() ?? null,
         senderName: inv.sender.name,
       }))}

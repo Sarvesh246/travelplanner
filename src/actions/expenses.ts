@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { ExpenseSplitMode } from "@prisma/client";
 import { validateCustomSplit, SplitParticipant } from "@/lib/expense-splits";
 import { expenseToClientJson } from "@/lib/serialize/prisma-json";
-import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
+import {
+  assertActiveTripMembers,
+  assertCanContribute,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
 
 interface ShareInput {
   userId: string;
@@ -25,18 +29,34 @@ interface CreateExpenseInput {
   shares: ShareInput[];
 }
 
+function assertPositiveAmount(value: number | undefined, label: string) {
+  if (value === undefined) return;
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${label} must be greater than 0`);
+  }
+}
+
+function assertUniqueParticipants(shares: ShareInput[]) {
+  const ids = shares.map((share) => share.userId.trim()).filter(Boolean);
+  if (ids.length !== shares.length) {
+    throw new Error("Every participant must be a trip member");
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("Each participant can only be added once");
+  }
+  return ids;
+}
+
 export async function createExpense(tripId: string, input: CreateExpenseInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
 
   if (!input.title?.trim()) throw new Error("Title is required");
-  if (input.totalAmount <= 0) throw new Error("Amount must be greater than 0");
+  assertPositiveAmount(input.totalAmount, "Amount");
   if (input.shares.length === 0) throw new Error("At least one participant required");
 
-  const payerIsMember = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId: input.paidById } },
-  });
-  if (!payerIsMember) throw new Error("Payer must be a trip member");
+  const participantIds = assertUniqueParticipants(input.shares);
+  await assertActiveTripMembers(tripId, [input.paidById, ...participantIds]);
 
   // Validate custom mode sums to total
   if (input.splitMode === "CUSTOM") {
@@ -110,6 +130,19 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
 
   const nextSplitMode = input.splitMode ?? existing.splitMode;
   const nextTotal = input.totalAmount ?? Number(existing.totalAmount);
+  const nextPaidById = input.paidById ?? existing.paidById;
+
+  if (input.title !== undefined && !input.title.trim()) throw new Error("Title is required");
+  assertPositiveAmount(input.totalAmount, "Amount");
+
+  if (input.paidById !== undefined || input.shares !== undefined) {
+    const participantIds = input.shares ? assertUniqueParticipants(input.shares) : [];
+    await assertActiveTripMembers(existing.tripId, [nextPaidById, ...participantIds]);
+  }
+
+  if (input.shares && input.shares.length === 0) {
+    throw new Error("At least one participant required");
+  }
 
   if (input.shares && nextSplitMode === "CUSTOM") {
     const participants: SplitParticipant[] = input.shares.map((s) => ({
@@ -125,7 +158,7 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
     await tx.expense.update({
       where: { id: expenseId },
       data: {
-        ...(input.title !== undefined && { title: input.title }),
+        ...(input.title !== undefined && { title: input.title.trim() }),
         ...(input.description !== undefined && { description: input.description }),
         ...(input.category !== undefined && { category: input.category }),
         ...(input.totalAmount !== undefined && { totalAmount: input.totalAmount }),
@@ -145,6 +178,8 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
           userId: s.userId,
           weight: nextSplitMode === "WEIGHTED" ? (s.weight ?? 1) : null,
           customAmount: nextSplitMode === "CUSTOM" ? (s.customAmount ?? 0) : null,
+          hasPaid: s.userId === nextPaidById,
+          paidAt: s.userId === nextPaidById ? new Date() : null,
         })),
       });
     }

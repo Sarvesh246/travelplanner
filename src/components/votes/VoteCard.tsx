@@ -79,7 +79,7 @@ export function VoteCard({ vote }: VoteCardProps) {
     try {
       await castVote(vote.id, next);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to vote");
+      toast.error(err instanceof Error ? err.message : "Could not save your vote. Please try again.");
     } finally {
       setPending(false);
     }
@@ -91,7 +91,7 @@ export function VoteCard({ vote }: VoteCardProps) {
       await closeVote(vote.id);
       toast.success("Vote closed");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not close this vote. Please try again.");
     }
   }
 
@@ -100,7 +100,7 @@ export function VoteCard({ vote }: VoteCardProps) {
       await deleteVote(vote.id);
       toast.success("Vote deleted");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not delete this vote. Please try again.");
     }
   }
 

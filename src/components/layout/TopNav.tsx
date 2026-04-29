@@ -122,7 +122,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
       toast.success("Trip name updated");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to rename trip");
+      toast.error(err instanceof Error ? err.message : "Could not rename this trip. Please try again.");
     } finally {
       stopLoading();
     }

@@ -44,7 +44,7 @@ export function SupplyRow({
     try {
       await updateSupplyItem(item.id, { [field]: Math.max(0, value) });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not update the quantity. Please try again.");
     }
   }
 
@@ -52,7 +52,7 @@ export function SupplyRow({
     try {
       await updateSupplyItem(item.id, { whoBringsId: userId });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not assign this item. Please try again.");
     }
   }
 
@@ -62,7 +62,7 @@ export function SupplyRow({
       await markBought(item.id);
       toast.success("Marked as covered");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not mark this item covered. Please try again.");
     }
   }
 
@@ -92,7 +92,7 @@ export function SupplyRow({
         },
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not remove this item. Please try again.");
     }
   }
 

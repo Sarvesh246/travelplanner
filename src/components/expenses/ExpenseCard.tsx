@@ -57,7 +57,7 @@ export function ExpenseCard({
       await markSharePaid(myShare.id, !myShare.hasPaid);
       toast.success(myShare.hasPaid ? "Marked unpaid" : "Marked paid");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not update your share. Please try again.");
     }
   }
 
@@ -86,7 +86,7 @@ export function ExpenseCard({
         },
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not remove this expense. Please try again.");
     }
   }
 

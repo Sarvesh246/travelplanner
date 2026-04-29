@@ -26,7 +26,7 @@ export function ActivityRow({ activity, canEdit }: ActivityRowProps) {
     try {
       await updateActivity(activity.id, { name });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not rename this activity. Please try again.");
       throw err;
     }
   }
@@ -37,7 +37,7 @@ export function ActivityRow({ activity, canEdit }: ActivityRowProps) {
       await updateActivity(activity.id, { status });
       toast.success(`Marked ${status.toLowerCase()}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not update this activity. Please try again.");
     }
   }
 
@@ -46,7 +46,7 @@ export function ActivityRow({ activity, canEdit }: ActivityRowProps) {
       await deleteActivity(activity.id);
       toast.success("Activity removed");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not remove this activity. Please try again.");
     }
   }
 

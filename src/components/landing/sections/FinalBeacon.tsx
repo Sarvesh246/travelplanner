@@ -110,7 +110,7 @@ export function FinalBeacon() {
             </h2>
             <p className="mt-5 text-base text-muted-foreground">
               Free to start. No credit card. Built for crews of 2-50. Plan your next
-              adventure in minutes, not across ten different apps.
+              adventure in minutes, without chasing ten scattered threads.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <button

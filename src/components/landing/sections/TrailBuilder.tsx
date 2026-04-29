@@ -244,7 +244,7 @@ export function TrailBuilder() {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
           Reorder the itinerary, hover for timing, and the route distance
-          recomputes as the crew changes course.
+          updates as the crew changes course.
         </p>
       </div>
 

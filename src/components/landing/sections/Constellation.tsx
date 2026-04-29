@@ -36,7 +36,7 @@ const STARS: Star[] = [
     y: 36,
     name: "Yuki",
     role: "Climbing club president",
-    quote: "Voting on dates is the killer feature for big groups.",
+    quote: "Date voting made the whole group say yes faster.",
   },
   {
     id: "d",
@@ -44,7 +44,7 @@ const STARS: Star[] = [
     y: 22,
     name: "Priya",
     role: "Iceland ring planner",
-    quote: "Beacon scaled with us. Logistics were a non-issue.",
+    quote: "Beacon kept every booking, stop, and decision easy to find.",
   },
   {
     id: "e",
@@ -52,7 +52,7 @@ const STARS: Star[] = [
     y: 50,
     name: "Owen",
     role: "Weekend backpacker",
-    quote: "Lighter than a planner, snappier than a notes app.",
+    quote: "Quick enough for weekend plans, organized enough for big routes.",
   },
   {
     id: "f",
@@ -60,7 +60,7 @@ const STARS: Star[] = [
     y: 60,
     name: "Sasha",
     role: "Six-trip organizer",
-    quote: "The optimistic UI feels like the future of group apps.",
+    quote: "Updates felt instant, even with six people changing plans.",
   },
   {
     id: "g",
@@ -68,7 +68,7 @@ const STARS: Star[] = [
     y: 70,
     name: "Rae",
     role: "Dolomites co-lead",
-    quote: "Onboarding new crew members is just an invite link.",
+    quote: "New crew members joined from one invite and caught up fast.",
   },
 ];
 

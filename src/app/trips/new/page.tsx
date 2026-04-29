@@ -11,7 +11,7 @@ import { slideRight } from "@/lib/motion";
 import { useLoading } from "@/hooks/useLoading";
 import { AppBackButton } from "@/components/layout/AppBackButton";
 
-const STEPS = ["Details", "Dates & Budget", "Done"];
+const STEPS = ["Details", "Dates and budget", "Done"];
 const mobileFieldClass =
   "block w-full min-w-0 max-w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base placeholder:text-muted-foreground transition-shadow focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm";
 
@@ -44,10 +44,10 @@ export default function NewTripPage() {
         currency,
         budgetTarget: budget ? parseFloat(budget) : undefined,
       });
-      toast.success("Trip created! Let's start planning 🎉");
+      toast.success("Trip created. Time to shape the route.");
       router.push(ROUTES.tripOverview(trip.id));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create trip");
+      toast.error(err instanceof Error ? err.message : "Could not create this trip. Please try again.");
       setLoading(false);
       stopLoading();
     }
@@ -103,7 +103,7 @@ export default function NewTripPage() {
               <motion.div key="step0" variants={slideRight} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div>
                   <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Name your trip</h2>
-                  <p className="text-muted-foreground text-sm">Give it a fun, memorable name</p>
+                  <p className="text-muted-foreground text-sm">Choose a name your crew will recognize.</p>
                 </div>
 
                 <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
@@ -126,7 +126,7 @@ export default function NewTripPage() {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="What's the vibe? What are you planning?"
+                      placeholder="Where are you headed, and what should the crew know?"
                       rows={3}
                       className={`${mobileFieldClass} resize-none`}
                     />
@@ -147,8 +147,8 @@ export default function NewTripPage() {
             {step === 1 && (
               <motion.div key="step1" variants={slideRight} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div>
-                  <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Dates & Budget</h2>
-                  <p className="text-muted-foreground text-sm">Optional — you can fill this in later</p>
+                  <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Dates and budget</h2>
+                  <p className="text-muted-foreground text-sm">Optional for now. Add what you know, refine the rest later.</p>
                 </div>
 
                 <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
@@ -221,7 +221,7 @@ export default function NewTripPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Create Trip
+                    Create trip
                   </button>
                 </div>
               </motion.div>

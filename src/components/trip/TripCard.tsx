@@ -13,6 +13,7 @@ import { AvatarGroup } from "@/components/shared/AvatarGroup";
 import { ROUTES, TRIP_STATUS_OPTIONS } from "@/lib/constants";
 import { uploadTripCover, updateTrip } from "@/actions/trips";
 import { DeleteTripDialog } from "@/components/trip/DeleteTripDialog";
+import type { TripStatus } from "@prisma/client";
 
 interface TripCardProps {
   trip: {
@@ -83,7 +84,7 @@ function TripCardImpl({
         (err instanceof TypeError && /fetch|network/i.test(msg));
       toast.error(
         isNetwork
-          ? "Upload could not reach the server. Try a smaller image, check your connection, and restart the dev server after changing env. If it persists, the trip cover limit is 4MB."
+          ? "Upload could not reach Beacon. Try a smaller image or check your connection. Trip covers can be up to 4MB."
           : msg
       );
     } finally {
@@ -95,7 +96,7 @@ function TripCardImpl({
     TRIP_STATUS_OPTIONS.find((o) => o.value === trip.status)?.label ??
     trip.status.replace(/_/g, " ");
 
-  async function onStatusSelect(value: string) {
+  async function onStatusSelect(value: TripStatus) {
     if (!canEditStatus || value === trip.status) return;
     setStatusBusy(true);
     try {
@@ -135,7 +136,7 @@ function TripCardImpl({
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
               <p className="pointer-events-none absolute bottom-1 left-2 z-[12] text-[9px] leading-tight text-white/80 drop-shadow-sm">
-                © OpenStreetMap
+                OpenStreetMap
               </p>
             </>
           ) : (
@@ -162,7 +163,7 @@ function TripCardImpl({
                 setDeleteOpen(true);
               }}
               className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/92 text-destructive shadow backdrop-blur-sm opacity-100 transition-[opacity,background-color] hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-              title="Delete trip…"
+              title="Delete trip..."
               aria-label={`Delete ${trip.name}`}
             >
               <Trash2 className="h-4 w-4" />
@@ -231,7 +232,7 @@ function TripCardImpl({
                       <DropdownMenu.Item
                         key={opt.value}
                         className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 outline-none data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                        onSelect={() => onStatusSelect(opt.value)}
+                        onSelect={() => onStatusSelect(opt.value as TripStatus)}
                         disabled={opt.value === trip.status}
                       >
                         {opt.label}
@@ -295,7 +296,7 @@ function TripCardImpl({
             <div className="mt-3 pt-3 border-t border-border">
               <p className="flex items-center gap-2 text-xs font-medium text-primary">
                 <span className="app-waypoint h-1.5 w-1.5" aria-hidden />
-                {days === 0 ? "Trip starts today! 🎉" : `${days} day${days !== 1 ? "s" : ""} to go`}
+                {days === 0 ? "Trip starts today" : `${days} day${days !== 1 ? "s" : ""} to go`}
               </p>
             </div>
           )}

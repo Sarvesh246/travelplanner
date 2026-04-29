@@ -55,22 +55,11 @@ function LoginForm() {
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
-    }
-
-    const debugAuth =
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_DEBUG_AUTH_SIGNINS === "true";
-    if (debugAuth) {
-      console.info("[beacon:auth] password sign-in", {
-        userId: data.user?.id,
-        next,
-        at: new Date().toISOString(),
-      });
     }
 
     router.push(next);
@@ -105,7 +94,7 @@ function LoginForm() {
       <div>
         <h1 className="text-xl font-semibold">Welcome back</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Sign in to your account to continue
+          Pick up where your crew left off.
         </p>
       </div>
 
@@ -169,7 +158,7 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="••••••••"
+              placeholder="Password"
               className="w-full rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
             />
             <button

@@ -3,7 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { SupplyItemStatus } from "@prisma/client";
-import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
+import {
+  assertActiveTripMembers,
+  assertCanContribute,
+  getAuthUser,
+} from "@/lib/auth/trip-permissions";
 
 function computeStatus(needed: number, owned: number): SupplyItemStatus {
   if (needed <= 0) return "NOT_NEEDED";
@@ -22,13 +26,38 @@ interface CreateSupplyInput {
   notes?: string;
 }
 
+function assertNonNegativeNumber(value: number | undefined | null, label: string) {
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${label} must be 0 or more`);
+  }
+}
+
+function assertNonNegativeInteger(value: number | undefined, label: string) {
+  if (value === undefined) return;
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`${label} must be a whole number 0 or higher`);
+  }
+}
+
+function normalizeOptionalUserId(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 export async function createSupplyItem(tripId: string, input: CreateSupplyInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
 
   if (!input.name?.trim()) throw new Error("Name is required");
+  assertNonNegativeInteger(input.quantityNeeded, "Quantity needed");
+  assertNonNegativeNumber(input.estimatedCost, "Estimated cost");
+  const whoBringsId = normalizeOptionalUserId(input.whoBringsId);
+  if (whoBringsId) {
+    await assertActiveTripMembers(tripId, [whoBringsId]);
+  }
 
-  const quantityNeeded = Math.max(0, input.quantityNeeded ?? 1);
+  const quantityNeeded = input.quantityNeeded ?? 1;
   const quantityOwned = 0;
   const status = computeStatus(quantityNeeded, quantityOwned);
 
@@ -43,7 +72,7 @@ export async function createSupplyItem(tripId: string, input: CreateSupplyInput)
       quantityOwned,
       quantityRemaining: Math.max(0, quantityNeeded - quantityOwned),
       estimatedCost: input.estimatedCost,
-      whoBringsId: input.whoBringsId ?? null,
+      whoBringsId,
       notes: input.notes,
       status,
     },
@@ -73,6 +102,17 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
   if (!existing) throw new Error("Item not found");
   await assertCanContribute(existing.tripId, user.id);
 
+  if (input.name !== undefined && !input.name.trim()) throw new Error("Name is required");
+  assertNonNegativeInteger(input.quantityNeeded, "Quantity needed");
+  assertNonNegativeInteger(input.quantityOwned, "Quantity owned");
+  assertNonNegativeNumber(input.estimatedCost, "Estimated cost");
+  assertNonNegativeNumber(input.actualCost, "Actual cost");
+  const whoBringsId =
+    input.whoBringsId !== undefined ? normalizeOptionalUserId(input.whoBringsId) : undefined;
+  const whoBoughtId =
+    input.whoBoughtId !== undefined ? normalizeOptionalUserId(input.whoBoughtId) : undefined;
+  await assertActiveTripMembers(existing.tripId, [whoBringsId, whoBoughtId]);
+
   const needed = input.quantityNeeded ?? existing.quantityNeeded;
   const owned = input.quantityOwned ?? existing.quantityOwned;
   const remaining = Math.max(0, needed - owned);
@@ -81,7 +121,7 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
   const updated = await prisma.supplyItem.update({
     where: { id: itemId },
     data: {
-      ...(input.name !== undefined && { name: input.name }),
+      ...(input.name !== undefined && { name: input.name.trim() }),
       ...(input.category !== undefined && { category: input.category }),
       ...(input.description !== undefined && { description: input.description }),
       ...(input.notes !== undefined && { notes: input.notes }),
@@ -90,8 +130,8 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
       quantityRemaining: remaining,
       ...(input.estimatedCost !== undefined && { estimatedCost: input.estimatedCost }),
       ...(input.actualCost !== undefined && { actualCost: input.actualCost }),
-      ...(input.whoBringsId !== undefined && { whoBringsId: input.whoBringsId }),
-      ...(input.whoBoughtId !== undefined && { whoBoughtId: input.whoBoughtId }),
+      ...(input.whoBringsId !== undefined && { whoBringsId }),
+      ...(input.whoBoughtId !== undefined && { whoBoughtId }),
       status: autoStatus,
     },
   });

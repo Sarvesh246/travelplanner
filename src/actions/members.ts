@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { MemberRole } from "@prisma/client";
 import {
   assertCanManage,
@@ -65,6 +65,7 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
   });
 
   revalidatePath(`/trips/${tripId}/members`);
+  revalidateTag(`trip-${tripId}`, "max");
   const inviteLink = getAppUrl(`/invite/${invite.token}`);
 
   const trip = await prisma.trip.findUnique({
@@ -142,6 +143,7 @@ export async function acceptInvite(token: string) {
       });
       revalidatePath(`/trips/${invite.tripId}/members`);
       revalidatePath("/dashboard");
+      revalidateTag(`trip-${invite.tripId}`, "max");
       return { tripId: invite.tripId };
     }
     // Re-activate if previously left
@@ -162,6 +164,7 @@ export async function acceptInvite(token: string) {
 
   revalidatePath(`/trips/${invite.tripId}/members`);
   revalidatePath("/dashboard");
+  revalidateTag(`trip-${invite.tripId}`, "max");
   return { tripId: invite.tripId };
 }
 
@@ -196,6 +199,7 @@ export async function updateMemberRole(tripId: string, targetUserId: string, rol
   });
 
   revalidatePath(`/trips/${tripId}/members`);
+  revalidateTag(`trip-${tripId}`, "max");
 }
 
 export async function removeMember(tripId: string, targetUserId: string) {
@@ -213,6 +217,7 @@ export async function removeMember(tripId: string, targetUserId: string) {
   });
 
   revalidatePath(`/trips/${tripId}/members`);
+  revalidateTag(`trip-${tripId}`, "max");
 }
 
 export async function leaveTrip(tripId: string) {
@@ -230,6 +235,7 @@ export async function leaveTrip(tripId: string) {
   });
 
   revalidatePath("/dashboard");
+  revalidateTag(`trip-${tripId}`, "max");
   return { success: true };
 }
 
@@ -245,4 +251,5 @@ export async function revokeInvite(inviteId: string) {
   });
 
   revalidatePath(`/trips/${invite.tripId}/members`);
+  revalidateTag(`trip-${invite.tripId}`, "max");
 }

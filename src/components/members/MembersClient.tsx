@@ -10,8 +10,9 @@ import { RoleBadge } from "./RoleBadge";
 import { revokeInvite } from "@/actions/members";
 import { useTripContext } from "@/components/trip/TripContext";
 import { toast } from "sonner";
-import { UserPlus, Clock, X } from "lucide-react";
+import { UserPlus, Clock, Copy, X } from "lucide-react";
 import { MemberRole } from "@prisma/client";
+import { ROUTES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 
 interface MembersClientProps {
@@ -27,6 +28,7 @@ interface MembersClientProps {
     id: string;
     email: string;
     role: MemberRole;
+    token: string;
     expiresAt: string | null;
     senderName: string;
   }[];
@@ -41,7 +43,19 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
       await revokeInvite(inviteId);
       toast.success("Invite revoked");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Could not revoke this invite. Please try again.");
+    }
+  }
+
+  async function copyInviteLink(invite: MembersClientProps["pendingInvites"][number]) {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      await navigator.clipboard.writeText(`${origin}${ROUTES.invite(invite.token)}`);
+      toast.success("Invite link copied", {
+        description: `${invite.email || "Pending invite"} can join as ${invite.role.toLowerCase()}.`,
+      });
+    } catch {
+      toast.error("Could not copy the invite link. Please try again.");
     }
   }
 
@@ -91,6 +105,15 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Clock className="w-4 h-4 text-muted-foreground" />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => void copyInviteLink(invite)}
+                  title="Copy invite link"
+                  aria-label={`Copy invite link for ${invite.email || "pending invite"}`}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-card/80 text-muted-foreground transition-[background-color,border-color,color,box-shadow] duration-300 hover:border-primary/35 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_24px_hsl(var(--primary)/0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{invite.email}</p>
                   <p className="text-xs text-muted-foreground">

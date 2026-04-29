@@ -239,7 +239,7 @@ function AddStopDialog({
           : undefined,
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add stop");
+      toast.error(err instanceof Error ? err.message : "Could not add this stop. Please try again.");
     } finally {
       setLoading(false);
       stopLoading();

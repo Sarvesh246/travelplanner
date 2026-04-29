@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
 
 interface TripShellClientProps {
@@ -17,6 +18,8 @@ const SWIPE_SECTIONS = [
   "votes",
   "members",
 ] as const;
+
+const ACCESS_CHECK_INTERVAL_MS = 5_000;
 
 function getSectionHref(tripId: string, section: (typeof SWIPE_SECTIONS)[number]) {
   switch (section) {
@@ -59,11 +62,69 @@ function isInteractiveTarget(target: EventTarget | null) {
 export function TripShellClient({ tripId, children }: TripShellClientProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [accessRevoked, setAccessRevoked] = useState(false);
+  const redirectingRef = useRef(false);
   const touchRef = useRef<{
     x: number;
     y: number;
     interactive: boolean;
   } | null>(null);
+
+  useEffect(() => {
+    let stopped = false;
+    let inFlight: AbortController | null = null;
+
+    async function checkAccess() {
+      if (stopped || redirectingRef.current || document.visibilityState === "hidden") return;
+      inFlight?.abort();
+      const controller = new AbortController();
+      inFlight = controller;
+
+      try {
+        const response = await fetch(`/api/trips/${tripId}/access`, {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
+
+        if (response.ok) return;
+
+        if (response.status === 401 || response.status === 403 || response.status === 404) {
+          redirectingRef.current = true;
+          setAccessRevoked(true);
+          toast.warning(
+            response.status === 401
+              ? "Your session ended. Sign in again to keep planning."
+              : "Your access to this trip was removed."
+          );
+          router.replace(
+            response.status === 401 ? ROUTES.login : `${ROUTES.dashboard}?access=revoked`
+          );
+          router.refresh();
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+
+    void checkAccess();
+    const interval = window.setInterval(checkAccess, ACCESS_CHECK_INTERVAL_MS);
+
+    function handleVisibilityOrFocus() {
+      void checkAccess();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    return () => {
+      stopped = true;
+      inFlight?.abort();
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+    };
+  }, [router, tripId]);
 
   function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
     if (window.innerWidth >= 768) {
@@ -106,7 +167,18 @@ export function TripShellClient({ tripId, children }: TripShellClientProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {children}
+      {accessRevoked ? (
+        <div className="flex min-h-[55dvh] items-center justify-center px-4 text-center">
+          <div className="app-surface max-w-md rounded-2xl p-6">
+            <h2 className="text-lg font-semibold">Trip access changed</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your access to this trip was removed. We are taking you back to your trip hub.
+            </p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 }

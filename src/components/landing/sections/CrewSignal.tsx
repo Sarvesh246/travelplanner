@@ -41,7 +41,7 @@ const SIGNAL_NODES: SignalNode[] = [
     label: "Shared ownership",
     description: "Expenses, supplies, and votes stay with the crew.",
     detail:
-      "Everyone sees the same source of truth as the route changes, the crate fills, and the split updates.",
+      "Everyone sees the latest route, packing list, and split before small changes turn into side chats.",
     Icon: Users2,
     position: { x: "78%", y: "78%" },
   },
@@ -74,14 +74,14 @@ export function CrewSignal() {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
           Invites, read-only access, and permissions stay inside the same trip
-          plan, so collaboration scales without turning chaotic.
+          plan, so more people can join without making the route harder to manage.
         </p>
       </div>
 
       <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-5">
           <h3 className="font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
-            One trip, one route, one control tower.
+            One trip, one route, one place to steer from.
           </h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
             {[

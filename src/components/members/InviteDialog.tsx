@@ -60,12 +60,12 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
       } else {
         toast.message("Invite created", {
           description:
-            "Email delivery is still a work in progress. Copy the invite link and send it manually for now.",
+            "Email is not available right now. Copy the invite link and send it directly.",
         });
       }
       setEmail("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send invite");
+      toast.error(err instanceof Error ? err.message : "Could not send this invite. Please try again.");
     } finally {
       setLoading(false);
       stopLoading();
@@ -76,7 +76,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
     if (!inviteLink) return;
     await navigator.clipboard.writeText(inviteLink);
     setCopied(true);
-    toast.success("Link copied!");
+    toast.success("Link copied");
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -141,8 +141,8 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
             >
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
-                Email delivery is still a work in progress. Your invite link is ready below - copy
-                it and send it manually for now.
+                Email is not available right now. Your invite link is ready below - copy
+                it and send it directly.
               </span>
             </div>
           )}
@@ -161,7 +161,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted text-sm transition-colors"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy"}
+                  {copied ? "Copied" : "Copy"}
                 </button>
               </div>
             </div>

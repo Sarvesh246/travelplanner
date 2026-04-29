@@ -17,9 +17,9 @@ export default function ErrorPage({
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center">
-        <h2 className="text-xl font-semibold">Something went wrong</h2>
+        <h2 className="text-xl font-semibold">We lost the trail for a moment</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          We hit an unexpected issue. You can retry, or head back to the dashboard.
+          Try again, or head back to your trips and reopen the plan.
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
           <button

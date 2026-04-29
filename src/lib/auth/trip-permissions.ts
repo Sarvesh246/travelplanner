@@ -39,6 +39,35 @@ export async function assertCanView(tripId: string, userId: string) {
   return m;
 }
 
+export async function assertActiveTripMembers(
+  tripId: string,
+  userIds: Iterable<string | null | undefined>
+) {
+  const uniqueUserIds = [...new Set([...userIds].map((id) => id?.trim()).filter(Boolean))] as string[];
+  if (uniqueUserIds.length === 0) return new Set<string>();
+
+  const members = await prisma.tripMember.findMany({
+    where: {
+      tripId,
+      userId: { in: uniqueUserIds },
+      status: "ACTIVE",
+    },
+    select: { userId: true },
+  });
+  const activeUserIds = new Set(members.map((member) => member.userId));
+  const missing = uniqueUserIds.filter((userId) => !activeUserIds.has(userId));
+
+  if (missing.length > 0) {
+    throw new Error(
+      missing.length === 1
+        ? "Selected person is not an active trip member"
+        : "Every selected person must be an active trip member"
+    );
+  }
+
+  return activeUserIds;
+}
+
 export async function assertCanContribute(tripId: string, userId: string) {
   const m = await getMembership(tripId, userId);
   if (!m) throw new Error("Not a member of this trip");

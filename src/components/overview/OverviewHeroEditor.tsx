@@ -49,7 +49,7 @@ export function OverviewHeroEditor({
             onChange={(e) => {
               const next = e.target.value;
               setLocalStart(next);
-              void updateTrip(tripId, { startDate: next || undefined });
+              void updateTrip(tripId, { startDate: next || null });
             }}
             className="w-full bg-transparent outline-none"
           />
@@ -63,7 +63,7 @@ export function OverviewHeroEditor({
             onChange={(e) => {
               const next = e.target.value;
               setLocalEnd(next);
-              void updateTrip(tripId, { endDate: next || undefined });
+              void updateTrip(tripId, { endDate: next || null });
             }}
             className="w-full bg-transparent outline-none"
           />
@@ -94,4 +94,3 @@ export function OverviewHeroEditor({
     </div>
   );
 }
-

@@ -50,7 +50,7 @@ export function StopList({ tripId, stops, selectedStopId, onSelectStop }: StopLi
     try {
       await reorderStops(tripId, next.map((s) => s.id));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to reorder");
+      toast.error(err instanceof Error ? err.message : "Could not reorder stops. Please try again.");
       setItems(items);
     }
   }

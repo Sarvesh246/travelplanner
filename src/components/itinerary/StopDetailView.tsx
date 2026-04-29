@@ -57,7 +57,7 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
       }
       onCloseDrawer?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete");
+      toast.error(err instanceof Error ? err.message : "Could not remove this stop. Please try again.");
     }
   }
 
@@ -322,7 +322,7 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
       toast.success("Stay added");
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add stay");
+      toast.error(err instanceof Error ? err.message : "Could not add this stay. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -424,7 +424,7 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
       toast.success("Activity added");
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add activity");
+      toast.error(err instanceof Error ? err.message : "Could not add this activity. Please try again.");
     } finally {
       setLoading(false);
     }
