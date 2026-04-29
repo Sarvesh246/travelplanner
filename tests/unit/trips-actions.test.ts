@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
   },
   getAuthUser: vi.fn(),
   assertCanManage: vi.fn(),
+  logAuditEvent: vi.fn(),
+  reportServerError: vi.fn(),
+  publishTripMembershipEvent: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
 }));
@@ -20,6 +23,15 @@ vi.mock("@/lib/auth/trip-permissions", () => ({
   assertCanManage: mocks.assertCanManage,
   assertCanView: vi.fn(),
   assertOwner: vi.fn(),
+}));
+vi.mock("@/lib/observability/audit", () => ({
+  logAuditEvent: mocks.logAuditEvent,
+}));
+vi.mock("@/lib/observability/errors", () => ({
+  reportServerError: mocks.reportServerError,
+}));
+vi.mock("@/lib/supabase/trip-membership-realtime", () => ({
+  publishTripMembershipEvent: mocks.publishTripMembershipEvent,
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
@@ -71,6 +83,7 @@ describe("trip actions", () => {
       status: "PLANNING",
       currency: "USD",
       budgetTarget: null,
+      estimatedCostOverride: null,
       startDate: null,
       endDate: null,
       createdAt: new Date("2026-04-28T00:00:00.000Z"),
@@ -99,6 +112,7 @@ describe("trip actions", () => {
       status: "PLANNING",
       currency: "USD",
       budgetTarget: null,
+      estimatedCostOverride: null,
       startDate: null,
       endDate: null,
       createdAt: new Date("2026-04-28T00:00:00.000Z"),

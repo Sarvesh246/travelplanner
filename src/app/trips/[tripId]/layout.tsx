@@ -74,7 +74,7 @@ export default async function TripLayout({
             data-trip-main-scroll=""
             className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
           >
-            <TripShellClient tripId={tripId}>
+            <TripShellClient tripId={tripId} userId={dbUser.id}>
               <div className="mx-auto max-w-[72rem] px-3 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-4 min-[400px]:px-4 min-[400px]:pt-5 sm:px-6 sm:pt-6 md:pb-6">
                 <TripSwipeHint />
                 <ViewerReadOnlyBanner />

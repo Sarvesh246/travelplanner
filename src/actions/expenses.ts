@@ -10,6 +10,7 @@ import {
   assertCanContribute,
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
+import { logAuditEvent } from "@/lib/observability/audit";
 
 interface ShareInput {
   userId: string;
@@ -111,6 +112,18 @@ export async function createExpense(tripId: string, input: CreateExpenseInput) {
   });
 
   revalidateExpenseViews(tripId);
+  await logAuditEvent({
+    action: "expense.created",
+    actorUserId: user.id,
+    tripId,
+    targetId: expense.id,
+    summary: `Created expense ${expense.title}`,
+    metadata: {
+      totalAmount: input.totalAmount,
+      splitMode: input.splitMode,
+      paidById: input.paidById,
+    },
+  });
   return { expense: expenseToClientJson(expense) };
 }
 
@@ -129,7 +142,10 @@ interface UpdateExpenseInput {
 
 export async function updateExpense(expenseId: string, input: UpdateExpenseInput) {
   const user = await getAuthUser();
-  const existing = await prisma.expense.findUnique({ where: { id: expenseId } });
+  const existing = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    include: { shares: true },
+  });
   if (!existing) throw new Error("Expense not found");
   await assertCanContribute(existing.tripId, user.id);
 
@@ -176,21 +192,43 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
     });
 
     if (input.shares) {
+      const previousShares = new Map(
+        existing.shares.map((share) => [share.userId, { hasPaid: share.hasPaid, paidAt: share.paidAt }])
+      );
       await tx.expenseShare.deleteMany({ where: { expenseId } });
       await tx.expenseShare.createMany({
-        data: input.shares.map((s) => ({
-          expenseId,
-          userId: s.userId,
-          weight: nextSplitMode === "WEIGHTED" ? (s.weight ?? 1) : null,
-          customAmount: nextSplitMode === "CUSTOM" ? (s.customAmount ?? 0) : null,
-          hasPaid: s.userId === nextPaidById,
-          paidAt: s.userId === nextPaidById ? new Date() : null,
-        })),
+        data: input.shares.map((s) => {
+          const previous = previousShares.get(s.userId);
+          return {
+            expenseId,
+            userId: s.userId,
+            weight: nextSplitMode === "WEIGHTED" ? (s.weight ?? 1) : null,
+            customAmount: nextSplitMode === "CUSTOM" ? (s.customAmount ?? 0) : null,
+            hasPaid: s.userId === nextPaidById ? true : previous?.hasPaid ?? false,
+            paidAt:
+              s.userId === nextPaidById
+                ? previous?.paidAt ?? new Date()
+                : (previous?.paidAt ?? null),
+          };
+        }),
       });
     }
   });
 
   revalidateExpenseViews(existing.tripId);
+  await logAuditEvent({
+    action: "expense.updated",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: expenseId,
+    summary: `Updated expense ${input.title?.trim() || existing.title}`,
+    metadata: {
+      changedFields: Object.keys(input),
+      splitMode: nextSplitMode,
+      totalAmount: nextTotal,
+      paidById: nextPaidById,
+    },
+  });
 }
 
 export async function deleteExpense(expenseId: string) {
@@ -204,6 +242,13 @@ export async function deleteExpense(expenseId: string) {
     data: { deletedAt: new Date() },
   });
   revalidateExpenseViews(existing.tripId);
+  await logAuditEvent({
+    action: "expense.deleted",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: expenseId,
+    summary: `Archived expense ${existing.title}`,
+  });
 }
 
 export async function restoreExpense(expenseId: string) {
@@ -217,6 +262,13 @@ export async function restoreExpense(expenseId: string) {
     data: { deletedAt: null },
   });
   revalidateExpenseViews(existing.tripId);
+  await logAuditEvent({
+    action: "expense.restored",
+    actorUserId: user.id,
+    tripId: existing.tripId,
+    targetId: expenseId,
+    summary: `Restored expense ${existing.title}`,
+  });
 }
 
 export async function markSharePaid(shareId: string, hasPaid: boolean) {

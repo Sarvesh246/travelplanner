@@ -9,6 +9,10 @@ import {
 } from "@/lib/auth/trip-permissions";
 import { sendInviteEmail } from "@/lib/email/send-invite";
 import { getAppUrl } from "@/lib/app-url";
+import { logAuditEvent } from "@/lib/observability/audit";
+import { reportServerError } from "@/lib/observability/errors";
+import { assertRateLimit } from "@/lib/rate-limit";
+import { publishTripMembershipEvent } from "@/lib/supabase/trip-membership-realtime";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -24,6 +28,14 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
   if (role === "OWNER" && myMembership.role !== "OWNER") {
     throw new Error("Only owners can invite another owner");
   }
+  await assertRateLimit({
+    scope: "trip-invite",
+    identifier: user.id,
+    key: `${tripId}:${normalizedEmail}`,
+    limit: 8,
+    windowMs: 15 * 60 * 1000,
+    message: "Too many invites sent. Give it a few minutes, then try again.",
+  });
 
   // Check if user with this email exists
   const targetUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -99,10 +111,33 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
       emailSent = true;
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err);
-      console.error("[inviteMember] email send failed:", raw);
+      await reportServerError({
+        source: "inviteMember.emailDelivery",
+        error: err,
+        userId: user.id,
+        tripId,
+        context: {
+          email: normalizedEmail,
+          role,
+        },
+      });
       emailSendError = raw.slice(0, 600);
     }
   }
+
+  await logAuditEvent({
+    action: "trip.invite.created",
+    actorUserId: user.id,
+    tripId,
+    targetUserId: targetUser?.id ?? null,
+    targetId: invite.id,
+    summary: `Invited ${normalizedEmail} as ${role.toLowerCase()}`,
+    metadata: {
+      email: normalizedEmail,
+      role,
+      emailSent,
+    },
+  });
 
   return {
     inviteLink,
@@ -114,6 +149,14 @@ export async function inviteMember(tripId: string, email: string, role: MemberRo
 
 export async function acceptInvite(token: string) {
   const user = await getAuthUser();
+  await assertRateLimit({
+    scope: "trip-invite-accept",
+    identifier: user.id,
+    key: token,
+    limit: 12,
+    windowMs: 10 * 60 * 1000,
+    message: "Too many invite attempts. Give it a minute, then try again.",
+  });
 
   const invite = await prisma.tripInvite.findUnique({ where: { token } });
   if (!invite) throw new Error("Invite not found");
@@ -141,6 +184,14 @@ export async function acceptInvite(token: string) {
         where: { id: invite.id },
         data: { status: "ACCEPTED" },
       });
+      await logAuditEvent({
+        action: "trip.invite.accepted",
+        actorUserId: user.id,
+        tripId: invite.tripId,
+        targetId: invite.id,
+        summary: "Accepted an invite while already an active member",
+        metadata: { role: invite.role },
+      });
       revalidatePath(`/trips/${invite.tripId}/members`);
       revalidatePath("/dashboard");
       revalidateTag(`trip-${invite.tripId}`, "max");
@@ -160,6 +211,15 @@ export async function acceptInvite(token: string) {
   await prisma.tripInvite.update({
     where: { id: invite.id },
     data: { status: "ACCEPTED" },
+  });
+
+  await logAuditEvent({
+    action: "trip.invite.accepted",
+    actorUserId: user.id,
+    tripId: invite.tripId,
+    targetId: invite.id,
+    summary: `Accepted invite as ${invite.role.toLowerCase()}`,
+    metadata: { role: invite.role },
   });
 
   revalidatePath(`/trips/${invite.tripId}/members`);
@@ -198,6 +258,22 @@ export async function updateMemberRole(tripId: string, targetUserId: string, rol
     data: { role },
   });
 
+  await logAuditEvent({
+    action: "trip.member.role-updated",
+    actorUserId: user.id,
+    tripId,
+    targetUserId,
+    summary: `Changed member role to ${role.toLowerCase()}`,
+    metadata: { role },
+  });
+
+  await publishTripMembershipEvent({
+    type: "membership-updated",
+    tripId,
+    targetUserId,
+    role,
+  });
+
   revalidatePath(`/trips/${tripId}/members`);
   revalidateTag(`trip-${tripId}`, "max");
 }
@@ -214,6 +290,21 @@ export async function removeMember(tripId: string, targetUserId: string) {
   await prisma.tripMember.update({
     where: { tripId_userId: { tripId, userId: targetUserId } },
     data: { status: "REMOVED" },
+  });
+
+  await logAuditEvent({
+    action: "trip.member.removed",
+    actorUserId: user.id,
+    tripId,
+    targetUserId,
+    summary: "Removed a member from the trip",
+  });
+
+  await publishTripMembershipEvent({
+    type: "access-revoked",
+    tripId,
+    targetUserId,
+    reason: "removed",
   });
 
   revalidatePath(`/trips/${tripId}/members`);
@@ -234,6 +325,21 @@ export async function leaveTrip(tripId: string) {
     data: { status: "LEFT" },
   });
 
+  await logAuditEvent({
+    action: "trip.member.left",
+    actorUserId: user.id,
+    tripId,
+    targetUserId: user.id,
+    summary: "Left the trip",
+  });
+
+  await publishTripMembershipEvent({
+    type: "access-revoked",
+    tripId,
+    targetUserId: user.id,
+    reason: "left",
+  });
+
   revalidatePath("/dashboard");
   revalidateTag(`trip-${tripId}`, "max");
   return { success: true };
@@ -248,6 +354,16 @@ export async function revokeInvite(inviteId: string) {
   await prisma.tripInvite.update({
     where: { id: inviteId },
     data: { status: "REVOKED" },
+  });
+
+  await logAuditEvent({
+    action: "trip.invite.revoked",
+    actorUserId: user.id,
+    tripId: invite.tripId,
+    targetUserId: invite.recipientId,
+    targetId: inviteId,
+    summary: "Revoked a pending invite",
+    metadata: { email: invite.email, role: invite.role },
   });
 
   revalidatePath(`/trips/${invite.tripId}/members`);

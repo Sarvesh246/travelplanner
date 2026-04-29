@@ -4,9 +4,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
+import {
+  getTripMembershipChannelName,
+  type TripMembershipRealtimeEvent,
+} from "@/lib/supabase/trip-membership-shared";
 
 interface TripShellClientProps {
   tripId: string;
+  userId: string;
   children: React.ReactNode;
 }
 
@@ -18,8 +24,6 @@ const SWIPE_SECTIONS = [
   "votes",
   "members",
 ] as const;
-
-const ACCESS_CHECK_INTERVAL_MS = 5_000;
 
 function getSectionHref(tripId: string, section: (typeof SWIPE_SECTIONS)[number]) {
   switch (section) {
@@ -59,7 +63,7 @@ function isInteractiveTarget(target: EventTarget | null) {
     );
 }
 
-export function TripShellClient({ tripId, children }: TripShellClientProps) {
+export function TripShellClient({ tripId, userId, children }: TripShellClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [accessRevoked, setAccessRevoked] = useState(false);
@@ -71,11 +75,11 @@ export function TripShellClient({ tripId, children }: TripShellClientProps) {
   } | null>(null);
 
   useEffect(() => {
-    let stopped = false;
+    const supabase = createClient();
     let inFlight: AbortController | null = null;
 
     async function checkAccess() {
-      if (stopped || redirectingRef.current || document.visibilityState === "hidden") return;
+      if (redirectingRef.current || document.visibilityState === "hidden") return;
       inFlight?.abort();
       const controller = new AbortController();
       inFlight = controller;
@@ -107,8 +111,33 @@ export function TripShellClient({ tripId, children }: TripShellClientProps) {
       }
     }
 
+    async function handleMembershipEvent(payload: TripMembershipRealtimeEvent) {
+      if (payload.tripId !== tripId || payload.targetUserId !== userId || redirectingRef.current) {
+        return;
+      }
+
+      if (payload.type === "membership-updated") {
+        toast.message("Your trip access changed.", {
+          description: "Refreshing this page to pick up the latest permissions.",
+        });
+        router.refresh();
+        return;
+      }
+
+      redirectingRef.current = true;
+      setAccessRevoked(true);
+      toast.warning("Your access to this trip was removed.");
+      router.replace(`${ROUTES.dashboard}?access=revoked`);
+      router.refresh();
+    }
+
     void checkAccess();
-    const interval = window.setInterval(checkAccess, ACCESS_CHECK_INTERVAL_MS);
+    const channel = supabase
+      .channel(getTripMembershipChannelName(tripId, userId))
+      .on("broadcast", { event: "trip-membership" }, ({ payload }) => {
+        void handleMembershipEvent(payload as TripMembershipRealtimeEvent);
+      })
+      .subscribe();
 
     function handleVisibilityOrFocus() {
       void checkAccess();
@@ -118,13 +147,12 @@ export function TripShellClient({ tripId, children }: TripShellClientProps) {
     window.addEventListener("focus", handleVisibilityOrFocus);
 
     return () => {
-      stopped = true;
       inFlight?.abort();
-      window.clearInterval(interval);
+      void supabase.removeChannel(channel);
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
       window.removeEventListener("focus", handleVisibilityOrFocus);
     };
-  }, [router, tripId]);
+  }, [router, tripId, userId]);
 
   function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
     if (window.innerWidth >= 768) {

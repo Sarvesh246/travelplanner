@@ -2,6 +2,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { prisma } from "@/lib/prisma";
 import { NextResponse, type NextRequest } from "next/server";
 import { getRequestOrigin } from "@/lib/app-url";
+import { reportServerError } from "@/lib/observability/errors";
+import { assertRateLimit, RateLimitError } from "@/lib/rate-limit";
 
 interface CookieToSet {
   name: string;
@@ -32,6 +34,11 @@ function getSafeNext(searchParams: URLSearchParams): string {
   return next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 }
 
+function getRequestIdentifier(request: NextRequest) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || request.headers.get("x-real-ip") || "unknown";
+}
+
 export async function GET(request: NextRequest) {
   const origin = getRequestOrigin(request);
   const code = request.nextUrl.searchParams.get("code");
@@ -43,6 +50,27 @@ export async function GET(request: NextRequest) {
 
   const destinationAfterAuth = new URL(nextPath, origin);
   let response = NextResponse.redirect(destinationAfterAuth);
+
+  try {
+    await assertRateLimit({
+      scope: "auth-callback",
+      identifier: getRequestIdentifier(request),
+      key: nextPath,
+      limit: 20,
+      windowMs: 10 * 60 * 1000,
+      message: "Too many sign-in callbacks. Please wait a minute and try again.",
+    });
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      await reportServerError({
+        source: "auth.callback.rateLimited",
+        error,
+        context: { nextPath },
+      });
+      return redirectTo(request, "/login?error=too-many-attempts");
+    }
+    throw error;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +97,11 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error || !data.user) {
+      await reportServerError({
+        source: "auth.callback.exchange",
+        error: error ?? new Error("No authenticated user returned from exchange"),
+        context: { nextPath },
+      });
       return redirectTo(request, "/login?error=auth-failed");
     }
 
@@ -96,7 +129,15 @@ export async function GET(request: NextRequest) {
           },
         });
       } catch (e) {
-        console.error("[auth/callback] Prisma user upsert failed:", e);
+        await reportServerError({
+          source: "auth.callback.userSync",
+          error: e,
+          tripId: null,
+          context: {
+            externalId: data.user.id,
+            email: data.user.email ?? null,
+          },
+        });
         const sep = nextPath.includes("?") ? "&" : "?";
         const withSyncFlag = `${nextPath}${sep}sync=db-failed`;
         return redirectPreservingAuthCookies(response, new URL(withSyncFlag, origin));
@@ -109,7 +150,11 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (e) {
-    console.error("[auth/callback] Unexpected error:", e);
+    await reportServerError({
+      source: "auth.callback.unexpected",
+      error: e,
+      context: { nextPath },
+    });
     return redirectTo(request, "/login?error=auth-failed");
   }
 }

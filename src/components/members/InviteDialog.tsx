@@ -7,6 +7,7 @@ import { X, Copy, Mail, Check, Loader2, AlertTriangle } from "lucide-react";
 import { MemberRole } from "@prisma/client";
 import { useLoading } from "@/hooks/useLoading";
 import { createPortal } from "react-dom";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface InviteDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface InviteDialogProps {
 
 export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) {
   const { startLoading, stopLoading } = useLoading();
+  const online = useNetworkStatus();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("MEMBER");
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,12 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
+    if (!online) {
+      toast.error("You are offline right now.", {
+        description: "Reconnect before sending an invite.",
+      });
+      return;
+    }
     setLoading(true);
     startLoading("Sending invite...");
     const to = email.trim();
@@ -124,13 +132,13 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
               </select>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading || !email.trim()}
+              <button
+                type="submit"
+              disabled={loading || !email.trim() || !online}
               className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-              Send invite
+              {online ? "Send invite" : "Reconnect to invite"}
             </button>
           </form>
 

@@ -14,6 +14,9 @@ import {
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
 import { TripStatus } from "@prisma/client";
+import { logAuditEvent } from "@/lib/observability/audit";
+import { reportServerError } from "@/lib/observability/errors";
+import { publishTripMembershipEvent } from "@/lib/supabase/trip-membership-realtime";
 
 const currencyCodes = CURRENCIES.map((currency) => currency.code) as [string, ...string[]];
 
@@ -73,6 +76,16 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
 
   revalidatePath("/dashboard");
   revalidateTag(`trip-${trip.id}`, "max");
+  await logAuditEvent({
+    action: "trip.created",
+    actorUserId: user.id,
+    tripId: trip.id,
+    summary: `Created trip ${trip.name}`,
+    metadata: {
+      currency: trip.currency,
+      hasManualEstimate: data.estimatedCostOverride != null,
+    },
+  });
   return { trip: tripToClientJson(trip) };
 }
 
@@ -114,6 +127,18 @@ export async function updateTrip(
   revalidatePath(`/trips/${tripId}`);
   revalidatePath(`/trips/${tripId}/overview`);
   revalidateTag(`trip-${tripId}`, "max");
+  await logAuditEvent({
+    action: "trip.updated",
+    actorUserId: user.id,
+    tripId,
+    summary: "Updated trip details",
+    metadata: {
+      changedFields: Object.keys(data),
+      status: data.status ?? null,
+      coverImageUrlUpdated: data.coverImageUrl !== undefined,
+      estimatedCostOverride: data.estimatedCostOverride ?? null,
+    },
+  });
   return { trip: tripToClientJson(trip) };
 }
 
@@ -191,6 +216,12 @@ export async function uploadTripCover(tripId: string, formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath(`/trips/${tripId}`);
   revalidateTag(`trip-${tripId}`, "max");
+  await logAuditEvent({
+    action: "trip.cover.updated",
+    actorUserId: user.id,
+    tripId,
+    summary: "Updated trip cover image",
+  });
   return { coverImageUrl: publicUrl };
 }
 
@@ -226,6 +257,24 @@ export async function deleteTrip(tripId: string) {
 
   await prisma.trip.delete({ where: { id: tripId } });
 
+  await logAuditEvent({
+    action: "trip.deleted",
+    actorUserId: user.id,
+    tripId,
+    summary: "Deleted the trip",
+  });
+
+  await Promise.all(
+    uploaderIds.map((memberUserId) =>
+      publishTripMembershipEvent({
+        type: "access-revoked",
+        tripId,
+        targetUserId: memberUserId,
+        reason: "deleted",
+      })
+    )
+  );
+
   try {
     const admin = getSupabaseAdminClient();
     const storage = admin ?? (await createClient());
@@ -247,7 +296,12 @@ export async function deleteTrip(tripId: string) {
     }
   } catch (err) {
     // Best-effort: the trip DB row is already gone, don't fail the action.
-    console.error("[deleteTrip] cover image cleanup failed:", err);
+    await reportServerError({
+      source: "deleteTrip.coverCleanup",
+      error: err,
+      userId: user.id,
+      tripId,
+    });
   }
 
   revalidatePath("/dashboard");

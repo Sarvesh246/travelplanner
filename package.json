@@ -16,6 +16,7 @@
     "db:studio": "node --env-file=.env.local ./node_modules/prisma/build/index.js studio",
     "db:migrate": "node --env-file=.env.local ./node_modules/prisma/build/index.js migrate dev",
     "typecheck": "next typegen && tsc --noEmit",
+    "perf:budget": "node ./scripts/check-performance-budgets.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -6,6 +6,7 @@ import { CalendarDays, Plane, WalletCards } from "lucide-react";
 import { OverviewClient } from "@/components/overview/OverviewClient";
 import { OverviewShareButton } from "@/components/overview/OverviewShareButton";
 import { OverviewHeroEditor } from "@/components/overview/OverviewHeroEditor";
+import { computeEstimatedTripCost } from "@/lib/trip-metrics";
 
 export const metadata = { title: "Overview" };
 
@@ -59,14 +60,20 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const days = daysUntil(trip.startDate);
   const duration = tripDuration(trip.startDate, trip.endDate);
   const totalExpenses = Number(expenseStats._sum.totalAmount ?? 0);
-  const totalSupplyCost = supplyItems.reduce(
-    (sum, item) => sum + Number(item.actualCost ?? item.estimatedCost ?? 0),
-    0
-  );
-  const automaticTripCost = totalExpenses + totalSupplyCost;
-  const estimatedTripCost = trip.estimatedCostOverride
-    ? Number(trip.estimatedCostOverride)
-    : automaticTripCost;
+  const supplyCosts = supplyItems.map((item) => ({
+    ...item,
+    estimatedCost: item.estimatedCost != null ? Number(item.estimatedCost) : null,
+    actualCost: item.actualCost != null ? Number(item.actualCost) : null,
+  }));
+  const { automaticCost: automaticTripCost, estimatedCost: estimatedTripCost } =
+    computeEstimatedTripCost({
+      totalExpenses,
+      supplyItems: supplyCosts,
+      estimatedCostOverride:
+        trip.estimatedCostOverride != null
+          ? Number(trip.estimatedCostOverride)
+          : null,
+    });
   const budgetTarget = Number(trip.budgetTarget ?? 0);
   const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((estimatedTripCost / budgetTarget) * 100)) : null;
   const coveredItems = supplyItems.filter((item) => item.status === "COVERED").length;

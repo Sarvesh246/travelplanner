@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   getAuthUser: vi.fn(),
   assertCanContribute: vi.fn(),
   assertActiveTripMembers: vi.fn(),
+  logAuditEvent: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -27,6 +28,9 @@ vi.mock("@/lib/auth/trip-permissions", () => ({
   getAuthUser: mocks.getAuthUser,
   assertCanContribute: mocks.assertCanContribute,
   assertActiveTripMembers: mocks.assertActiveTripMembers,
+}));
+vi.mock("@/lib/observability/audit", () => ({
+  logAuditEvent: mocks.logAuditEvent,
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
@@ -47,6 +51,19 @@ describe("expense actions", () => {
       paidById: "user-owner",
       totalAmount: { toNumber: () => 120, valueOf: () => "120" },
       splitMode: "EQUAL",
+      title: "Groceries",
+      shares: [
+        {
+          userId: "user-owner",
+          hasPaid: true,
+          paidAt: new Date("2026-04-28T00:00:00.000Z"),
+        },
+        {
+          userId: "user-2",
+          hasPaid: false,
+          paidAt: null,
+        },
+      ],
     });
     mocks.prisma.$transaction.mockImplementation(async (fn) =>
       fn({
@@ -115,6 +132,43 @@ describe("expense actions", () => {
           userId: "user-owner",
           hasPaid: true,
           paidAt: expect.any(Date),
+        }),
+      ]),
+    });
+  });
+
+  it("preserves existing paid status for other unchanged participants", async () => {
+    mocks.prisma.expense.findUnique.mockResolvedValue({
+      id: "expense-1",
+      tripId: "trip-1",
+      paidById: "user-owner",
+      title: "Groceries",
+      totalAmount: { toNumber: () => 120, valueOf: () => "120" },
+      splitMode: "EQUAL",
+      shares: [
+        {
+          userId: "user-owner",
+          hasPaid: true,
+          paidAt: new Date("2026-04-28T00:00:00.000Z"),
+        },
+        {
+          userId: "user-2",
+          hasPaid: true,
+          paidAt: new Date("2026-04-29T00:00:00.000Z"),
+        },
+      ],
+    });
+
+    await updateExpense("expense-1", {
+      shares: [{ userId: "user-owner" }, { userId: "user-2" }],
+    });
+
+    expect(mocks.prisma.expenseShare.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          userId: "user-2",
+          hasPaid: true,
+          paidAt: new Date("2026-04-29T00:00:00.000Z"),
         }),
       ]),
     });

@@ -4,6 +4,10 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     user: { findUnique: vi.fn() },
     trip: { findUnique: vi.fn() },
+    rateLimitEvent: {
+      count: vi.fn(),
+      create: vi.fn(),
+    },
     tripMember: {
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -20,6 +24,9 @@ const mocks = vi.hoisted(() => ({
   getAuthUser: vi.fn(),
   assertCanManage: vi.fn(),
   sendInviteEmail: vi.fn(),
+  logAuditEvent: vi.fn(),
+  reportServerError: vi.fn(),
+  publishTripMembershipEvent: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
 }));
@@ -31,6 +38,15 @@ vi.mock("@/lib/auth/trip-permissions", () => ({
 }));
 vi.mock("@/lib/email/send-invite", () => ({
   sendInviteEmail: mocks.sendInviteEmail,
+}));
+vi.mock("@/lib/observability/audit", () => ({
+  logAuditEvent: mocks.logAuditEvent,
+}));
+vi.mock("@/lib/observability/errors", () => ({
+  reportServerError: mocks.reportServerError,
+}));
+vi.mock("@/lib/supabase/trip-membership-realtime", () => ({
+  publishTripMembershipEvent: mocks.publishTripMembershipEvent,
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
@@ -61,6 +77,8 @@ describe("member invite actions", () => {
     });
     mocks.assertCanManage.mockResolvedValue({ role: "OWNER" });
     mocks.prisma.user.findUnique.mockResolvedValue(null);
+    mocks.prisma.rateLimitEvent.count.mockResolvedValue(0);
+    mocks.prisma.rateLimitEvent.create.mockResolvedValue({ id: "limit-1" });
     mocks.prisma.tripMember.findUnique.mockResolvedValue(null);
     mocks.prisma.tripInvite.findFirst.mockResolvedValue(null);
     mocks.prisma.tripInvite.create.mockResolvedValue({
@@ -147,6 +165,13 @@ describe("member invite actions", () => {
       emailConfigured: true,
       emailSendError: "domain is not verified",
     });
+    expect(mocks.reportServerError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: "inviteMember.emailDelivery",
+        tripId: "trip-1",
+        userId: "user-owner",
+      })
+    );
   });
 
   it("rejects duplicate active members before creating an invite", async () => {
@@ -250,6 +275,21 @@ describe("member invite actions", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/trips/trip-1/members");
   });
 
+  it("prevents admins from promoting someone to owner", async () => {
+    mocks.assertCanManage.mockResolvedValue({ role: "ADMIN" });
+    mocks.prisma.tripMember.findUnique.mockResolvedValue({
+      id: "member-1",
+      userId: "user-friend",
+      role: "MEMBER",
+      status: "ACTIVE",
+    });
+
+    await expect(updateMemberRole("trip-1", "user-friend", "OWNER")).rejects.toThrow(
+      "Only owners can assign owner role"
+    );
+    expect(mocks.prisma.tripMember.update).not.toHaveBeenCalled();
+  });
+
   it("prevents demoting the last owner", async () => {
     mocks.assertCanManage.mockResolvedValue({ role: "OWNER" });
     mocks.prisma.tripMember.findUnique.mockResolvedValue({
@@ -282,5 +322,11 @@ describe("member invite actions", () => {
       data: { status: "REMOVED" },
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/trips/trip-1/members");
+    expect(mocks.publishTripMembershipEvent).toHaveBeenCalledWith({
+      type: "access-revoked",
+      tripId: "trip-1",
+      targetUserId: "user-friend",
+      reason: "removed",
+    });
   });
 });
