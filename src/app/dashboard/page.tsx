@@ -87,7 +87,7 @@ export default async function DashboardPage({
               </p>
               <h1 className="text-2xl font-bold tracking-tight">Your Trips</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {trips.length === 0 ? "Start a route and bring the crew into one plan." : `${trips.length} trip${trips.length !== 1 ? "s" : ""} in your workspace`}
+                {trips.length === 0 ? "Start a route and bring members into one plan." : `${trips.length} trip${trips.length !== 1 ? "s" : ""} in your workspace`}
               </p>
             </div>
             <div className="flex w-full min-w-0 flex-wrap items-center gap-3 min-[520px]:w-auto min-[520px]:shrink-0 min-[520px]:justify-end">
@@ -135,7 +135,7 @@ export default async function DashboardPage({
         <EmptyState
           icon={<Compass className="w-8 h-8" />}
           title="No trips yet"
-          description="Create your first trip and invite your crew into one shared plan."
+            description="Create your first trip and invite members into one shared plan."
           action={
             <Link
               href="/trips/new"
@@ -151,7 +151,7 @@ export default async function DashboardPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Active planning</h2>
-              <p className="text-sm text-muted-foreground">Open a trip to work the route, pack list, costs, and crew decisions.</p>
+              <p className="text-sm text-muted-foreground">Open a trip to work the route, pack list, costs, and member decisions.</p>
             </div>
             <div className="hidden h-px flex-1 bg-gradient-to-r from-border to-transparent sm:block" aria-hidden />
           </div>

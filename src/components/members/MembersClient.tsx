@@ -81,7 +81,7 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
   return (
     <>
       <PageHeader
-        eyebrow="Crew access"
+        eyebrow="Group access"
         title="Members"
         description={`${members.length} member${members.length !== 1 ? "s" : ""} in this trip`}
         actions={

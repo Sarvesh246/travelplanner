@@ -66,7 +66,7 @@ export default function SignupPage() {
       <div>
         <h1 className="text-xl font-semibold">Create your account</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Build the trip plan your whole crew can follow.
+                    Build the trip plan your whole group can follow.
         </p>
       </div>
 

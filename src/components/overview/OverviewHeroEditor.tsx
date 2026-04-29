@@ -12,7 +12,7 @@ import { nextSaturday } from "date-fns/nextSaturday";
 import { InlineEdit } from "@/components/shared/InlineEdit";
 import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
-import { formatCurrency, formatDateRange } from "@/lib/utils";
+import { formatCurrency, formatDateRange, getStandardTimeZoneLabel } from "@/lib/utils";
 
 export function OverviewHeroEditor({
   tripId,
@@ -63,13 +63,7 @@ export function OverviewHeroEditor({
   });
 
   const tzLabel = useMemo(() => {
-    try {
-      return new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-        .formatToParts(new Date())
-        .find((p) => p.type === "timeZoneName")?.value ?? "";
-    } catch {
-      return "";
-    }
+    return getStandardTimeZoneLabel();
   }, []);
 
   function saveManualEstimate(value: string) {
@@ -133,7 +127,7 @@ export function OverviewHeroEditor({
       {tzLabel ? (
         <p className="text-[11px] text-muted-foreground">
           Dates render in{" "}
-          <span className="font-semibold uppercase tracking-[0.14em] text-foreground">{tzLabel}</span> — teammates
+          <span className="font-semibold uppercase tracking-[0.14em] text-foreground">{tzLabel}</span> — members
           in other zones see aligned calendar days rather than simultaneous local midnight.
         </p>
       ) : null}

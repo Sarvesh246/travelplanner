@@ -290,7 +290,7 @@ export function ExpenseSplitter() {
             </div>
 
             <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Crew ({included.size} in)
+                    Members ({included.size} in)
             </p>
             <div className="flex flex-wrap gap-2">
               {PEOPLE.map((person) => {

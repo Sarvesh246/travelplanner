@@ -199,7 +199,7 @@ export function SupplyCrate() {
 
         <div className="space-y-5">
           <h3 className="font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
-            Pack like a crew, not a committee.
+          Pack like a group, not a committee.
           </h3>
           <ul className="space-y-3 text-sm text-muted-foreground">
             {[

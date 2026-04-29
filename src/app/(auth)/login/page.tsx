@@ -94,7 +94,7 @@ function LoginForm() {
       <div>
         <h1 className="text-xl font-semibold">Welcome back</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Pick up where your crew left off.
+                    Pick up where your members left off.
         </p>
       </div>
 

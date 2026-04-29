@@ -28,7 +28,7 @@ const STARS: Star[] = [
     y: 18,
     name: "Marcus",
     role: "Patagonia trip lead",
-    quote: "Splits and supplies in one place. The crew finally stopped arguing.",
+      quote: "Splits and supplies in one place. The members finally stopped arguing.",
   },
   {
     id: "c",
@@ -68,7 +68,7 @@ const STARS: Star[] = [
     y: 70,
     name: "Rae",
     role: "Dolomites co-lead",
-    quote: "New crew members joined from one invite and caught up fast.",
+      quote: "New members joined from one invite and caught up fast.",
   },
 ];
 
@@ -126,12 +126,12 @@ export function Constellation() {
       className="landing-journey-chapter max-w-6xl"
     >
       <div className="mb-12 text-center">
-        <p className="landing-kicker mb-5">Chapter 06 - The Crew</p>
+          <p className="landing-kicker mb-5">Chapter 06 - The Members</p>
         <h2 className="text-balance font-sans text-3xl font-semibold tracking-tight sm:text-4xl">
           Crews already <span className="gradient-text">on the trail</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
-          Hover or focus a star to hear from a crew. Drag the sky side-to-side to tilt it.
+            Hover or focus a star to hear from a group. Drag the sky side-to-side to tilt it.
         </p>
       </div>
 

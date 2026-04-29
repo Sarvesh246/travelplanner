@@ -103,7 +103,7 @@ export default function NewTripPage() {
               <motion.div key="step0" variants={slideRight} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div>
                   <h2 className="mb-1 text-[clamp(1.9rem,6vw,2.25rem)] font-bold">Name your trip</h2>
-                  <p className="text-muted-foreground text-sm">Choose a name your crew will recognize.</p>
+                  <p className="text-muted-foreground text-sm">Choose a name your members will recognize.</p>
                 </div>
 
                 <div className="space-y-4 rounded-[1.5rem] border border-border bg-card p-5 sm:p-6">
@@ -126,7 +126,7 @@ export default function NewTripPage() {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Where are you headed, and what should the crew know?"
+                    placeholder="Where are you headed, and what should members know?"
                       rows={3}
                       className={`${mobileFieldClass} resize-none`}
                     />

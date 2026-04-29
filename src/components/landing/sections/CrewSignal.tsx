@@ -39,7 +39,7 @@ const SIGNAL_NODES: SignalNode[] = [
   {
     id: "members",
     label: "Shared ownership",
-    description: "Expenses, supplies, and votes stay with the crew.",
+    description: "Expenses, supplies, and votes stay with the members.",
     detail:
       "Everyone sees the latest route, packing list, and split before small changes turn into side chats.",
     Icon: Users2,
@@ -69,7 +69,7 @@ export function CrewSignal() {
       <div className="mb-12 text-center">
         <p className="landing-kicker mb-5">Chapter 06 - The Signal</p>
         <h2 className="text-balance font-sans text-3xl font-semibold tracking-tight sm:text-4xl">
-          Keep the <span className="gradient-text">crew aligned</span> before
+            Keep <span className="gradient-text">members aligned</span> before
           the trip gets noisy.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground">
@@ -88,7 +88,7 @@ export function CrewSignal() {
               "Invite by link or email without rebuilding the plan for every new person.",
               "Use viewer access for people who need visibility without edit power.",
               "Keep admin-only actions separated from routine collaboration.",
-              "Hand the whole crew the same itinerary, supply list, vote board, and split ledger.",
+              "Hand all members the same itinerary, supply list, vote board, and split ledger.",
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -157,7 +157,7 @@ export function CrewSignal() {
                       {node.label}
                     </p>
                     <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground sm:text-[11px]">
-                      {node.id === "viewer" ? "Follow-only" : "Crew-ready"}
+                  {node.id === "viewer" ? "Follow-only" : "Member-ready"}
                     </p>
                   </button>
                 );

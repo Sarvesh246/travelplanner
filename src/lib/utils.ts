@@ -5,6 +5,75 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const STANDARD_TIMEZONE_BY_IANA: Record<string, string> = {
+  "America/New_York": "EST",
+  "America/Detroit": "EST",
+  "America/Kentucky/Louisville": "EST",
+  "America/Kentucky/Monticello": "EST",
+  "America/Indiana/Indianapolis": "EST",
+  "America/Indiana/Vincennes": "EST",
+  "America/Indiana/Winamac": "EST",
+  "America/Indiana/Marengo": "EST",
+  "America/Indiana/Petersburg": "EST",
+  "America/Indiana/Vevay": "EST",
+  "America/Chicago": "CST",
+  "America/Indiana/Knox": "CST",
+  "America/Indiana/Tell_City": "CST",
+  "America/Menominee": "CST",
+  "America/North_Dakota/Center": "CST",
+  "America/North_Dakota/New_Salem": "CST",
+  "America/North_Dakota/Beulah": "CST",
+  "America/Denver": "MST",
+  "America/Boise": "MST",
+  "America/Phoenix": "MST",
+  "America/Los_Angeles": "PST",
+  "America/Anchorage": "AKST",
+  "America/Juneau": "AKST",
+  "America/Sitka": "AKST",
+  "America/Metlakatla": "AKST",
+  "America/Yakutat": "AKST",
+  "America/Nome": "AKST",
+  "America/Adak": "HST",
+  "Pacific/Honolulu": "HST",
+  "America/Halifax": "AST",
+  "America/Puerto_Rico": "AST",
+};
+
+export function normalizeTimeZoneLabel(label: string): string {
+  return label
+    .replace(/\bEDT\b/g, "EST")
+    .replace(/\bCDT\b/g, "CST")
+    .replace(/\bMDT\b/g, "MST")
+    .replace(/\bPDT\b/g, "PST")
+    .replace(/\bAKDT\b/g, "AKST")
+    .replace(/\bHADT\b/g, "HST")
+    .replace(/\bAtlantic Daylight Time\b/g, "Atlantic Standard Time")
+    .replace(/\bEastern Daylight Time\b/g, "Eastern Standard Time")
+    .replace(/\bCentral Daylight Time\b/g, "Central Standard Time")
+    .replace(/\bMountain Daylight Time\b/g, "Mountain Standard Time")
+    .replace(/\bPacific Daylight Time\b/g, "Pacific Standard Time")
+    .replace(/\bAlaska Daylight Time\b/g, "Alaska Standard Time")
+    .replace(/\bHawaii-Aleutian Daylight Time\b/g, "Hawaii Standard Time");
+}
+
+export function getStandardTimeZoneLabel(): string {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (zone && STANDARD_TIMEZONE_BY_IANA[zone]) {
+      return STANDARD_TIMEZONE_BY_IANA[zone];
+    }
+
+    const label =
+      new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+        .formatToParts(new Date())
+        .find((part) => part.type === "timeZoneName")?.value ?? "";
+
+    return normalizeTimeZoneLabel(label);
+  } catch {
+    return "";
+  }
+}
+
 export function formatCurrency(
   amount: number | string | null | undefined,
   currency = "USD"

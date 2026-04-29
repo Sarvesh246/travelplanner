@@ -5,6 +5,7 @@ import { staggerContainer } from "@/lib/motion";
 import { StatCard } from "./StatCard";
 import { formatCurrency } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { LocalDateTime } from "@/components/shared/LocalDateTime";
 import {
   Users, Map, Clock, Receipt, Package, Vote, Activity
 } from "lucide-react";
@@ -90,7 +91,10 @@ export function OverviewClient({ stats, recentActivity, tripId }: OverviewClient
             recentActivity.map((event) => (
               <div key={`${event.kind}-${event.id}`} className="rounded-lg border border-border/70 bg-card/65 px-3 py-2">
                 <p className="text-sm">{event.label}</p>
-                <p className="text-xs text-muted-foreground">{new Date(event.at).toLocaleString()}</p>
+                <LocalDateTime
+                  className="text-xs text-muted-foreground"
+                  value={event.at}
+                />
               </div>
             ))
           ) : (

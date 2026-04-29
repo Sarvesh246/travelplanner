@@ -39,7 +39,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
   return (
     <>
       <PageHeader
-        eyebrow="Crew decisions"
+      eyebrow="Member decisions"
         title="Votes"
         description="Gather opinions and reach decisions as a group"
         actions={

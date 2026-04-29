@@ -412,7 +412,7 @@ function LandingExperienceBody() {
               <div className="landing-hero-eyebrow landing-fade-up landing-stagger-1 mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3.5 py-1.5 text-xs font-medium text-muted-foreground shadow-[0_1px_0_0_hsl(var(--foreground)/0.04)] backdrop-blur">
                 <span className="landing-badge-dot inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
                 <Sparkles className="h-3 w-3 text-primary" />
-                One shared plan for the whole crew
+          One shared plan for all members
               </div>
               <h1 className="landing-fade-up landing-stagger-2 text-balance font-sans text-3xl font-semibold tracking-tight text-foreground min-[400px]:text-5xl sm:text-7xl">
                 Plan trips <span className="gradient-text">together</span>,
@@ -421,7 +421,7 @@ function LandingExperienceBody() {
               </h1>
               <p className="landing-fade-up landing-stagger-3 mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
                 Itinerary, supplies, expenses, and votes in one shared route.
-                Scroll the trail and keep the whole crew aligned from day one.
+          Scroll the trail and keep all members aligned from day one.
               </p>
               <div className="landing-hero-actions landing-fade-up landing-stagger-4 mx-auto mt-9 flex w-full max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center">
                 <Link

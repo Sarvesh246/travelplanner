@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { assertCanView } from "@/lib/auth/trip-permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ClearActivityButton } from "@/components/activity/ClearActivityButton";
+import { LocalDateTime } from "@/components/shared/LocalDateTime";
 
 export const metadata = { title: "Activity" };
 
@@ -77,12 +78,10 @@ export default async function TripActivityPage({ params }: { params: Promise<{ t
                 <p className="text-muted-foreground">
                   {(row.actorUserId ? actorName[row.actorUserId] ?? "Member" : "System")}
                 </p>
-                <time className="mt-1 block whitespace-nowrap text-muted-foreground/85" dateTime={row.createdAt.toISOString()}>
-                  {new Intl.DateTimeFormat(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(row.createdAt)}
-                </time>
+                <LocalDateTime
+                  className="mt-1 block whitespace-nowrap text-muted-foreground/85"
+                  value={row.createdAt}
+                />
               </div>
             </div>
           ))

@@ -36,7 +36,7 @@ export function OverviewContextHints({ tripId }: { tripId: string }) {
         key: "after-members",
         msg: (
           <>
-            <span aria-hidden>&middot; </span>Solid crew - consider splitting gear on{" "}
+            <span aria-hidden>&middot; </span>Solid member count - consider splitting gear on{" "}
             <Link
               className="underline underline-offset-4 hover:text-foreground"
               href={ROUTES.tripSupplies(tripId)}
