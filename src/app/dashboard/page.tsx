@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { DashboardTripSortSelect } from "@/components/dashboard/DashboardTripSortSelect";
 import { parseDashboardTripSort, sortDashboardMemberships } from "@/lib/dashboard-trip-sort";
 import { formatDate } from "@/lib/utils";
+import { ensureAppUserForAuth } from "@/lib/auth/ensure-app-user";
 
 export const metadata = { title: "Dashboard" };
 
@@ -26,20 +27,7 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  let dbUser = await prisma.user.findUnique({
-    where: { externalId: user.id },
-  });
-
-  if (!dbUser) {
-    dbUser = await prisma.user.create({
-      data: {
-        externalId: user.id,
-        email: user.email!,
-        name: user.user_metadata?.name || user.email?.split("@")[0] || "Traveler",
-        avatarUrl: user.user_metadata?.avatar_url ?? null,
-      },
-    });
-  }
+  const dbUser = await ensureAppUserForAuth(user);
 
   const memberships = await prisma.tripMember.findMany({
     where: { userId: dbUser.id, status: "ACTIVE" },

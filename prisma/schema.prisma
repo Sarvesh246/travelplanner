@@ -466,3 +466,48 @@ model Comment {
   @@index([threadParentId])
   @@map("comments")
 }
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  action       String
+  actorUserId  String?
+  tripId       String?
+  targetUserId String?
+  targetId     String?
+  summary      String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([tripId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model AppErrorLog {
+  id        String   @id @default(cuid())
+  source    String
+  message   String
+  stack     String?
+  userId    String?
+  tripId    String?
+  context   Json?
+  createdAt DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([tripId, createdAt])
+  @@index([userId, createdAt])
+  @@map("app_error_logs")
+}
+
+model RateLimitEvent {
+  id         String   @id @default(cuid())
+  scope      String
+  identifier String
+  key        String?
+  createdAt  DateTime @default(now())
+
+  @@index([scope, identifier, createdAt])
+  @@index([createdAt])
+  @@map("rate_limit_events")
+}
