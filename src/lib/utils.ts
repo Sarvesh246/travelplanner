@@ -27,6 +27,28 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+function calendarDate(date: Date | string): Date {
+  if (typeof date === "string") {
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+    if (dateOnly) {
+      const [, year, month, day] = dateOnly;
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+  }
+
+  const parsed = new Date(date);
+  if (
+    parsed.getUTCHours() === 0 &&
+    parsed.getUTCMinutes() === 0 &&
+    parsed.getUTCSeconds() === 0 &&
+    parsed.getUTCMilliseconds() === 0
+  ) {
+    return new Date(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+  }
+
+  return parsed;
+}
+
 export function formatDate(
   date: Date | string | null | undefined,
   opts?: Intl.DateTimeFormatOptions
@@ -37,7 +59,7 @@ export function formatDate(
     day: "numeric",
     year: "numeric",
     ...opts,
-  }).format(new Date(date));
+  }).format(calendarDate(date));
 }
 
 export function formatDateRange(
@@ -46,12 +68,12 @@ export function formatDateRange(
 ): string {
   if (!start) return "Dates TBD";
   if (!end) return formatDate(start);
-  const s = new Date(start);
-  const e = new Date(end);
+  const s = calendarDate(start);
+  const e = calendarDate(end);
   const sameYear = s.getFullYear() === e.getFullYear();
   const sameMonth = sameYear && s.getMonth() === e.getMonth();
   if (sameMonth) {
-    return `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(s)}–${new Intl.DateTimeFormat("en-US", { day: "numeric", year: "numeric" }).format(e)}`;
+    return `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(s)}–${e.getDate()}, ${e.getFullYear()}`;
   }
   if (sameYear) {
     return `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(s)} – ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(e)}`;
@@ -63,7 +85,7 @@ export function daysUntil(date: Date | string | null | undefined): number | null
   if (!date) return null;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  const target = new Date(date);
+  const target = calendarDate(date);
   target.setHours(0, 0, 0, 0);
   return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
@@ -73,8 +95,8 @@ export function tripDuration(
   end: Date | string | null | undefined
 ): number | null {
   if (!start || !end) return null;
-  const s = new Date(start);
-  const e = new Date(end);
+  const s = calendarDate(start);
+  const e = calendarDate(end);
   return Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 }
 

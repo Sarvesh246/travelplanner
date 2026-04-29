@@ -47,6 +47,11 @@ function assertUniqueParticipants(shares: ShareInput[]) {
   return ids;
 }
 
+function revalidateExpenseViews(tripId: string) {
+  revalidatePath(`/trips/${tripId}/expenses`);
+  revalidatePath(`/trips/${tripId}/overview`);
+}
+
 export async function createExpense(tripId: string, input: CreateExpenseInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
@@ -105,7 +110,7 @@ export async function createExpense(tripId: string, input: CreateExpenseInput) {
     return created;
   });
 
-  revalidatePath(`/trips/${tripId}/expenses`);
+  revalidateExpenseViews(tripId);
   return { expense: expenseToClientJson(expense) };
 }
 
@@ -185,7 +190,7 @@ export async function updateExpense(expenseId: string, input: UpdateExpenseInput
     }
   });
 
-  revalidatePath(`/trips/${existing.tripId}/expenses`);
+  revalidateExpenseViews(existing.tripId);
 }
 
 export async function deleteExpense(expenseId: string) {
@@ -198,7 +203,7 @@ export async function deleteExpense(expenseId: string) {
     where: { id: expenseId },
     data: { deletedAt: new Date() },
   });
-  revalidatePath(`/trips/${existing.tripId}/expenses`);
+  revalidateExpenseViews(existing.tripId);
 }
 
 export async function restoreExpense(expenseId: string) {
@@ -211,7 +216,7 @@ export async function restoreExpense(expenseId: string) {
     where: { id: expenseId },
     data: { deletedAt: null },
   });
-  revalidatePath(`/trips/${existing.tripId}/expenses`);
+  revalidateExpenseViews(existing.tripId);
 }
 
 export async function markSharePaid(shareId: string, hasPaid: boolean) {
@@ -231,5 +236,5 @@ export async function markSharePaid(shareId: string, hasPaid: boolean) {
     },
   });
 
-  revalidatePath(`/trips/${share.expense.tripId}/expenses`);
+  revalidateExpenseViews(share.expense.tripId);
 }

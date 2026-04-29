@@ -45,6 +45,11 @@ function normalizeOptionalUserId(value: string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
+function revalidateSupplyViews(tripId: string) {
+  revalidatePath(`/trips/${tripId}/supplies`);
+  revalidatePath(`/trips/${tripId}/overview`);
+}
+
 export async function createSupplyItem(tripId: string, input: CreateSupplyInput) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
@@ -78,7 +83,7 @@ export async function createSupplyItem(tripId: string, input: CreateSupplyInput)
     },
   });
 
-  revalidatePath(`/trips/${tripId}/supplies`);
+  revalidateSupplyViews(tripId);
   return { item };
 }
 
@@ -136,7 +141,7 @@ export async function updateSupplyItem(itemId: string, input: UpdateSupplyInput)
     },
   });
 
-  revalidatePath(`/trips/${existing.tripId}/supplies`);
+  revalidateSupplyViews(existing.tripId);
   return { item: updated };
 }
 
@@ -150,7 +155,7 @@ export async function deleteSupplyItem(itemId: string) {
     where: { id: itemId },
     data: { deletedAt: new Date() },
   });
-  revalidatePath(`/trips/${existing.tripId}/supplies`);
+  revalidateSupplyViews(existing.tripId);
 }
 
 export async function restoreSupplyItem(itemId: string) {
@@ -163,7 +168,7 @@ export async function restoreSupplyItem(itemId: string) {
     where: { id: itemId },
     data: { deletedAt: null },
   });
-  revalidatePath(`/trips/${existing.tripId}/supplies`);
+  revalidateSupplyViews(existing.tripId);
 }
 
 export async function assignBringer(itemId: string, userId: string | null) {
@@ -189,7 +194,7 @@ export async function markBought(itemId: string, actualCost?: number | null) {
     },
   });
 
-  revalidatePath(`/trips/${existing.tripId}/supplies`);
+  revalidateSupplyViews(existing.tripId);
   return { item: updated };
 }
 
@@ -221,7 +226,7 @@ export async function bulkMarkBought(itemIds: string[]) {
     )
   );
 
-  revalidatePath(`/trips/${tripId}/supplies`);
+  revalidateSupplyViews(tripId);
 }
 
 export async function bulkDeleteSupplyItems(itemIds: string[]) {
@@ -243,5 +248,5 @@ export async function bulkDeleteSupplyItems(itemIds: string[]) {
     data: { deletedAt: new Date() },
   });
 
-  revalidatePath(`/trips/${tripId}/supplies`);
+  revalidateSupplyViews(tripId);
 }

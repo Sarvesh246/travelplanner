@@ -5,27 +5,45 @@ import { CalendarDays, WalletCards } from "lucide-react";
 import { InlineEdit } from "@/components/shared/InlineEdit";
 import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
-import { formatDateRange } from "@/lib/utils";
+import { formatCurrency, formatDateRange } from "@/lib/utils";
 
 export function OverviewHeroEditor({
   tripId,
   name,
   startDate,
   endDate,
-  budgetTarget,
+  estimatedCost,
+  automaticCost,
+  hasManualEstimate,
   currency,
 }: {
   tripId: string;
   name: string;
   startDate: string | null;
   endDate: string | null;
-  budgetTarget: number | null;
+  estimatedCost: number;
+  automaticCost: number;
+  hasManualEstimate: boolean;
   currency: string;
 }) {
   const [localStart, setLocalStart] = useState(startDate ?? "");
   const [localEnd, setLocalEnd] = useState(endDate ?? "");
-  const [localBudget, setLocalBudget] = useState(budgetTarget?.toString() ?? "");
   const { canManage } = useTripContext();
+
+  function saveManualEstimate(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      void updateTrip(tripId, { estimatedCostOverride: null });
+      return;
+    }
+
+    const parsed = Number(trimmed.replace(/,/g, ""));
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return;
+    }
+
+    void updateTrip(tripId, { estimatedCostOverride: parsed });
+  }
 
   return (
     <div className="space-y-3">
@@ -70,25 +88,60 @@ export function OverviewHeroEditor({
         </label>
       </div>
 
-      <label className="flex max-w-xs items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2 text-sm">
-        <WalletCards className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">{currency}</span>
-        <input
-          type="number"
-          value={localBudget}
-          onChange={(e) => setLocalBudget(e.target.value)}
-          onBlur={() => {
-            const parsed = Number(localBudget);
-            void updateTrip(tripId, { budgetTarget: Number.isFinite(parsed) ? parsed : 0 });
-          }}
-          className="w-full bg-transparent outline-none"
-          placeholder="Budget target"
-        />
-      </label>
+      <div className="flex w-full max-w-xs min-w-0 items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2 text-sm">
+        <WalletCards className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <label className="min-w-0 flex-1">
+          <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Estimated cost
+          </span>
+          <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">{currency}</span>
+            {canManage ? (
+              <input
+                key={`${estimatedCost}:${hasManualEstimate}`}
+                type="text"
+                inputMode="decimal"
+                defaultValue={estimatedCost.toString()}
+                onBlur={(e) => saveManualEstimate(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                  if (e.key === "Escape") {
+                    e.currentTarget.value = estimatedCost.toString();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="min-w-0 flex-1 bg-transparent text-base font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+                aria-label="Estimated trip cost"
+              />
+            ) : (
+              <span className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
+                {formatCurrency(estimatedCost, currency)}
+              </span>
+            )}
+          </span>
+        </label>
+        {canManage && hasManualEstimate ? (
+          <button
+            type="button"
+            onClick={() => {
+              void updateTrip(tripId, { estimatedCostOverride: null });
+            }}
+            className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            <span className="hidden min-[360px]:inline">Use auto</span>
+            <span className="min-[360px]:hidden">Auto</span>
+          </button>
+        ) : null}
+      </div>
+      <p className="-mt-1 max-w-xs text-xs text-muted-foreground">
+        {hasManualEstimate
+          ? `Manual estimate. Auto total is ${formatCurrency(automaticCost, currency)}.`
+          : "Auto-calculated from expenses and supplies. Edit it if you need a different estimate."}
+      </p>
 
       <p className="text-sm text-muted-foreground">
         {localStart || localEnd
-          ? formatDateRange(localStart ? new Date(localStart) : null, localEnd ? new Date(localEnd) : null)
+          ? formatDateRange(localStart || null, localEnd || null)
           : "Set dates to frame the itinerary"}
       </p>
     </div>

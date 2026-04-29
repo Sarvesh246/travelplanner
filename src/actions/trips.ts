@@ -39,6 +39,7 @@ const createTripSchema = z.object({
   endDate: z.string().optional(),
   currency: z.enum(currencyCodes).default("USD"),
   budgetTarget: z.number().finite().nonnegative("Budget must be 0 or more").optional(),
+  estimatedCostOverride: z.number().finite().nonnegative("Estimated cost must be 0 or more").nullable().optional(),
 });
 
 const updateTripSchema = createTripSchema.partial().extend({
@@ -63,6 +64,7 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
       endDate,
       currency: data.currency,
       budgetTarget: data.budgetTarget,
+      estimatedCostOverride: data.estimatedCostOverride,
       members: {
         create: { userId: user.id, role: "OWNER" },
       },
@@ -102,6 +104,7 @@ export async function updateTrip(
       ...(data.endDate !== undefined && { endDate: endDate ?? null }),
       ...(data.currency !== undefined && { currency: data.currency }),
       ...(data.budgetTarget !== undefined && { budgetTarget: data.budgetTarget }),
+      ...(data.estimatedCostOverride !== undefined && { estimatedCostOverride: data.estimatedCostOverride }),
       ...(data.status !== undefined && { status: data.status }),
       ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
     },
@@ -109,6 +112,7 @@ export async function updateTrip(
 
   revalidatePath("/dashboard");
   revalidatePath(`/trips/${tripId}`);
+  revalidatePath(`/trips/${tripId}/overview`);
   revalidateTag(`trip-${tripId}`, "max");
   return { trip: tripToClientJson(trip) };
 }

@@ -199,33 +199,9 @@ function CommandPaletteInner() {
               <span>toggle</span>
             </span>
           </div>
-          {tripId ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/50 pt-2 text-[10px]">
-              <span className="min-w-max font-medium uppercase tracking-wide text-muted-foreground/85">
-                Trip pages
-              </span>
-              <span className="inline-flex flex-wrap gap-x-2 gap-y-1">
-                <TripShortcutHint ks="G O" label="overview" />
-                <TripShortcutHint ks="G I" label="route" />
-                <TripShortcutHint ks="G S" label="gear" />
-                <TripShortcutHint ks="G E" label="costs" />
-                <TripShortcutHint ks="G V" label="votes" />
-                <TripShortcutHint ks="G M" label="members" />
-              </span>
-            </div>
-          ) : null}
         </div>
       </Command>
     </div>
-  );
-}
-
-function TripShortcutHint({ ks, label }: { ks: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <Kbd keys={ks} asChord />
-      <span>{label}</span>
-    </span>
   );
 }
 

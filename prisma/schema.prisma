@@ -150,6 +150,7 @@ model Trip {
   status        TripStatus @default(PLANNING)
   currency      String     @default("USD")
   budgetTarget  Decimal?   @db.Decimal(12, 2)
+  estimatedCostOverride Decimal? @db.Decimal(12, 2)
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime   @default(now())

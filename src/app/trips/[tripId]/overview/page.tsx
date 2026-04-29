@@ -19,15 +19,14 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const dbUser = await prisma.user.findUnique({ where: { externalId: user.id } });
   if (!dbUser) redirect("/login");
 
-  const [trip, memberCount, stopCount, supplyStats, expenseStats, openVoteCount, recentStops, recentSupplies, recentExpenses] =
+  const [trip, memberCount, stopCount, supplyItems, expenseStats, openVoteCount, recentStops, recentSupplies, recentExpenses] =
     await Promise.all([
       prisma.trip.findUnique({ where: { id: tripId } }),
       prisma.tripMember.count({ where: { tripId, status: "ACTIVE" } }),
       prisma.stop.count({ where: { tripId, deletedAt: null } }),
-      prisma.supplyItem.aggregate({
+      prisma.supplyItem.findMany({
         where: { tripId, deletedAt: null },
-        _count: { id: true },
-        _sum: { estimatedCost: true, actualCost: true },
+        select: { status: true, estimatedCost: true, actualCost: true },
       }),
       prisma.expense.aggregate({
         where: { tripId, deletedAt: null },
@@ -60,10 +59,18 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const days = daysUntil(trip.startDate);
   const duration = tripDuration(trip.startDate, trip.endDate);
   const totalExpenses = Number(expenseStats._sum.totalAmount ?? 0);
+  const totalSupplyCost = supplyItems.reduce(
+    (sum, item) => sum + Number(item.actualCost ?? item.estimatedCost ?? 0),
+    0
+  );
+  const automaticTripCost = totalExpenses + totalSupplyCost;
+  const estimatedTripCost = trip.estimatedCostOverride
+    ? Number(trip.estimatedCostOverride)
+    : automaticTripCost;
   const budgetTarget = Number(trip.budgetTarget ?? 0);
-  const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((totalExpenses / budgetTarget) * 100)) : null;
-  const coveredItems = await prisma.supplyItem.count({ where: { tripId, status: { in: ["COVERED"] }, deletedAt: null } });
-  const totalItems = supplyStats._count.id;
+  const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((estimatedTripCost / budgetTarget) * 100)) : null;
+  const coveredItems = supplyItems.filter((item) => item.status === "COVERED").length;
+  const totalItems = supplyItems.length;
   const recentActivity = [
     ...recentStops.map((s) => ({ id: s.id, label: `Stop updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "stop" as const })),
     ...recentSupplies.map((s) => ({ id: s.id, label: `Supply updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "supply" as const })),
@@ -87,7 +94,9 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 name={trip.name}
                 startDate={trip.startDate ? trip.startDate.toISOString().slice(0, 10) : null}
                 endDate={trip.endDate ? trip.endDate.toISOString().slice(0, 10) : null}
-                budgetTarget={trip.budgetTarget ? Number(trip.budgetTarget) : null}
+                estimatedCost={estimatedTripCost}
+                automaticCost={automaticTripCost}
+                hasManualEstimate={trip.estimatedCostOverride !== null}
                 currency={trip.currency}
               />
             </div>
@@ -125,7 +134,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                     <div className="h-full rounded-full bg-primary" style={{ width: `${budgetPct}%` }} />
                   </div>
                   <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {formatCurrency(totalExpenses, trip.currency)} / {formatCurrency(budgetTarget, trip.currency)}
+                    {formatCurrency(estimatedTripCost, trip.currency)} / {formatCurrency(budgetTarget, trip.currency)}
                   </p>
                 </div>
               </div>

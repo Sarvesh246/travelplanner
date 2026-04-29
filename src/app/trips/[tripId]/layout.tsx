@@ -51,6 +51,7 @@ export default async function TripLayout({
         startDate: toIsoString(trip.startDate),
         endDate: toIsoString(trip.endDate),
         budgetTarget: trip.budgetTarget ? Number(trip.budgetTarget) : null,
+        estimatedCostOverride: trip.estimatedCostOverride ? Number(trip.estimatedCostOverride) : null,
         coverImageUrl: trip.coverImageUrl,
       }}
       currentUser={{ id: dbUser.id, name: dbUser.name, email: dbUser.email, avatarUrl: dbUser.avatarUrl, role: membership.role }}
