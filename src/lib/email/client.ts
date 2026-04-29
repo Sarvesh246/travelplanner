@@ -21,24 +21,62 @@ function getResendApiKey() {
   return key;
 }
 
+function stripWrappingQuotes(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+function isValidEmailAddress(value: string): boolean {
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(value);
+}
+
+function assertValidEmailAddress(address: string, source: string) {
+  if (!isValidEmailAddress(address)) {
+    throw new Error(
+      `${source} must be an email address like email@example.com or Name <email@example.com>. Current address part is invalid.`
+    );
+  }
+}
+
 export function parseEmailAddress(raw: string): EmailAddress {
-  const value = raw.trim();
+  const value = stripWrappingQuotes(raw)
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!value) {
+    throw new Error("EMAIL_FROM is empty.");
+  }
+
   const namedMatch = value.match(/^(.*?)<([^>]+)>$/);
   if (namedMatch) {
     const [, name, address] = namedMatch;
+    const cleanedAddress = address.trim().replace(/^mailto:/i, "");
+    assertValidEmailAddress(cleanedAddress, "EMAIL_FROM");
     return {
-      address: address.trim(),
-      name: name.trim().replace(/^"|"$/g, "") || undefined,
+      address: cleanedAddress,
+      name: stripWrappingQuotes(name).trim() || undefined,
     };
   }
 
-  return { address: value };
+  const bareAddress = value.replace(/^mailto:/i, "");
+  assertValidEmailAddress(bareAddress, "EMAIL_FROM");
+  return { address: bareAddress };
 }
 
 /** Resend `from` field: `"Name <addr@domain>"` or bare address. */
 export function formatFromHeader(addr: EmailAddress): string {
+  assertValidEmailAddress(addr.address, "Email sender");
   if (addr.name?.trim()) {
-    return `${addr.name.trim()} <${addr.address}>`;
+    const name = addr.name.trim().replace(/[\r\n<>]/g, "");
+    return `${name} <${addr.address}>`;
   }
   return addr.address;
 }
