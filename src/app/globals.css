@@ -434,6 +434,19 @@
     opacity: 1;
   }
 
+  /* Hairline stripes read as misplaced “green bars” on narrow portrait viewports — keep the wash, drop the slit. */
+  @media (max-width: 767.98px) {
+    .app-workspace-shell::before,
+    .dark .app-workspace-shell::before {
+      background-image: linear-gradient(
+        to bottom,
+        hsl(var(--foreground) / 0.04),
+        transparent 16rem
+      );
+      opacity: 0.88;
+    }
+  }
+
   .app-glass {
     border: 1px solid hsl(var(--border) / 0.72);
     background: hsl(var(--card) / 0.82);
@@ -467,6 +480,16 @@
     background:
       linear-gradient(135deg, hsl(var(--card) / 0.94), hsl(135 8% 16% / 0.84)),
       radial-gradient(circle at 90% 8%, hsl(var(--primary) / 0.12), transparent 18rem);
+  }
+
+  @media (max-width: 767.98px) {
+    .app-surface {
+      background: linear-gradient(135deg, hsl(var(--card) / 0.96), hsl(var(--card) / 0.82));
+    }
+
+    .dark .app-surface {
+      background: linear-gradient(135deg, hsl(var(--card) / 0.94), hsl(135 8% 16% / 0.84));
+    }
   }
 
   .app-page-band {

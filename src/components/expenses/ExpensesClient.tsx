@@ -86,6 +86,7 @@ export function ExpensesClient({
 
   const filteredTotal = useMemo(() => filteredSorted.reduce((sum, e) => sum + e.totalAmount, 0), [filteredSorted]);
   const myNet = useMemo(() => balances.find((b) => b.userId === currentUser.id)?.net ?? 0, [balances, currentUser.id]);
+  const hasExpenses = expenses.length > 0;
 
   function scrollExpenseRowIntoView(id: string) {
     requestAnimationFrame(() => {
@@ -138,7 +139,7 @@ export function ExpensesClient({
         title="Expenses"
         description={`${filteredSorted.length} shown of ${expenses.length} expense${expenses.length !== 1 ? "s" : ""} · ${new Intl.NumberFormat("en-US", { style: "currency", currency }).format(filteredTotal)}`}
         actions={
-          canEdit && (
+          canEdit && hasExpenses && (
             <button
               type="button"
               onClick={() => setAddOpen(true)}
@@ -151,6 +152,7 @@ export function ExpensesClient({
         }
       />
 
+      {hasExpenses ? (
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)_320px]">
         <div className="flex min-h-0 min-w-0 flex-col gap-3">
           <div className="sticky top-14 z-[8] rounded-xl border border-border/65 bg-[hsl(var(--card)/0.92)] p-3 shadow-sm backdrop-blur-md transition-shadow duration-200 dark:bg-card/82">
@@ -215,6 +217,16 @@ export function ExpensesClient({
           <ExpenseCategoryChart expenses={filteredSorted} currency={currency} />
         </aside>
       </div>
+      ) : (
+        <ExpenseList
+          tripId={tripId}
+          expenses={filteredSorted}
+          currency={currency}
+          selectedExpenseId={effectiveSelectedExpenseId}
+          onSelectExpense={setSelectedExpenseId}
+          onAddClick={() => setAddOpen(true)}
+        />
+      )}
 
       <AddExpenseDialog
         open={addOpen}
@@ -224,7 +236,7 @@ export function ExpensesClient({
         onExpenseCreated={(id) => revealExpense(id, { syncUrl: true })}
       />
 
-      {canEdit ? (
+      {canEdit && expenses.length > 0 ? (
         <StickyActionBar
           primary={
             <button

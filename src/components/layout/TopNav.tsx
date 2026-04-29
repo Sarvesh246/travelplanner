@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useTripSearch } from "@/hooks/useTripSearch";
 import { useIsMac } from "@/hooks/useIsMac";
 import { useLoading } from "@/hooks/useLoading";
 import { ROUTES } from "@/lib/constants";
@@ -38,6 +39,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
   const pathname = usePathname();
   const supabase = createClient();
   const setPaletteOpen = useCommandPalette((s) => s.setOpen);
+  const setTripSearchOpen = useTripSearch((s) => s.setOpen);
   const isMac = useIsMac();
   const standalone = useStandaloneMode();
   const handleOpenPalette = onCommandPaletteOpen ?? (() => setPaletteOpen(true));
@@ -45,6 +47,7 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
 
   const tripMatch = pathname.match(/^\/trips\/([^/]+)(?:\/([^/]+))?/);
   const tripId = tripMatch?.[1] ?? null;
+  const tripSearchAvailable = Boolean(tripId && tripId !== "new");
   const tripSection = tripMatch?.[2] ?? null;
   const isStopDetail = /^\/trips\/[^/]+\/stops\/[^/]+/.test(pathname);
   const showBackButton =
@@ -168,9 +171,15 @@ export function TopNav({ user, trip, onCommandPaletteOpen }: TopNavProps) {
 
         <button
           type="button"
-          onClick={handleOpenPalette}
-          title="Search (/)"
-          aria-label="Open command palette"
+          onClick={() =>
+            tripSearchAvailable ? setTripSearchOpen(true) : handleOpenPalette()
+          }
+          title={
+            tripSearchAvailable
+              ? "Search this trip — use account menu for app-wide search (⌘K)"
+              : "Search commands (/)"
+          }
+          aria-label={tripSearchAvailable ? "Search this trip" : "Open command palette"}
           className={cn(
             "app-top-nav__mobile-search inline-flex h-10 min-w-0 items-center justify-center rounded-xl border border-transparent px-0 text-muted-foreground transition-[background-color,border-color,box-shadow,color,width] duration-200 hover:bg-muted/80 hover:text-foreground focus-ring md:hidden",
             collapsed

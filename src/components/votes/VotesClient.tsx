@@ -43,7 +43,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
         title="Votes"
         description="Gather opinions and reach decisions as a group"
         actions={
-          canEdit && (
+          canEdit && votes.length > 0 && (
             <button
               onClick={() => setCreateOpen(true)}
               className="app-hover-lift flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
@@ -55,6 +55,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
         }
       />
 
+      {votes.length > 0 ? (
       <div className="app-glass mb-5 grid w-full max-w-xl grid-cols-3 gap-1 rounded-xl p-1 min-[560px]:w-fit min-[560px]:max-w-none">
         {(
           [
@@ -82,6 +83,7 @@ export function VotesClient({ tripId, votes }: VotesClientProps) {
           </button>
         ))}
       </div>
+      ) : null}
 
       {filtered.length === 0 ? (
         <EmptyState

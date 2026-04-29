@@ -101,7 +101,7 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        className="space-y-3"
+        className="max-w-5xl space-y-3"
       >
         {members.map((member) => (
           <motion.div key={member.id} variants={listItem}>
@@ -111,7 +111,7 @@ export function MembersClient({ tripId, members, pendingInvites }: MembersClient
       </motion.div>
 
       {pendingInvites.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-8 max-w-5xl">
           <div className="mb-4 flex flex-col gap-3 min-[560px]:flex-row min-[560px]:items-center min-[560px]:justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Pending invites

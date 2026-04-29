@@ -22,18 +22,18 @@ export function SupplySummaryBar({ stats, currency }: SupplySummaryBarProps) {
       <Cell icon={<Package className="w-4 h-4" />} label="Total items" value={stats.total.toString()} iconClass="bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))] dark:bg-[hsl(var(--secondary)/0.15)]" />
       <Cell icon={<CheckCircle2 className="w-4 h-4" />} label="Packed" value={`${stats.covered} / ${stats.total}`} iconClass="bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] dark:bg-[hsl(var(--success)/0.15)]" />
       <Cell icon={<DollarSign className="w-4 h-4" />} label="Estimated" value={formatCurrency(stats.estimated, currency)} iconClass="bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))] dark:bg-[hsl(var(--accent)/0.15)]" />
-      <div>
+      <div className="min-w-0 md:col-span-1 col-span-2">
         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Progress</p>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex-1 min-w-0 h-2 rounded-full bg-muted overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-primary shadow-[0_0_14px_hsl(var(--primary)/0.35)]"
+              className="h-full max-w-full rounded-full bg-primary shadow-[0_0_14px_hsl(var(--primary)/0.35)]"
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>
-          <span className="text-sm font-semibold w-10 text-right">{pct}%</span>
+          <span className="shrink-0 tabular-nums text-sm font-semibold min-w-[2.5rem] text-right">{pct}%</span>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { assertCanView } from "@/lib/auth/trip-permissions";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export const metadata = { title: "Activity" };
 
@@ -48,17 +49,13 @@ export default async function TripActivityPage({ params }: { params: Promise<{ t
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="app-kicker mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-          <span className="app-waypoint shrink-0" aria-hidden /> Trip history
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Recent role changes, invites, shared costs, and plan updates visible to trip members for context.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Trip history"
+        title="Activity"
+        description="Recent role changes, invites, shared costs, and plan updates visible to trip members for context."
+      />
 
-      <section className="app-surface divide-y divide-border rounded-2xl overflow-hidden border border-border/70">
+      <section className="app-surface max-w-5xl divide-y divide-border rounded-2xl overflow-hidden border border-border/70">
         {logs.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-muted-foreground">Nothing logged yet.</p>

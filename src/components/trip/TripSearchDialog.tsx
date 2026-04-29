@@ -187,24 +187,28 @@ export function TripSearchDialog({ open, onOpenChange, tripId }: TripSearchDialo
             "flex min-h-0 flex-1 flex-col bg-transparent",
             /* cmdk renders an internal group; constrain width so accents never leak as side blocks */
             "[&_[cmdk-item]]:!w-full [&_[cmdk-item]]:!justify-start [&_[cmdk-item]]:!overflow-hidden",
-            "[&_[cmdk-item][data-selected=true]]:!bg-muted/65 [&_[cmdk-item][data-selected=true]]:!text-foreground",
+            "[&_[cmdk-item]]:!rounded-2xl [&_[cmdk-item]]:!shadow-none [&_[cmdk-item]]:!ring-0 [&_[cmdk-item]]:!outline-none",
+            "[&_[cmdk-item][data-selected=true]]:!bg-muted/72 [&_[cmdk-item][data-selected=true]]:!text-foreground",
             "[&_[cmdk-group-heading]]:!px-4 [&_[cmdk-group-heading]]:!py-1.5 [&_[cmdk-group-heading]]:!text-[10px]",
           )}
         >
-          <div className="shrink-0 border-b border-border/80 px-4 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] md:border-border">
-            <div className="mx-auto mb-4 h-1 w-11 shrink-0 rounded-full bg-muted/90 md:hidden" aria-hidden />
+          <div className="shrink-0 border-b border-border/80 px-4 pb-3 pt-[max(0.25rem,min(12px,env(safe-area-inset-top,0px)))] md:border-border md:px-5 md:pb-3 md:pt-4">
+            <div className="mx-auto mb-1.5 h-1 w-9 shrink-0 rounded-full bg-muted/80 md:hidden" aria-hidden />
 
-            <div className="mb-4 flex min-h-[44px] items-center gap-3">
-              <h2 id="trip-search-heading" className="min-w-0 flex-1 text-lg font-semibold tracking-tight text-foreground">
+            <div className="mb-2 flex items-center gap-2.5 md:mb-2.5">
+              <h2
+                id="trip-search-heading"
+                className="min-w-0 flex-1 text-base font-semibold leading-tight tracking-tight text-foreground md:text-lg"
+              >
                 Search trip
               </h2>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="inline-flex shrink-0 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/80 bg-muted/35 text-muted-foreground transition-[background-color,color,transform] duration-200 hover:bg-muted/65 hover:text-foreground active:scale-[0.98] md:hidden"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted/30 text-muted-foreground transition-[background-color,color,transform] duration-200 hover:bg-muted/60 hover:text-foreground active:scale-[0.98] md:hidden"
                 aria-label="Close search"
               >
-                <X className="h-5 w-5 shrink-0" />
+                <X className="h-[18px] w-[18px] shrink-0" strokeWidth={2.25} />
               </button>
               <button
                 type="button"
@@ -220,7 +224,7 @@ export function TripSearchDialog({ open, onOpenChange, tripId }: TripSearchDialo
 
             <label
               htmlFor="trip-search-input"
-              className="flex min-h-[52px] w-full cursor-text items-center gap-3 rounded-2xl border border-border/90 bg-muted/25 px-3.5 py-3 outline-none ring-offset-background transition-[box-shadow,border-color] duration-300 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring/60 dark:bg-muted/15"
+              className="flex min-h-[48px] w-full cursor-text items-center gap-3 rounded-2xl border border-border/90 bg-muted/25 px-3 py-2.5 outline-none ring-offset-background transition-[box-shadow,border-color] duration-300 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring/50 dark:bg-muted/15 md:min-h-[50px] md:px-3.5 md:py-3"
             >
               <span className="sr-only">Filter trip results</span>
               {loading ? (
@@ -248,7 +252,7 @@ export function TripSearchDialog({ open, onOpenChange, tripId }: TripSearchDialo
 
           <Command.List
             className={cn(
-              "flex-1 overflow-y-auto overscroll-contain px-2 py-3 [scrollbar-width:thin]",
+              "flex-1 overflow-x-clip overflow-y-auto overscroll-contain px-2 py-3 [scrollbar-width:thin]",
               "min-h-0 max-md:max-h-[min(52dvh,28rem)] md:max-h-[min(48vh,21rem)]",
             )}
           >
@@ -266,10 +270,10 @@ export function TripSearchDialog({ open, onOpenChange, tripId }: TripSearchDialo
                   router.push(hit.href);
                 }}
                 className={cn(
-                  "mb-2 flex min-h-[3.75rem] w-full max-w-full cursor-pointer touch-manipulation flex-col rounded-2xl border border-transparent px-4 py-[0.9375rem]",
-                  "text-left outline-none ring-offset-background",
-                  "transition-[background-color,box-shadow,transform] duration-300 hover:bg-muted/55",
-                  "data-[selected=true]:shadow-[inset_0_0_0_1px_hsl(var(--border)/0.65)] motion-safe:active:scale-[0.99]",
+                  "mb-2 flex min-h-[3.5rem] w-full max-w-full cursor-pointer touch-manipulation flex-col rounded-2xl border border-transparent px-4 py-3",
+                  "text-left outline-none ring-0 ring-offset-0 focus-visible:ring-2 focus-visible:ring-ring/40",
+                  "transition-[background-color,transform] duration-200 hover:bg-muted/50",
+                  "data-[selected=true]:bg-muted/65 data-[selected=true]:shadow-none motion-safe:active:scale-[0.99]",
                 )}
               >
                 <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">

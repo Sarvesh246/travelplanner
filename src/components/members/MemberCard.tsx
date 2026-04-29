@@ -54,7 +54,7 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
     <>
       <div
         className={cn(
-          "app-surface app-hover-lift flex items-center gap-3 rounded-xl px-4 py-3",
+          "app-surface app-hover-lift grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-4 py-3.5 md:px-5",
           "!overflow-visible"
         )}
       >
@@ -66,59 +66,61 @@ export function MemberCard({ member, tripId }: MemberCardProps) {
           </div>
           <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
         </div>
-        <RoleBadge role={member.role} />
-        {canManage && !isMe && !isOwnerMember && (
-          <div
-            className="shrink-0"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button
-                  type="button"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                  aria-label="Member actions"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  className="z-[120] min-w-[12rem] overflow-hidden rounded-xl border border-border bg-popover py-1 text-popover-foreground shadow-lg"
-                  sideOffset={8}
-                  align="end"
-                  collisionPadding={12}
-                  onCloseAutoFocus={(e) => e.preventDefault()}
-                >
-                  {canManage && member.role !== "ADMIN" && (
-                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("ADMIN")}>
-                      <Shield className="w-3.5 h-3.5 shrink-0" /> Make admin
-                    </DropdownMenu.Item>
-                  )}
-                  {canManage && member.role !== "MEMBER" && (
-                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("MEMBER")}>
-                      <User className="w-3.5 h-3.5 shrink-0" /> Make member
-                    </DropdownMenu.Item>
-                  )}
-                  {canManage && member.role !== "VIEWER" && (
-                    <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("VIEWER")}>
-                      <Eye className="w-3.5 h-3.5 shrink-0" /> Make viewer
-                    </DropdownMenu.Item>
-                  )}
-                  <DropdownMenu.Item
-                    className={cn(itemCls, "text-destructive data-[highlighted]:bg-destructive/10")}
-                    onSelect={() => setConfirmRemove(true)}
+        <div className="flex items-center gap-2 justify-self-end">
+          <RoleBadge role={member.role} />
+          {canManage && !isMe && !isOwnerMember && (
+            <div
+              className="shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    type="button"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                    aria-label="Member actions"
                   >
-                    <UserMinus className="w-3.5 h-3.5 shrink-0" /> Remove
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          </div>
-        )}
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="z-[120] min-w-[12rem] overflow-hidden rounded-xl border border-border bg-popover py-1 text-popover-foreground shadow-lg"
+                    sideOffset={8}
+                    align="end"
+                    collisionPadding={12}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    {canManage && member.role !== "ADMIN" && (
+                      <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("ADMIN")}>
+                        <Shield className="w-3.5 h-3.5 shrink-0" /> Make admin
+                      </DropdownMenu.Item>
+                    )}
+                    {canManage && member.role !== "MEMBER" && (
+                      <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("MEMBER")}>
+                        <User className="w-3.5 h-3.5 shrink-0" /> Make member
+                      </DropdownMenu.Item>
+                    )}
+                    {canManage && member.role !== "VIEWER" && (
+                      <DropdownMenu.Item className={itemCls} onSelect={() => handleRoleChange("VIEWER")}>
+                        <Eye className="w-3.5 h-3.5 shrink-0" /> Make viewer
+                      </DropdownMenu.Item>
+                    )}
+                    <DropdownMenu.Item
+                      className={cn(itemCls, "text-destructive data-[highlighted]:bg-destructive/10")}
+                      onSelect={() => setConfirmRemove(true)}
+                    >
+                      <UserMinus className="w-3.5 h-3.5 shrink-0" /> Remove
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            </div>
+          )}
+        </div>
       </div>
 
       <ConfirmDialog

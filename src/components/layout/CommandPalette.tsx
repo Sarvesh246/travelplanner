@@ -19,6 +19,7 @@ import {
   Plane,
 } from "lucide-react";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useTripSearch } from "@/hooks/useTripSearch";
 import { useIsMac } from "@/hooks/useIsMac";
 import { useLoadingStore } from "@/lib/store/loading";
 import { ROUTES } from "@/lib/constants";
@@ -58,10 +59,11 @@ function CommandPaletteInner() {
 
   const tripMatch = pathname.match(/^\/trips\/([^/]+)/);
   const tripId = tripMatch?.[1];
+  const canTripSearch = Boolean(tripId && tripId !== "new");
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center p-3 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+1rem))] min-[500px]:p-4 min-[500px]:pt-[14vh]"
+      className="fixed inset-0 z-[60] flex items-start justify-center p-2 pt-[max(0.5rem,calc(env(safe-area-inset-top,0px)+0.35rem))] min-[500px]:p-4 min-[500px]:pt-[max(1rem,12vh)]"
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"
@@ -92,12 +94,22 @@ function CommandPaletteInner() {
           </span>
         </div>
 
-        <Command.List className="max-h-[min(52dvh,380px)] overflow-y-auto p-2">
+        <Command.List className="max-h-[min(52dvh,380px)] overflow-x-hidden overflow-y-auto p-2">
           <Command.Empty className="py-8 text-center text-sm text-muted-foreground">
             No results found.
           </Command.Empty>
 
           <Command.Group heading="Navigation">
+            {canTripSearch && tripId && (
+              <CommandItem
+                icon={<Search className="w-4 h-4" />}
+                label="Search this trip"
+                onSelect={() => {
+                  setOpen(false);
+                  useTripSearch.getState().setOpen(true);
+                }}
+              />
+            )}
             <CommandItem
               icon={<LayoutDashboard className="w-4 h-4" />}
               label="Dashboard"

@@ -67,7 +67,7 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         title="Itinerary"
         description={`${stops.length} stop${stops.length !== 1 ? "s" : ""} planned`}
         actions={
-          canEdit && (
+          canEdit && stops.length > 0 && (
             <button
               type="button"
               onClick={() => setAddOpen(true)}
@@ -165,7 +165,7 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         onOpenChange={(v) => !v && setSelectedStopId(null)}
       />
 
-      {canEdit ? (
+      {canEdit && stops.length > 0 ? (
         <StickyActionBar
           primary={
             <button

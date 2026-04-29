@@ -109,7 +109,10 @@ export function MobileNav({ tripId }: MobileNavProps) {
             isActive ? "bg-primary/14" : "bg-transparent",
           )}
         >
-          <Icon className="h-[1.26rem] w-[1.26rem] min-[390px]:h-[1.34rem] min-[390px]:w-[1.34rem]" />
+          <Icon
+            className="h-[1.26rem] w-[1.26rem] min-[390px]:h-[1.34rem] min-[390px]:w-[1.34rem] text-current opacity-95"
+            strokeWidth={isActive ? 2.125 : 1.875}
+          />
         </span>
         <span className="min-w-0 truncate">{item.mobileLabel ?? item.label}</span>
       </Link>
@@ -191,7 +194,7 @@ export function MobileNav({ tripId }: MobileNavProps) {
                 Polls & people
               </p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Same trip tools as the sidebar—votes and member list.
+                Votes, members, and recent activity—the same shortcuts as on desktop.
               </p>
             </div>
 
@@ -224,7 +227,11 @@ export function MobileNav({ tripId }: MobileNavProps) {
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold leading-tight">{item.label}</span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
-                        {item.label === "Votes" ? "Decide as a group" : "Invitees and roles"}
+                        {item.label === "Votes"
+                          ? "Decide as a group"
+                          : item.label === "Activity"
+                            ? "What changed lately"
+                            : "Invitees and roles"}
                       </span>
                     </span>
                     <ChevronRight

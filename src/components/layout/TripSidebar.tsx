@@ -38,7 +38,7 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
 
   return (
     <aside
-      className="hidden w-56 min-h-0 shrink-0 flex-col self-stretch overflow-y-auto border-r border-sidebar-border/80 bg-sidebar/[0.88] shadow-[16px_0_36px_-34px_hsl(var(--primary)/0.8)] backdrop-blur-xl md:flex"
+      className="hidden h-full max-h-full min-h-0 w-56 shrink-0 flex-col overflow-hidden border-r border-sidebar-border/80 bg-sidebar/[0.88] shadow-[16px_0_36px_-34px_hsl(var(--primary)/0.8)] backdrop-blur-xl md:flex"
     >
       {/* Back to dashboard */}
       <div className="p-3 border-b border-sidebar-border/80">
@@ -73,7 +73,7 @@ export function TripSidebar({ tripId, tripName }: TripSidebarProps) {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 space-y-1 [-webkit-overflow-scrolling:touch]">
         {items.map((item) => {
           const itineraryHref = ROUTES.tripItinerary(tripId);
           const isActive =

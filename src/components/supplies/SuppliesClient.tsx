@@ -140,7 +140,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         title="Supplies"
         description={`Showing ${filteredItems.length} of ${items.length} item${items.length !== 1 ? "s" : ""}`}
         actions={
-          canEdit && (
+          canEdit && items.length > 0 && (
             <button
               type="button"
               onClick={() => setAddOpen(true)}
@@ -153,7 +153,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         }
       />
 
-      <SupplySummaryBar stats={stats} currency={currency} />
+      {items.length > 0 ? <SupplySummaryBar stats={stats} currency={currency} /> : null}
 
       {items.length === 0 ? (
         <EmptyState
@@ -265,7 +265,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         onSupplyCreated={(id) => revealSupply(id, { syncUrl: true })}
       />
 
-      {canEdit ? (
+      {canEdit && items.length > 0 ? (
         <StickyActionBar
           primary={
             <button
