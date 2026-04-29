@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
@@ -59,13 +59,26 @@ function getCurrentSection(pathname: string, tripId: string) {
     : null;
 }
 
-function isInteractiveTarget(target: EventTarget | null) {
-  return target instanceof HTMLElement
-    && Boolean(
-      target.closest(
-        'input, textarea, select, button, a, [role="button"], [role="dialog"], [data-no-swipe]'
-      )
-    );
+/** Bounded ancestor walk avoids `closest()` selector work on touchends over large subtrees during INP-critical paths. */
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  let el = target instanceof HTMLElement ? target : null;
+  for (let i = 0; i < 12 && el; i++) {
+    if (el.hasAttribute("data-no-swipe")) return true;
+    const tag = el.tagName;
+    if (
+      tag === "INPUT"
+      || tag === "TEXTAREA"
+      || tag === "SELECT"
+      || tag === "BUTTON"
+      || tag === "A"
+    ) {
+      return true;
+    }
+    const role = el.getAttribute("role");
+    if (role === "button" || role === "dialog") return true;
+    el = el.parentElement;
+  }
+  return false;
 }
 
 export function TripShellClient({ tripId, userId, children }: TripShellClientProps) {
@@ -192,7 +205,13 @@ export function TripShellClient({ tripId, userId, children }: TripShellClientPro
     const nextSection = SWIPE_SECTIONS[nextIndex];
     if (!nextSection) return;
 
-    router.push(getSectionHref(tripId, nextSection));
+    const href = getSectionHref(tripId, nextSection);
+    /** Defer client navigation past the gesture so the interaction can yield before Router + RSC work (INP). */
+    window.requestAnimationFrame(() => {
+      startTransition(() => {
+        router.push(href);
+      });
+    });
   }
 
   return (
@@ -219,7 +238,7 @@ export function TripShellClient({ tripId, userId, children }: TripShellClientPro
             data-no-swipe=""
             aria-label="Search this trip"
             onClick={() => setSearchOpen(true)}
-            className="fixed bottom-[calc(4.85rem+env(safe-area-inset-bottom))] left-4 z-40 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/35 bg-[hsl(var(--card)/0.96)] shadow-[0_10px_32px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors duration-200 hover:bg-primary/15 hover:border-primary/55 md:right-8 md:left-auto md:top-[calc(env(safe-area-inset-top,0)+4.85rem)] md:bottom-auto"
+            className="fixed bottom-[calc(4.85rem+env(safe-area-inset-bottom))] left-4 z-40 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/35 bg-[hsl(var(--card)/0.96)] shadow-[0_10px_32px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-[transform,background-color,border-color] duration-300 hover:bg-primary/15 hover:border-primary/55 md:bottom-auto md:left-auto md:right-0 md:top-[calc(env(safe-area-inset-top,0)+4.85rem)] md:translate-x-[36%] md:hover:translate-x-[28%] md:focus-visible:translate-x-[28%]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary" aria-hidden>
               <circle cx={11} cy={11} r={8} />

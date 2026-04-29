@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { startTransition, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { StopDetailView } from "./StopDetailView";
 import { useTripContext } from "@/components/trip/TripContext";
@@ -12,15 +12,26 @@ interface StopDetailPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function isInteractiveDrawerTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    Boolean(
-      target.closest(
-        'input, textarea, select, button, a, [role="button"], [role="dialog"], [contenteditable="true"], [data-no-swipe]'
-      )
-    )
-  );
+function isInteractiveDrawerTarget(target: EventTarget | null): boolean {
+  let el = target instanceof HTMLElement ? target : null;
+  for (let i = 0; i < 12 && el; i++) {
+    if (el.hasAttribute("data-no-swipe")) return true;
+    if (el.getAttribute("contenteditable") === "true") return true;
+    const tag = el.tagName;
+    if (
+      tag === "INPUT"
+      || tag === "TEXTAREA"
+      || tag === "SELECT"
+      || tag === "BUTTON"
+      || tag === "A"
+    ) {
+      return true;
+    }
+    const role = el.getAttribute("role");
+    if (role === "button" || role === "dialog") return true;
+    el = el.parentElement;
+  }
+  return false;
 }
 
 export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelProps) {
@@ -55,7 +66,9 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
     const dy = t.clientY - state.y;
     if (dx < 72 || Math.abs(dy) > 56) return;
 
-    onOpenChange(false);
+    window.requestAnimationFrame(() => {
+      startTransition(() => onOpenChange(false));
+    });
   }
 
   if (!open || !stop) return null;
