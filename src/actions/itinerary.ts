@@ -19,9 +19,9 @@ function revalidateItineraryAndStop(tripId: string, stopId: string) {
   revalidateStopPage(tripId, stopId);
 }
 
-function changedFieldKeys<T extends Record<string, unknown>>(input: Partial<T>) {
-  return Object.keys(input).filter(
-    (key) => input[key as keyof T] !== undefined
+function changedFieldKeys<T extends object>(input: T) {
+  return (Object.keys(input) as Array<keyof T & string>).filter(
+    (key) => input[key] !== undefined
   );
 }
 
