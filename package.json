@@ -15,7 +15,7 @@
     "db:generate": "node --env-file=.env.local ./node_modules/prisma/build/index.js generate",
     "db:studio": "node --env-file=.env.local ./node_modules/prisma/build/index.js studio",
     "db:migrate": "node --env-file=.env.local ./node_modules/prisma/build/index.js migrate dev",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
