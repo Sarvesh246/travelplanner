@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { MouseEvent } from "react";
-import { CalendarDays, ChevronRight, Hotel, MapPin, Route } from "lucide-react";
+import { ArrowUpRight, CalendarDays, ChevronRight, Hotel, MapPin, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ACTIVITY_STATUS_COLORS, ACTIVITY_STATUS_LABELS, STAY_STATUS_COLORS } from "@/lib/constants";
 import type { DayPlan, DayPlanItem, StopDetailTab } from "./types";
@@ -42,22 +41,6 @@ function targetLabel(tab: StopDetailTab) {
 }
 
 export function DayBuilderView({ days, selectedStopId, onOpenItem }: DayBuilderViewProps) {
-  function handleItemClick(event: MouseEvent<HTMLAnchorElement>, item: DayPlanItem) {
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    onOpenItem(item);
-  }
-
   if (days.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border/80 px-4 py-6 text-sm text-muted-foreground">
@@ -93,42 +76,54 @@ export function DayBuilderView({ days, selectedStopId, onOpenItem }: DayBuilderV
 
           <div className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card/30">
             {day.items.map((item) => (
-              <Link
+              <div
                 key={item.id}
-                href={item.href}
-                onClick={(event) => handleItemClick(event, item)}
                 className={cn(
-                  "flex items-start gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex items-start gap-2 px-3 py-3 transition-colors hover:bg-muted/35",
                   selectedStopId === item.stopId && "bg-primary/5"
                 )}
-                title={`Open ${item.stopName} ${targetLabel(item.targetTab).toLowerCase()}`}
               >
-                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  {itemIcon(item.kind)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-medium text-foreground">{item.title}</p>
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
-                        itemStatusClass(item)
-                      )}
-                    >
-                      {itemStatusLabel(item)}
-                    </span>
-                    {item.timeLabel && <span className="text-xs text-muted-foreground">{item.timeLabel}</span>}
+                <button
+                  type="button"
+                  onClick={() => onOpenItem(item)}
+                  className="flex min-w-0 flex-1 items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  title={`Open ${item.stopName} ${targetLabel(item.targetTab).toLowerCase()}`}
+                >
+                  <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {itemIcon(item.kind)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">{item.title}</p>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+                          itemStatusClass(item)
+                        )}
+                      >
+                        {itemStatusLabel(item)}
+                      </span>
+                      {item.timeLabel && <span className="text-xs text-muted-foreground">{item.timeLabel}</span>}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {item.stopName}
+                      </span>
+                      {item.subtitle && <span className="min-w-0 flex-1">{item.subtitle}</span>}
+                    </div>
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {item.stopName}
-                    </span>
-                    {item.subtitle && <span className="min-w-0 flex-1">{item.subtitle}</span>}
-                  </div>
-                </div>
-                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-              </Link>
+                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+                <Link
+                  href={item.href}
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  title={`Open ${item.stopName} on its own page`}
+                  aria-label={`Open ${item.stopName} on its own page`}
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </div>
             ))}
           </div>
         </section>
