@@ -155,7 +155,7 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
         </TabButton>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 min-h-0">
+      <div className="flex-1 overflow-y-auto px-5 pt-5 pb-10 min-h-0">
         {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} />}
         {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} />}
       </div>
@@ -432,65 +432,95 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <input
-          id={`${fieldPrefix}-arrival-time`}
-          name="stay-arrival-time"
-          aria-label="Arrival time"
-          type="time"
-          value={arrivalTime}
-          onChange={(e) => setArrivalTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          id={`${fieldPrefix}-check-in`}
-          name="stay-check-in"
-          aria-label="Check-in date"
-          type="date"
-          value={checkIn}
-          onChange={(e) => setCheckIn(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Arrival time
+          </span>
+          <input
+            id={`${fieldPrefix}-arrival-time`}
+            name="stay-arrival-time"
+            aria-label="Arrival time"
+            type="time"
+            value={arrivalTime}
+            onChange={(e) => setArrivalTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-in date
+          </span>
+          <input
+            id={`${fieldPrefix}-check-in`}
+            name="stay-check-in"
+            aria-label="Check-in date"
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <input
-          id={`${fieldPrefix}-check-in-time`}
-          name="stay-check-in-time"
-          aria-label="Check-in time"
-          type="time"
-          value={checkInTime}
-          onChange={(e) => setCheckInTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          id={`${fieldPrefix}-check-out`}
-          name="stay-check-out"
-          aria-label="Check-out date"
-          type="date"
-          value={checkOut}
-          onChange={(e) => setCheckOut(e.target.value)}
-          min={checkIn}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-in time
+          </span>
+          <input
+            id={`${fieldPrefix}-check-in-time`}
+            name="stay-check-in-time"
+            aria-label="Check-in time"
+            type="time"
+            value={checkInTime}
+            onChange={(e) => setCheckInTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-out date
+          </span>
+          <input
+            id={`${fieldPrefix}-check-out`}
+            name="stay-check-out"
+            aria-label="Check-out date"
+            type="date"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            min={checkIn}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <input
-          id={`${fieldPrefix}-check-out-time`}
-          name="stay-check-out-time"
-          aria-label="Check-out time"
-          type="time"
-          value={checkOutTime}
-          onChange={(e) => setCheckOutTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          id={`${fieldPrefix}-leave-time`}
-          name="stay-leave-time"
-          aria-label="Leave time"
-          type="time"
-          value={leaveTime}
-          onChange={(e) => setLeaveTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-out time
+          </span>
+          <input
+            id={`${fieldPrefix}-check-out-time`}
+            name="stay-check-out-time"
+            aria-label="Check-out time"
+            type="time"
+            value={checkOutTime}
+            onChange={(e) => setCheckOutTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Leave time
+          </span>
+          <input
+            id={`${fieldPrefix}-leave-time`}
+            name="stay-leave-time"
+            aria-label="Leave time"
+            type="time"
+            value={leaveTime}
+            onChange={(e) => setLeaveTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
       <input
         id={`${fieldPrefix}-total-price`}
