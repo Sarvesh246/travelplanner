@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { staggerContainer, listItem } from "@/lib/motion";
+import { listItem, staggerContainer } from "@/lib/motion";
 import { SupplyRow } from "./SupplyRow";
 import type { SupplyItemSerialized } from "./types";
 
@@ -33,11 +33,11 @@ export function SupplyTable({
     <div className="space-y-4">
       {groups.map(([category, categoryItems]) => (
         <section key={category}>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1 px-1">
+          <h3 className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {category}
           </h3>
 
-          <div className="hidden 2xl:grid 2xl:grid-cols-[auto_minmax(0,1.45fr)_4.5rem_4.5rem_6.5rem_minmax(10rem,1fr)_7.5rem] 2xl:gap-3 px-4 py-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden xl:grid xl:grid-cols-[auto_minmax(11rem,1.25fr)_4.5rem_4.5rem_6rem_minmax(9.5rem,0.95fr)_7rem] xl:gap-3 px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -62,19 +62,19 @@ export function SupplyTable({
               animate="animate"
               className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
             >
-            {categoryItems.map((item) => (
-              <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>
-                <SupplyRow
-                  tripId={tripId}
-                  item={item}
-                  currency={currency}
-                  selected={selectedItemId === item.id}
-                  bulkSelected={selectedBulkIds.includes(item.id)}
-                  onSelect={() => onSelectItem?.(item.id)}
-                  onToggleBulk={() => onToggleBulk?.(item.id)}
-                />
-              </motion.div>
-            ))}
+              {categoryItems.map((item) => (
+                <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>
+                  <SupplyRow
+                    tripId={tripId}
+                    item={item}
+                    currency={currency}
+                    selected={selectedItemId === item.id}
+                    bulkSelected={selectedBulkIds.includes(item.id)}
+                    onSelect={() => onSelectItem?.(item.id)}
+                    onToggleBulk={() => onToggleBulk?.(item.id)}
+                  />
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </section>

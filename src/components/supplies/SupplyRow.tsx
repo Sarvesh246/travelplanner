@@ -108,11 +108,11 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "rounded-2xl px-3 py-2.5 transition-colors 2xl:rounded-none 2xl:px-4 2xl:py-2",
+          "rounded-2xl px-3 py-2.5 transition-colors xl:rounded-none xl:px-4 xl:py-2",
           selected && "bg-primary/5"
         )}
       >
-        <div className="flex items-start gap-3 2xl:hidden">
+        <div className="flex items-start gap-3 xl:hidden">
           <input
             type="checkbox"
             checked={bulkSelected}
@@ -223,7 +223,7 @@ export function SupplyRow({
           </div>
         </div>
 
-        <div className="hidden 2xl:grid 2xl:grid-cols-[auto_minmax(0,1.45fr)_4.5rem_4.5rem_6.5rem_minmax(10rem,1fr)_7.5rem] 2xl:items-center 2xl:gap-3">
+        <div className="hidden xl:grid xl:grid-cols-[auto_minmax(11rem,1.25fr)_4.5rem_4.5rem_6rem_minmax(9.5rem,0.95fr)_7rem] xl:items-center xl:gap-3">
           <div className="flex justify-center">
             <input
               type="checkbox"
@@ -248,7 +248,7 @@ export function SupplyRow({
               )}
             />
             <button type="button" onClick={onSelect} className="min-w-0 text-left">
-              <p className="truncate text-sm font-medium">{item.name}</p>
+              <p className="truncate text-sm font-medium leading-5">{item.name}</p>
               <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>
                 {item.status.replace("_", " ")}
               </p>
@@ -289,7 +289,7 @@ export function SupplyRow({
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-1.5">
             <InlineActionButton
               label={`Copy trip link for ${item.name}`}
               title="Copy link"
