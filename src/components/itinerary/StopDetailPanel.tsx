@@ -1,15 +1,17 @@
 "use client";
 
-import { startTransition, useEffect, useRef } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { StopDetailView } from "./StopDetailView";
 import { useTripContext } from "@/components/trip/TripContext";
-import type { StopSerialized } from "./types";
+import { useWarnOnUnload } from "@/hooks/useWarnOnUnload";
+import type { StopDetailTab, StopSerialized } from "./types";
 
 interface StopDetailPanelProps {
   stop: StopSerialized | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: StopDetailTab;
 }
 
 function isInteractiveDrawerTarget(target: EventTarget | null): boolean {
@@ -34,18 +36,26 @@ function isInteractiveDrawerTarget(target: EventTarget | null): boolean {
   return false;
 }
 
-export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelProps) {
+export function StopDetailPanel({ stop, open, onOpenChange, initialTab }: StopDetailPanelProps) {
   const { trip } = useTripContext();
   const touchRef = useRef<{ x: number; y: number; blocked: boolean } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useWarnOnUnload(open && hasUnsavedChanges);
+
+  const requestClose = useCallback(() => {
+    if (hasUnsavedChanges && !window.confirm("Discard your unsaved stop changes?")) return;
+    onOpenChange(false);
+  }, [hasUnsavedChanges, onOpenChange]);
 
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape") requestClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange]);
+  }, [open, requestClose]);
 
   function handleTouchStart(e: React.TouchEvent<HTMLElement>) {
     const t = e.touches[0];
@@ -67,7 +77,7 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
     if (dx < 72 || Math.abs(dy) > 56) return;
 
     window.requestAnimationFrame(() => {
-      startTransition(() => onOpenChange(false));
+      startTransition(() => requestClose());
     });
   }
 
@@ -77,7 +87,7 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
     <>
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-        onClick={() => onOpenChange(false)}
+        onClick={requestClose}
         aria-hidden
       />
       <motion.aside
@@ -90,10 +100,13 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <StopDetailView
+            key={`${stop.id}:${initialTab ?? "stays"}`}
             stop={stop}
             tripId={trip.id}
             layout="drawer"
-            onCloseDrawer={() => onOpenChange(false)}
+            initialTab={initialTab}
+            onCloseDrawer={requestClose}
+            onDirtyChange={setHasUnsavedChanges}
           />
         </div>
       </motion.aside>

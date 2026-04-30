@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { activityToClientJson, stayToClientJson, stopToClientJson } from "@/lib/serialize/prisma-json";
 import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
 import { logAuditEvent } from "@/lib/observability/audit";
+import { deriveDurationMins } from "@/lib/utils";
 
 function revalidateItinerary(tripId: string) {
   revalidatePath(`/trips/${tripId}/itinerary`);
@@ -23,6 +24,12 @@ function changedFieldKeys<T extends object>(input: T) {
   return (Object.keys(input) as Array<keyof T & string>).filter(
     (key) => input[key] !== undefined
   );
+}
+
+function normalizeOptionalText(value: string | null | undefined) {
+  if (value == null) return value;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 // ── Stops ────────────────────────────────────────────────────────────────────
@@ -332,16 +339,35 @@ export async function createActivity(
   if (!stop) throw new Error("Stop not found");
   await assertCanContribute(stop.tripId, user.id);
 
+  const previousActivityDate = await prisma.activity.findFirst({
+    where: {
+      stopId,
+      deletedAt: null,
+      scheduledDate: { not: null },
+    },
+    orderBy: [{ scheduledDate: "desc" }, { sortOrder: "desc" }, { createdAt: "desc" }],
+    select: { scheduledDate: true },
+  });
+
+  const scheduledDate = normalizeOptionalText(data.scheduledDate);
+  const startTime = normalizeOptionalText(data.startTime);
+  const endTime = normalizeOptionalText(data.endTime);
+  const durationMins =
+    data.durationMins ??
+    deriveDurationMins(startTime ?? undefined, endTime ?? undefined);
+
   const activity = await prisma.activity.create({
     data: {
       stopId,
       createdById: user.id,
       name: data.name,
       description: data.description,
-      scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : undefined,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      durationMins: data.durationMins,
+      scheduledDate: scheduledDate
+        ? new Date(scheduledDate)
+        : previousActivityDate?.scheduledDate ?? undefined,
+      startTime: startTime ?? undefined,
+      endTime: endTime ?? undefined,
+      durationMins,
       estimatedCost: data.estimatedCost,
       url: data.url,
     },
@@ -367,11 +393,11 @@ export async function updateActivity(
   data: Partial<{
     name: string;
     description: string;
-    scheduledDate: string;
-    startTime: string;
-    endTime: string;
-    durationMins: number;
-    estimatedCost: number;
+    scheduledDate: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    durationMins: number | null;
+    estimatedCost: number | null;
     actualCost: number;
     status: string;
     url: string;
@@ -382,15 +408,30 @@ export async function updateActivity(
   if (!activity) throw new Error("Activity not found");
   await assertCanContribute(activity.stop.tripId, user.id);
 
+  const normalizedScheduledDate =
+    data.scheduledDate === undefined ? undefined : normalizeOptionalText(data.scheduledDate);
+  const normalizedStartTime =
+    data.startTime === undefined ? undefined : normalizeOptionalText(data.startTime);
+  const normalizedEndTime =
+    data.endTime === undefined ? undefined : normalizeOptionalText(data.endTime);
+
+  const nextStartTime = normalizedStartTime === undefined ? activity.startTime : normalizedStartTime;
+  const nextEndTime = normalizedEndTime === undefined ? activity.endTime : normalizedEndTime;
+  const derivedDuration = deriveDurationMins(nextStartTime, nextEndTime);
+  const nextDuration =
+    data.durationMins === undefined ? derivedDuration : data.durationMins;
+
   const updated = await prisma.activity.update({
     where: { id: activityId },
     data: {
       ...(data.name && { name: data.name }),
       ...(data.description !== undefined && { description: data.description }),
-      ...(data.scheduledDate && { scheduledDate: new Date(data.scheduledDate) }),
-      ...(data.startTime !== undefined && { startTime: data.startTime }),
-      ...(data.endTime !== undefined && { endTime: data.endTime }),
-      ...(data.durationMins !== undefined && { durationMins: data.durationMins }),
+      ...(normalizedScheduledDate !== undefined && {
+        scheduledDate: normalizedScheduledDate ? new Date(normalizedScheduledDate) : null,
+      }),
+      ...(normalizedStartTime !== undefined && { startTime: normalizedStartTime }),
+      ...(normalizedEndTime !== undefined && { endTime: normalizedEndTime }),
+      ...(nextDuration !== undefined && { durationMins: nextDuration }),
       ...(data.estimatedCost !== undefined && { estimatedCost: data.estimatedCost }),
       ...(data.actualCost !== undefined && { actualCost: data.actualCost }),
       ...(data.status && { status: data.status as never }),

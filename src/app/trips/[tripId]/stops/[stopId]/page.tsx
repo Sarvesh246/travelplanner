@@ -3,8 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { StopDetailView } from "@/components/itinerary/StopDetailView";
 import { itineraryStopInclude, serializeItineraryStop } from "@/lib/serialize/stop-for-itinerary";
+import type { StopDetailTab } from "@/components/itinerary/types";
 
-type Props = { params: Promise<{ tripId: string; stopId: string }> };
+type Props = {
+  params: Promise<{ tripId: string; stopId: string }>;
+  searchParams?: Promise<{ tab?: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
   const { tripId, stopId } = await params;
@@ -16,8 +20,9 @@ export async function generateMetadata({ params }: Props) {
   return { title: stop.name };
 }
 
-export default async function TripStopPage({ params }: Props) {
+export default async function TripStopPage({ params, searchParams }: Props) {
   const { tripId, stopId } = await params;
+  const resolvedSearch = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -39,6 +44,8 @@ export default async function TripStopPage({ params }: Props) {
   if (!stop) notFound();
 
   const serialized = serializeItineraryStop(stop);
+  const initialTab: StopDetailTab =
+    resolvedSearch?.tab === "activities" ? "activities" : "stays";
 
-  return <StopDetailView stop={serialized} tripId={tripId} layout="page" />;
+  return <StopDetailView stop={serialized} tripId={tripId} layout="page" initialTab={initialTab} />;
 }

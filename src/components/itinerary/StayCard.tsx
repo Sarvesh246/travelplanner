@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bed,
+  Check,
   CheckCircle2,
   CircleDashed,
   Ban,
@@ -14,7 +15,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { cn, formatCurrency, formatDateRange, formatTimeValue } from "@/lib/utils";
+import { cn, deriveDurationMins, formatCurrency, formatDateRange, formatTimeValue } from "@/lib/utils";
 import { STAY_STATUS_COLORS } from "@/lib/constants";
 import { deleteStay, updateStay } from "@/actions/itinerary";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ import type { StaySerialized } from "./types";
 interface StayCardProps {
   stay: StaySerialized;
   canEdit: boolean;
+  onDirtyChange?: (key: string, dirty: boolean) => void;
 }
 
 const STATUS_ICONS: Record<StayStatus, React.ReactNode> = {
@@ -32,11 +34,12 @@ const STATUS_ICONS: Record<StayStatus, React.ReactNode> = {
   CANCELLED: <Ban className="w-3 h-3" />,
 };
 
-export function StayCard({ stay, canEdit }: StayCardProps) {
+export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<StayStatus | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [name, setName] = useState(stay.name);
   const [address, setAddress] = useState(stay.address ?? "");
   const [roomSiteInput, setRoomSiteInput] = useState("");
@@ -51,6 +54,63 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
     stay.totalPrice != null ? stay.totalPrice.toString() : ""
   );
   const [url, setUrl] = useState(stay.url ?? "");
+
+  const dirtyKey = `stay:${stay.id}`;
+  const original = {
+    name: stay.name,
+    address: stay.address ?? "",
+    roomSiteNumbers: stay.roomSiteNumbers,
+    arrivalTime: stay.arrivalTime ?? "",
+    checkIn: stay.checkIn?.slice(0, 10) ?? "",
+    checkInTime: stay.checkInTime ?? "",
+    checkOut: stay.checkOut?.slice(0, 10) ?? "",
+    checkOutTime: stay.checkOutTime ?? "",
+    leaveTime: stay.leaveTime ?? "",
+    totalPrice: stay.totalPrice != null ? stay.totalPrice.toString() : "",
+    url: stay.url ?? "",
+  };
+  const normalizedSites = roomSiteNumbers.map((value) => value.trim().toLowerCase()).filter(Boolean);
+  const pendingSite = roomSiteInput.trim().toLowerCase();
+  const duplicatePendingSite = pendingSite.length > 0 && normalizedSites.includes(pendingSite);
+  const isDirty =
+    name !== original.name ||
+    address !== original.address ||
+    arrivalTime !== original.arrivalTime ||
+    checkIn !== original.checkIn ||
+    checkInTime !== original.checkInTime ||
+    checkOut !== original.checkOut ||
+    checkOutTime !== original.checkOutTime ||
+    leaveTime !== original.leaveTime ||
+    totalPrice !== original.totalPrice ||
+    url !== original.url ||
+    roomSiteInput.trim().length > 0 ||
+    roomSiteNumbers.join("|") !== original.roomSiteNumbers.join("|");
+  const errors: string[] = [];
+
+  if ((checkIn && !checkInTime) || (!checkIn && checkInTime)) {
+    errors.push("Check-in date and time need to be set together.");
+  }
+  if ((checkOut && !checkOutTime) || (!checkOut && checkOutTime)) {
+    errors.push("Check-out date and time need to be set together.");
+  }
+  if (checkIn && checkOut && checkOut < checkIn) {
+    errors.push("Check-out cannot be before check-in.");
+  }
+  if (checkIn && checkOut && checkIn === checkOut && checkInTime && checkOutTime && deriveDurationMins(checkInTime, checkOutTime) == null) {
+    errors.push("Check-out time cannot be before check-in time on the same day.");
+  }
+  if (duplicatePendingSite) {
+    errors.push("Room or site numbers must be unique.");
+  }
+
+  useEffect(() => {
+    if (!editing) {
+      onDirtyChange?.(dirtyKey, false);
+      return;
+    }
+    onDirtyChange?.(dirtyKey, isDirty);
+    return () => onDirtyChange?.(dirtyKey, false);
+  }, [dirtyKey, editing, isDirty, onDirtyChange]);
 
   async function setStatus(status: StayStatus) {
     setMenuOpen(false);
@@ -76,7 +136,7 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
   }
 
   async function handleSave() {
-    if (!name.trim()) return;
+    if (!name.trim() || errors.length > 0) return;
     setSaving(true);
     try {
       await updateStay(stay.id, {
@@ -93,6 +153,9 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
         url,
       });
       setEditing(false);
+      setShowSaved(true);
+      window.setTimeout(() => setShowSaved(false), 1800);
+      onDirtyChange?.(dirtyKey, false);
       toast.success("Stay updated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update this stay. Please try again.");
@@ -103,13 +166,31 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
 
   function addRoomSiteNumber() {
     const next = roomSiteInput.trim();
-    if (!next || roomSiteNumbers.includes(next)) return;
+    if (!next || duplicatePendingSite) return;
     setRoomSiteNumbers((current) => [...current, next]);
     setRoomSiteInput("");
   }
 
   function removeRoomSiteNumber(value: string) {
     setRoomSiteNumbers((current) => current.filter((item) => item !== value));
+  }
+
+  function handleCancel() {
+    if (isDirty && !window.confirm("Discard your stay changes?")) return;
+    setName(original.name);
+    setAddress(original.address);
+    setRoomSiteInput("");
+    setRoomSiteNumbers(original.roomSiteNumbers);
+    setArrivalTime(original.arrivalTime);
+    setCheckIn(original.checkIn);
+    setCheckInTime(original.checkInTime);
+    setCheckOut(original.checkOut);
+    setCheckOutTime(original.checkOutTime);
+    setLeaveTime(original.leaveTime);
+    setTotalPrice(original.totalPrice);
+    setUrl(original.url);
+    setEditing(false);
+    onDirtyChange?.(dirtyKey, false);
   }
 
   const arrivalLabel = formatTimeValue(stay.arrivalTime);
@@ -150,19 +231,19 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
             </p>
           )}
           {(arrivalLabel || checkInLabel || checkOutLabel || leaveLabel) && (
-            <div className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-              {(arrivalLabel || checkInLabel) && (
-                <p>
-                  {arrivalLabel ? `Arrive ${arrivalLabel}` : "Arrival TBD"}
-                  {checkInLabel ? ` • Check-in ${checkInLabel}` : ""}
-                </p>
-              )}
-              {(checkOutLabel || leaveLabel) && (
-                <p>
-                  {checkOutLabel ? `Check-out ${checkOutLabel}` : "Check-out TBD"}
-                  {leaveLabel ? ` • Leave ${leaveLabel}` : ""}
-                </p>
-              )}
+            <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+              <p className="whitespace-nowrap">
+                {arrivalLabel ? `Arrive ${arrivalLabel}` : "Arrival TBD"}
+              </p>
+              <p className="whitespace-nowrap">
+                {leaveLabel ? `Leave ${leaveLabel}` : "Leave TBD"}
+              </p>
+              <p className="whitespace-nowrap">
+                {checkInLabel ? `Check-in ${checkInLabel}` : "Check-in TBD"}
+              </p>
+              <p className="whitespace-nowrap">
+                {checkOutLabel ? `Check-out ${checkOutLabel}` : "Check-out TBD"}
+              </p>
             </div>
           )}
           <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
@@ -177,6 +258,12 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
               >
                 Link <ExternalLink className="w-3 h-3" />
               </a>
+            )}
+            {showSaved && (
+              <span className="inline-flex items-center gap-1 text-success">
+                <Check className="w-3 h-3" />
+                Saved
+              </span>
             )}
           </div>
         </div>
@@ -270,7 +357,7 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
                     onClick={() => removeRoomSiteNumber(value)}
                     className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-destructive/35 hover:text-destructive"
                   >
-                    {value} ×
+                    {value} x
                   </button>
                 ))}
               </div>
@@ -305,18 +392,6 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Check-in time
-              </span>
-              <input
-                type="time"
-                value={checkInTime}
-                onChange={(e) => setCheckInTime(e.target.value)}
-                aria-label="Check-in time"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
-            <label className="space-y-1">
-              <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Check-in date
               </span>
               <input
@@ -327,20 +402,20 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Check-out time
+                Check-in time
               </span>
               <input
                 type="time"
-                value={checkOutTime}
-                onChange={(e) => setCheckOutTime(e.target.value)}
-                aria-label="Check-out time"
+                value={checkInTime}
+                onChange={(e) => setCheckInTime(e.target.value)}
+                aria-label="Check-in time"
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Check-out date
@@ -351,6 +426,18 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
                 onChange={(e) => setCheckOut(e.target.value)}
                 aria-label="Check-out date"
                 min={checkIn || undefined}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Check-out time
+              </span>
+              <input
+                type="time"
+                value={checkOutTime}
+                onChange={(e) => setCheckOutTime(e.target.value)}
+                aria-label="Check-out time"
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
@@ -371,10 +458,19 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
+          {errors.length > 0 && (
+            <div className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <ul className="space-y-1">
+                {errors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setEditing(false)}
+              onClick={handleCancel}
               className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
             >
               <X className="w-3.5 h-3.5" /> Cancel
@@ -382,7 +478,7 @@ export function StayCard({ stay, canEdit }: StayCardProps) {
             <button
               type="button"
               onClick={() => void handleSave()}
-              disabled={saving || !name.trim()}
+              disabled={saving || !name.trim() || errors.length > 0}
               className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}

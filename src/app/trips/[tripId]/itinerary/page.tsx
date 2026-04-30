@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ItineraryClient } from "@/components/itinerary/ItineraryClient";
+import { buildDayPlans } from "@/lib/serialize/day-builder";
 import { itineraryStopInclude, serializeItineraryStop } from "@/lib/serialize/stop-for-itinerary";
 
 export const metadata = { title: "Itinerary" };
@@ -19,6 +20,7 @@ export default async function ItineraryPage({ params }: { params: Promise<{ trip
   });
 
   const serialized = stops.map(serializeItineraryStop);
+  const dayPlans = buildDayPlans(tripId, serialized);
 
-  return <ItineraryClient tripId={tripId} stops={serialized} />;
+  return <ItineraryClient tripId={tripId} stops={serialized} dayPlans={dayPlans} />;
 }

@@ -7,9 +7,10 @@ import type { ActivitySerialized } from "./types";
 interface DayTimelineProps {
   activities: ActivitySerialized[];
   canEdit: boolean;
+  onDirtyChange?: (key: string, dirty: boolean) => void;
 }
 
-export function DayTimeline({ activities, canEdit }: DayTimelineProps) {
+export function DayTimeline({ activities, canEdit, onDirtyChange }: DayTimelineProps) {
   if (activities.length === 0) {
     return <p className="text-sm text-muted-foreground text-center py-6">No activities yet.</p>;
   }
@@ -23,10 +24,13 @@ export function DayTimeline({ activities, canEdit }: DayTimelineProps) {
           <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
             {dayKey === "unscheduled" ? "Unscheduled" : formatDate(dayKey, { weekday: "long", month: "short", day: "numeric" })}
           </h4>
-          <div className="space-y-1.5 border-l-2 border-border/60 pl-4 ml-1 relative">
+          <div className="relative ml-1">
+            <div className="absolute bottom-0 left-3 top-0 w-px bg-border/60" aria-hidden />
+            <div className="space-y-1.5">
             {items.map((activity) => (
-              <ActivityRow key={activity.id} activity={activity} canEdit={canEdit} />
+              <ActivityRow key={activity.id} activity={activity} canEdit={canEdit} onDirtyChange={onDirtyChange} />
             ))}
+            </div>
           </div>
         </section>
       ))}

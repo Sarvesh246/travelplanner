@@ -172,6 +172,23 @@ export function formatTimeRange(
   return formattedStart ?? formattedEnd;
 }
 
+export function deriveDurationMins(
+  start: string | null | undefined,
+  end: string | null | undefined
+): number | null {
+  if (!start || !end) return null;
+  const startMatch = /^(\d{2}):(\d{2})$/.exec(start);
+  const endMatch = /^(\d{2}):(\d{2})$/.exec(end);
+  if (!startMatch || !endMatch) return null;
+
+  const startTotal = Number(startMatch[1]) * 60 + Number(startMatch[2]);
+  const endTotal = Number(endMatch[1]) * 60 + Number(endMatch[2]);
+
+  if (endTotal < startTotal) return null;
+
+  return Math.max(0, endTotal - startTotal);
+}
+
 export function daysUntil(date: Date | string | null | undefined): number | null {
   if (!date) return null;
   const now = new Date();

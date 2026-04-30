@@ -5,22 +5,26 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StickyActionBar } from "@/components/layout/StickyActionBar";
-import { Map, Plus, Loader2, X, Users, Package } from "lucide-react";
+import { CalendarDays, Map, Plus, Loader2, Route, X, Users, Package } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { StopList } from "./StopList";
 import { StopDetailPanel } from "./StopDetailPanel";
 import { StopDetailView } from "./StopDetailView";
 import { ItineraryFloatingControls } from "./ItineraryFloatingControls";
+import { DownloadTripPdfButton } from "./DownloadTripPdfButton";
+import { DayBuilderView } from "./DayBuilderView";
 import { useTripContext } from "@/components/trip/TripContext";
 import { createStop } from "@/actions/itinerary";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLoading } from "@/hooks/useLoading";
-import type { StopSerialized } from "./types";
+import { useWarnOnUnload } from "@/hooks/useWarnOnUnload";
+import type { DayPlan, DayPlanItem, StopDetailTab, StopSerialized } from "./types";
 
 interface ItineraryClientProps {
   tripId: string;
   stops: StopSerialized[];
+  dayPlans: DayPlan[];
 }
 
 interface LocationSuggestion {
@@ -39,10 +43,12 @@ interface NominatimResult {
   lon?: string;
 }
 
-export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
+export function ItineraryClient({ tripId, stops, dayPlans }: ItineraryClientProps) {
   const { canEdit } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<StopDetailTab>("stays");
+  const [viewMode, setViewMode] = useState<"stops" | "days">("stops");
   const [desktop, setDesktop] = useState(false);
 
   useEffect(() => {
@@ -60,10 +66,19 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
     ? stops.find((s) => s.id === selectedStopId) ?? null
     : null;
   const desktopSelectedStop =
-    mobileSelectedStop ?? stops[0] ?? null;
+    mobileSelectedStop ?? (viewMode === "stops" ? stops[0] ?? null : null);
   const listSelectedStopId = desktop
     ? (desktopSelectedStop?.id ?? null)
     : (mobileSelectedStop?.id ?? null);
+
+  function openStop(stopId: string, tab: StopDetailTab = "stays") {
+    setSelectedStopId(stopId);
+    setSelectedTab(tab);
+  }
+
+  function handleOpenDayItem(item: DayPlanItem) {
+    openStop(item.stopId, item.targetTab);
+  }
 
   return (
     <>
@@ -72,15 +87,42 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         title="Itinerary"
         description={`${stops.length} stop${stops.length !== 1 ? "s" : ""} planned`}
         actions={
-          canEdit && stops.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="app-hover-lift hidden md:inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Stop
-            </button>
+          stops.length > 0 && (
+            <>
+              <div className="inline-flex rounded-xl border border-border bg-card/80 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("stops")}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    viewMode === "stops" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Route className="h-4 w-4" />
+                  Stops
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("days")}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    viewMode === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  Days
+                </button>
+              </div>
+              <DownloadTripPdfButton stops={stops} />
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setAddOpen(true)}
+                  className="app-hover-lift hidden md:inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Stop
+                </button>
+              )}
+            </>
           )
         }
       />
@@ -124,19 +166,29 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(20rem,25rem)] md:items-start">
-          <StopList
-            tripId={tripId}
-            stops={stops}
-            selectedStopId={listSelectedStopId}
-            onSelectStop={(id) => setSelectedStopId(id)}
-          />
+          {viewMode === "stops" ? (
+            <StopList
+              tripId={tripId}
+              stops={stops}
+              selectedStopId={listSelectedStopId}
+              onSelectStop={(id) => openStop(id, "stays")}
+            />
+          ) : (
+            <DayBuilderView
+              days={dayPlans}
+              selectedStopId={listSelectedStopId}
+              onOpenItem={handleOpenDayItem}
+            />
+          )}
           <aside className="hidden min-w-0 md:block md:self-start">
             {desktopSelectedStop ? (
               <div className="app-surface sticky top-0 flex h-[calc(100dvh-4.75rem)] max-h-[calc(100dvh-4.75rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-border/80">
                 <StopDetailView
+                  key={`${desktopSelectedStop.id}:${selectedTab}`}
                   stop={desktopSelectedStop}
                   tripId={tripId}
                   layout="drawer"
+                  initialTab={selectedTab}
                   onCloseDrawer={() => setSelectedStopId(null)}
                 />
               </div>
@@ -172,6 +224,7 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
       <StopDetailPanel
         stop={mobileSelectedStop}
         open={!!mobileSelectedStop && !desktop}
+        initialTab={selectedTab}
         onOpenChange={(v) => !v && setSelectedStopId(null)}
       />
 
@@ -216,6 +269,19 @@ function AddStopDialog({
   const stopLocationId = "stop-location";
   const stopArrivalId = "stop-arrival-date";
   const stopDepartureId = "stop-departure-date";
+  const isDirty =
+    name.trim().length > 0 ||
+    country.trim().length > 0 ||
+    selectedLocation !== null ||
+    arrivalDate.length > 0 ||
+    departureDate.length > 0;
+
+  useWarnOnUnload(open && isDirty);
+
+  function attemptClose() {
+    if (isDirty && !window.confirm("Discard your unsaved stop changes?")) return;
+    onOpenChange(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -260,12 +326,12 @@ function AddStopDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={attemptClose} />
       <div className="relative mt-auto flex max-h-[min(92dvh,38rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-xl sm:mt-0 sm:rounded-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <h2 className="font-semibold text-base">Add stop</h2>
           <button
-            onClick={() => onOpenChange(false)}
+            onClick={attemptClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
           >
             <X className="w-4 h-4" />

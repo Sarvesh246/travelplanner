@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { normalizeTimeZoneLabel } from "@/lib/utils";
 
 interface LocalDateTimeProps {
@@ -20,14 +20,10 @@ export function LocalDateTime({
   options = DEFAULT_OPTIONS,
 }: LocalDateTimeProps) {
   const isoValue = value instanceof Date ? value.toISOString() : value;
-  const [formatted, setFormatted] = useState<string | null>(null);
-
-  useEffect(() => {
+  const formatted = useMemo(() => {
     const date = new Date(isoValue);
-    setFormatted(
-      normalizeTimeZoneLabel(
-        new Intl.DateTimeFormat(undefined, options).format(date)
-      )
+    return normalizeTimeZoneLabel(
+      new Intl.DateTimeFormat(undefined, options).format(date)
     );
   }, [isoValue, options]);
 
@@ -37,7 +33,7 @@ export function LocalDateTime({
       dateTime={isoValue}
       suppressHydrationWarning
     >
-      {formatted ?? ""}
+      {formatted}
     </time>
   );
 }

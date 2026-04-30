@@ -2,10 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bed, CalendarDays, MapPin, Maximize2, Plus, Trash2, X, Loader2 } from "lucide-react";
-import { formatDateRange } from "@/lib/utils";
+import {
+  ArrowLeft,
+  Bed,
+  CalendarDays,
+  ChevronDown,
+  MapPin,
+  Maximize2,
+  Plus,
+  Trash2,
+  X,
+  Loader2,
+} from "lucide-react";
+import { deriveDurationMins, formatDateRange } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { StayCard } from "./StayCard";
 import { DayTimeline } from "./DayTimeline";
@@ -18,7 +29,7 @@ import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenc
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
 import { OsmMapEmbed, StopMapPlaceholder } from "./OsmMapEmbed";
-import type { StopSerialized } from "./types";
+import type { StopDetailTab, StopSerialized } from "./types";
 
 export type StopDetailLayout = "drawer" | "page";
 
@@ -26,20 +37,41 @@ type StopDetailViewProps = {
   stop: StopSerialized;
   tripId: string;
   layout: StopDetailLayout;
-  /** When layout is `drawer`, called for close and after delete. */
+  initialTab?: StopDetailTab;
   onCloseDrawer?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
-export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDetailViewProps) {
+export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onCloseDrawer, onDirtyChange }: StopDetailViewProps) {
   const { canEdit } = useTripContext();
   const router = useRouter();
-  const [tab, setTab] = useState<"stays" | "activities">("stays");
+  const [tab, setTab] = useState<StopDetailTab>(initialTab);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [dirtyMap, setDirtyMap] = useState<Record<string, boolean>>({});
 
   const isPage = layout === "page";
   const hasMapCoords = stop.latitude != null && stop.longitude != null;
+  const hasUnsavedChanges = useMemo(() => Object.values(dirtyMap).some(Boolean), [dirtyMap]);
+
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  function registerDirty(key: string, dirty: boolean) {
+    setDirtyMap((current) => {
+      if (dirty && current[key]) return current;
+      if (!dirty && !current[key]) return current;
+      if (!dirty) {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      }
+      return { ...current, [key]: true };
+    });
+  }
 
   function closeIfDrawer() {
+    if (hasUnsavedChanges && !window.confirm("Discard your unsaved stop changes?")) return;
     setConfirmDelete(false);
     onCloseDrawer?.();
   }
@@ -95,7 +127,13 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
       {!isPage && (
         <Link
           href={ROUTES.tripStop(tripId, stop.id)}
-          onClick={() => onCloseDrawer?.()}
+          onClick={(event) => {
+            if (hasUnsavedChanges && !window.confirm("Discard your unsaved stop changes?")) {
+              event.preventDefault();
+              return;
+            }
+            onCloseDrawer?.();
+          }}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           title="Open full page with map"
           aria-label="Expand stop to full page"
@@ -156,8 +194,8 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]">
-        {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} />}
-        {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} />}
+        {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
+        {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
       </div>
     </>
   );
@@ -206,7 +244,6 @@ export function StopDetailView({ stop, tripId, layout, onCloseDrawer }: StopDeta
     );
   }
 
-  // Drawer: header + body only; shell is the parent aside (fixed height flex column — tab panel scrolls)
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-border p-5 flex items-start gap-3">
@@ -259,7 +296,55 @@ function TabButton({
   );
 }
 
-function StaysTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boolean }) {
+function InlineErrors({ errors }: { errors: string[] }) {
+  if (errors.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+      <ul className="space-y-1">
+        {errors.map((error) => (
+          <li key={error}>{error}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SecondaryFields({
+  open,
+  onOpenChange,
+  label = "More details",
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  label?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/40">
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <span>{label}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="space-y-3 border-t border-border/80 p-3">{children}</div>}
+    </div>
+  );
+}
+
+function StaysTab({
+  stop,
+  canEdit,
+  onDirtyChange,
+}: {
+  stop: StopSerialized;
+  canEdit: boolean;
+  onDirtyChange: (key: string, dirty: boolean) => void;
+}) {
   const [adding, setAdding] = useState(false);
 
   return (
@@ -268,9 +353,15 @@ function StaysTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boolean })
         <p className="text-sm text-muted-foreground text-center py-6">No stays yet.</p>
       )}
       {stop.stays.map((stay) => (
-        <StayCard key={stay.id} stay={stay} canEdit={canEdit} />
+        <StayCard key={stay.id} stay={stay} canEdit={canEdit} onDirtyChange={onDirtyChange} />
       ))}
-      {adding && <AddStayForm stopId={stop.id} onDone={() => setAdding(false)} />}
+      {adding && (
+        <AddStayForm
+          stopId={stop.id}
+          onDone={() => setAdding(false)}
+          onDirtyChange={onDirtyChange}
+        />
+      )}
       {canEdit && !adding && (
         <button
           type="button"
@@ -284,13 +375,33 @@ function StaysTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boolean })
   );
 }
 
-function ActivitiesTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boolean }) {
+function ActivitiesTab({
+  stop,
+  canEdit,
+  onDirtyChange,
+}: {
+  stop: StopSerialized;
+  canEdit: boolean;
+  onDirtyChange: (key: string, dirty: boolean) => void;
+}) {
   const [adding, setAdding] = useState(false);
+  const previousActivityDate =
+    stop.activities
+      .slice()
+      .reverse()
+      .find((activity) => activity.scheduledDate)?.scheduledDate ?? null;
 
   return (
     <div className="space-y-4">
-      <DayTimeline activities={stop.activities} canEdit={canEdit} />
-      {adding && <AddActivityForm stopId={stop.id} onDone={() => setAdding(false)} />}
+      <DayTimeline activities={stop.activities} canEdit={canEdit} onDirtyChange={onDirtyChange} />
+      {adding && (
+        <AddActivityForm
+          stopId={stop.id}
+          fallbackDate={previousActivityDate}
+          onDone={() => setAdding(false)}
+          onDirtyChange={onDirtyChange}
+        />
+      )}
       {canEdit && !adding && (
         <button
           type="button"
@@ -304,7 +415,15 @@ function ActivitiesTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boole
   );
 }
 
-function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void }) {
+function AddStayForm({
+  stopId,
+  onDone,
+  onDirtyChange,
+}: {
+  stopId: string;
+  onDone: () => void;
+  onDirtyChange: (key: string, dirty: boolean) => void;
+}) {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [roomSiteInput, setRoomSiteInput] = useState("");
@@ -317,8 +436,10 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
   const [leaveTime, setLeaveTime] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
   const fieldPrefix = `stay-${stopId}`;
   const surfaceId = `stop-stay:${stopId}`;
+  const dirtyKey = `add-stay:${stopId}`;
   const namePresence = useTripEditingPresenceField({
     surfaceId,
     surfaceLabel: "Add stay",
@@ -328,9 +449,47 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
     fieldLabel: "stay name",
   });
 
+  const normalizedSites = roomSiteNumbers.map((value) => value.trim().toLowerCase()).filter(Boolean);
+  const pendingSite = roomSiteInput.trim().toLowerCase();
+  const duplicatePendingSite = pendingSite.length > 0 && normalizedSites.includes(pendingSite);
+  const stayErrors: string[] = [];
+  const isDirty =
+    name.trim().length > 0 ||
+    address.trim().length > 0 ||
+    roomSiteInput.trim().length > 0 ||
+    roomSiteNumbers.length > 0 ||
+    arrivalTime.length > 0 ||
+    checkIn.length > 0 ||
+    checkInTime.length > 0 ||
+    checkOut.length > 0 ||
+    checkOutTime.length > 0 ||
+    leaveTime.length > 0 ||
+    totalPrice.length > 0;
+
+  if ((checkIn && !checkInTime) || (!checkIn && checkInTime)) {
+    stayErrors.push("Check-in date and time need to be set together.");
+  }
+  if ((checkOut && !checkOutTime) || (!checkOut && checkOutTime)) {
+    stayErrors.push("Check-out date and time need to be set together.");
+  }
+  if (checkIn && checkOut && checkOut < checkIn) {
+    stayErrors.push("Check-out cannot be before check-in.");
+  }
+  if (checkIn && checkOut && checkIn === checkOut && checkInTime && checkOutTime && deriveDurationMins(checkInTime, checkOutTime) == null) {
+    stayErrors.push("Check-out time cannot be before check-in time on the same day.");
+  }
+  if (duplicatePendingSite) {
+    stayErrors.push("Room or site numbers must be unique.");
+  }
+
+  useEffect(() => {
+    onDirtyChange(dirtyKey, isDirty);
+    return () => onDirtyChange(dirtyKey, false);
+  }, [dirtyKey, isDirty, onDirtyChange]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || stayErrors.length > 0) return;
     setLoading(true);
     try {
       await createStay(stopId, {
@@ -346,6 +505,7 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         totalPrice: totalPrice ? parseFloat(totalPrice) : undefined,
       });
       toast.success("Stay added");
+      onDirtyChange(dirtyKey, false);
       onDone();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not add this stay. Please try again.");
@@ -356,13 +516,19 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
 
   function addRoomSiteNumber() {
     const next = roomSiteInput.trim();
-    if (!next || roomSiteNumbers.includes(next)) return;
+    if (!next || duplicatePendingSite) return;
     setRoomSiteNumbers((current) => [...current, next]);
     setRoomSiteInput("");
   }
 
   function removeRoomSiteNumber(value: string) {
     setRoomSiteNumbers((current) => current.filter((item) => item !== value));
+  }
+
+  function handleCancel() {
+    if (isDirty && !window.confirm("Discard this new stay?")) return;
+    onDirtyChange(dirtyKey, false);
+    onDone();
   }
 
   return (
@@ -384,55 +550,6 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <EditingPresenceNotice editors={namePresence.fieldEditors} />
-      <input
-        id={`${fieldPrefix}-address`}
-        name="stay-address"
-        aria-label="Stay address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        placeholder="Address (optional)"
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <div className="rounded-lg border border-border bg-background/70 p-3">
-        <div className="flex items-center gap-2">
-          <input
-            id={`${fieldPrefix}-room-site`}
-            name="stay-room-site"
-            aria-label="Room or site number"
-            value={roomSiteInput}
-            onChange={(e) => setRoomSiteInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addRoomSiteNumber();
-              }
-            }}
-            placeholder="Add room or site number"
-            className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            type="button"
-            onClick={addRoomSiteNumber}
-            className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Add
-          </button>
-        </div>
-        {roomSiteNumbers.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {roomSiteNumbers.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => removeRoomSiteNumber(value)}
-                className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-destructive/35 hover:text-destructive"
-              >
-                {value} ×
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -466,20 +583,6 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Check-in time
-          </span>
-          <input
-            id={`${fieldPrefix}-check-in-time`}
-            name="stay-check-in-time"
-            aria-label="Check-in time"
-            type="time"
-            value={checkInTime}
-            onChange={(e) => setCheckInTime(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Check-in date
           </span>
           <input
@@ -492,8 +595,37 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-in time
+          </span>
+          <input
+            id={`${fieldPrefix}-check-in-time`}
+            name="stay-check-in-time"
+            aria-label="Check-in time"
+            type="time"
+            value={checkInTime}
+            onChange={(e) => setCheckInTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
       <div className="grid grid-cols-2 gap-2">
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Check-out date
+          </span>
+          <input
+            id={`${fieldPrefix}-check-out`}
+            name="stay-check-out"
+            aria-label="Check-out date"
+            type="date"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            min={checkIn || undefined}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Check-out time
@@ -508,44 +640,81 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
-        <label className="space-y-1">
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Check-out date
-          </span>
-          <input
-            id={`${fieldPrefix}-check-out`}
-            name="stay-check-out"
-            aria-label="Check-out date"
-            type="date"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            min={checkIn}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </label>
       </div>
-      <input
-        id={`${fieldPrefix}-total-price`}
-        name="stay-total-price"
-        aria-label="Stay total price"
-        type="number"
-        value={totalPrice}
-        onChange={(e) => setTotalPrice(e.target.value)}
-        placeholder="Total price (optional)"
-        step="0.01"
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
+      <InlineErrors errors={stayErrors} />
+      <SecondaryFields open={showMoreDetails} onOpenChange={setShowMoreDetails}>
+        <input
+          id={`${fieldPrefix}-address`}
+          name="stay-address"
+          aria-label="Stay address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Address (optional)"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <div className="rounded-lg border border-border bg-background/70 p-3">
+          <div className="flex items-center gap-2">
+            <input
+              id={`${fieldPrefix}-room-site`}
+              name="stay-room-site"
+              aria-label="Room or site number"
+              value={roomSiteInput}
+              onChange={(e) => setRoomSiteInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addRoomSiteNumber();
+                }
+              }}
+              placeholder="Add room or site number"
+              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="button"
+              onClick={addRoomSiteNumber}
+              className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              Add
+            </button>
+          </div>
+          {roomSiteNumbers.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {roomSiteNumbers.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => removeRoomSiteNumber(value)}
+                  className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-destructive/35 hover:text-destructive"
+                >
+                  {value} x
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <input
+          id={`${fieldPrefix}-total-price`}
+          name="stay-total-price"
+          aria-label="Stay total price"
+          type="number"
+          value={totalPrice}
+          onChange={(e) => setTotalPrice(e.target.value)}
+          placeholder="Total price (optional)"
+          step="0.01"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </SecondaryFields>
       <div className="flex gap-2 justify-end">
         <button
           type="button"
-          onClick={onDone}
+          onClick={handleCancel}
           className="text-sm px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={loading || !name.trim()}
+          disabled={loading || !name.trim() || stayErrors.length > 0}
           className="flex items-center gap-2 bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {loading && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -556,15 +725,27 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
   );
 }
 
-function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => void }) {
+function AddActivityForm({
+  stopId,
+  fallbackDate,
+  onDone,
+  onDirtyChange,
+}: {
+  stopId: string;
+  fallbackDate: string | null;
+  onDone: () => void;
+  onDirtyChange: (key: string, dirty: boolean) => void;
+}) {
   const [name, setName] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
   const fieldPrefix = `activity-${stopId}`;
   const surfaceId = `stop-activity:${stopId}`;
+  const dirtyKey = `add-activity:${stopId}`;
   const namePresence = useTripEditingPresenceField({
     surfaceId,
     surfaceLabel: "Add activity",
@@ -573,10 +754,30 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
     fieldKey: "name",
     fieldLabel: "activity name",
   });
+  const derivedDuration = deriveDurationMins(startTime || undefined, endTime || undefined);
+  const activityErrors: string[] = [];
+  const isDirty =
+    name.trim().length > 0 ||
+    scheduledDate.length > 0 ||
+    startTime.length > 0 ||
+    endTime.length > 0 ||
+    estimatedCost.length > 0;
+
+  if ((startTime && !endTime) || (!startTime && endTime)) {
+    activityErrors.push("Start and end time need to be set together.");
+  }
+  if (startTime && endTime && derivedDuration == null) {
+    activityErrors.push("End time cannot be before start time.");
+  }
+
+  useEffect(() => {
+    onDirtyChange(dirtyKey, isDirty);
+    return () => onDirtyChange(dirtyKey, false);
+  }, [dirtyKey, isDirty, onDirtyChange]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || activityErrors.length > 0) return;
     setLoading(true);
     try {
       await createActivity(stopId, {
@@ -584,15 +785,23 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
         scheduledDate: scheduledDate || undefined,
         startTime: startTime || undefined,
         endTime: endTime || undefined,
+        durationMins: derivedDuration ?? undefined,
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : undefined,
       });
       toast.success("Activity added");
+      onDirtyChange(dirtyKey, false);
       onDone();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not add this activity. Please try again.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleCancel() {
+    if (isDirty && !window.confirm("Discard this new activity?")) return;
+    onDirtyChange(dirtyKey, false);
+    onDone();
   }
 
   return (
@@ -614,7 +823,10 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <EditingPresenceNotice editors={namePresence.fieldEditors} />
-      <div className="grid grid-cols-2 gap-2">
+      <label className="space-y-1">
+        <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Date
+        </span>
         <input
           id={`${fieldPrefix}-scheduled-date`}
           name="activity-scheduled-date"
@@ -622,52 +834,87 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
           type="date"
           value={scheduledDate}
           onChange={(e) => setScheduledDate(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <input
-          id={`${fieldPrefix}-start-time`}
-          name="activity-start-time"
-          aria-label="Activity start time"
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        {!scheduledDate && fallbackDate && (
+          <p className="text-[11px] text-muted-foreground">
+            Uses the previous activity date by default.
+          </p>
+        )}
+      </label>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Start time
+          </span>
+          <input
+            id={`${fieldPrefix}-start-time`}
+            name="activity-start-time"
+            aria-label="Activity start time"
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            End time
+          </span>
+          <input
+            id={`${fieldPrefix}-end-time`}
+            name="activity-end-time"
+            aria-label="Activity end time"
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          id={`${fieldPrefix}-end-time`}
-          name="activity-end-time"
-          aria-label="Activity end time"
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <div />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Duration
+          </span>
+          <div className="flex min-h-10 items-center rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+            {derivedDuration != null ? `${derivedDuration} min` : "Calculated from start and end"}
+          </div>
+        </label>
+        <div className="space-y-1">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Save state
+          </span>
+          <div className="flex min-h-10 items-center rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+            {isDirty ? "Unsaved changes" : "Ready"}
+          </div>
+        </div>
       </div>
-      <input
-        id={`${fieldPrefix}-estimated-cost`}
-        name="activity-estimated-cost"
-        aria-label="Activity estimated cost"
-        type="number"
-        value={estimatedCost}
-        onChange={(e) => setEstimatedCost(e.target.value)}
-        placeholder="Estimated cost (optional)"
-        step="0.01"
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
+      <InlineErrors errors={activityErrors} />
+      <SecondaryFields open={showMoreDetails} onOpenChange={setShowMoreDetails}>
+        <input
+          id={`${fieldPrefix}-estimated-cost`}
+          name="activity-estimated-cost"
+          aria-label="Activity estimated cost"
+          type="number"
+          value={estimatedCost}
+          onChange={(e) => setEstimatedCost(e.target.value)}
+          placeholder="Estimated cost (optional)"
+          step="0.01"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </SecondaryFields>
       <div className="flex gap-2 justify-end">
         <button
           type="button"
-          onClick={onDone}
+          onClick={handleCancel}
           className="text-sm px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={loading || !name.trim()}
+          disabled={loading || !name.trim() || activityErrors.length > 0}
           className="flex items-center gap-2 bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {loading && <Loader2 className="w-3 h-3 animate-spin" />}

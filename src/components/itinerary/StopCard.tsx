@@ -68,7 +68,7 @@ export function StopCard({
           onClick={onSelect}
           ref={onButtonRef}
           aria-pressed={selected}
-          className="min-w-0 flex-1 text-left p-4 pr-14 md:pr-20 flex items-start gap-3"
+          className="min-w-0 flex-1 text-left p-4 pr-14 md:pr-32 flex items-start gap-3"
         >
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
             <span className="font-bold text-primary text-sm">{index + 1}</span>
@@ -102,7 +102,7 @@ export function StopCard({
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground/60 shrink-0 self-center group-hover:text-muted-foreground transition-colors md:hidden" />
         </button>
-        <div className="pointer-events-none absolute inset-y-0 right-2 z-[1] hidden w-auto items-center justify-end gap-1.5 pr-0 md:flex">
+        <div className="pointer-events-none absolute inset-y-0 right-4 z-[1] hidden w-auto items-center justify-end gap-1.5 md:flex">
           <button
             type="button"
             title="Copy link to stop page"

@@ -86,10 +86,20 @@ export const SUPPLY_STATUS_COLORS = {
 
 export const ACTIVITY_STATUS_COLORS = {
   IDEA: "status-idea",
+  OPTION: "status-idea",
   PLANNED: "status-planned",
   CONFIRMED: "status-confirmed",
   COMPLETED: "status-completed",
   CANCELLED: "status-cancelled",
+} as const;
+
+export const ACTIVITY_STATUS_LABELS = {
+  IDEA: "Idea",
+  OPTION: "Optional",
+  PLANNED: "Planned",
+  CONFIRMED: "Confirmed",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 } as const;
 
 export const STAY_STATUS_COLORS = {

@@ -50,3 +50,49 @@ export interface StopSerialized {
   stays: StaySerialized[];
   activities: ActivitySerialized[];
 }
+
+export type StopDetailTab = "stays" | "activities";
+
+export type DayPlanItemKind = "stop-arrival" | "stop-departure" | "stay" | "activity";
+
+export interface DayPlanItemBase {
+  id: string;
+  kind: DayPlanItemKind;
+  sourceId: string;
+  stopId: string;
+  stopName: string;
+  date: string;
+  title: string;
+  subtitle: string | null;
+  timeLabel: string | null;
+  href: string;
+  targetTab: StopDetailTab;
+}
+
+export interface DayPlanStopItem extends DayPlanItemBase {
+  kind: "stop-arrival" | "stop-departure";
+}
+
+export interface DayPlanStayItem extends DayPlanItemBase {
+  kind: "stay";
+  status: StayStatus;
+  phase: "single" | "start" | "middle" | "end";
+}
+
+export interface DayPlanActivityItem extends DayPlanItemBase {
+  kind: "activity";
+  status: ActivityStatus;
+}
+
+export type DayPlanItem = DayPlanStopItem | DayPlanStayItem | DayPlanActivityItem;
+
+export interface DayPlan {
+  date: string;
+  label: string;
+  items: DayPlanItem[];
+  counts: {
+    stops: number;
+    stays: number;
+    activities: number;
+  };
+}
