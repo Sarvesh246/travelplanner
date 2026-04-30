@@ -108,7 +108,7 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "rounded-2xl px-4 py-4 transition-colors 2xl:rounded-none 2xl:px-4 2xl:py-3",
+          "rounded-2xl px-3 py-2.5 transition-colors 2xl:rounded-none 2xl:px-4 2xl:py-2",
           selected && "bg-primary/5"
         )}
       >
@@ -144,7 +144,7 @@ export function SupplyRow({
               </div>
             </button>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
               <FieldBlock label="Needed">
                 <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
               </FieldBlock>
@@ -163,7 +163,7 @@ export function SupplyRow({
               </FieldBlock>
             </div>
 
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Bringer
@@ -172,7 +172,7 @@ export function SupplyRow({
                   <select
                     value={item.whoBringsId ?? ""}
                     onChange={(e) => updateBringer(e.target.value || null)}
-                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <option value="">Unassigned</option>
                     {members.map((member) => (
@@ -182,7 +182,7 @@ export function SupplyRow({
                     ))}
                   </select>
                 ) : item.whoBrings ? (
-                  <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-2 text-sm">
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-1.5 text-sm">
                     <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
                     <span className="truncate">{item.whoBrings.name}</span>
                   </div>
@@ -270,7 +270,7 @@ export function SupplyRow({
               <select
                 value={item.whoBringsId ?? ""}
                 onChange={(e) => updateBringer(e.target.value || null)}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Unassigned</option>
                 {members.map((member) => (
@@ -280,7 +280,7 @@ export function SupplyRow({
                 ))}
               </select>
             ) : item.whoBrings ? (
-              <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-2 text-sm">
+              <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-1.5 text-sm">
                 <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
                 <span className="truncate">{item.whoBrings.name}</span>
               </div>
@@ -398,7 +398,7 @@ function InlineActionButton({
       title={title}
       aria-label={label}
       className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors",
+        "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors",
         destructive
           ? "hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
           : "hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
@@ -429,7 +429,7 @@ function NumberInput({
       min={0}
       value={value}
       onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-      className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      className="w-full min-w-0 rounded-lg border border-input bg-background px-2 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     />
   );
 }

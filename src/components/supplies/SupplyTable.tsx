@@ -30,14 +30,14 @@ export function SupplyTable({
   const allSelected = items.length > 0 && selectedBulkIds.length === items.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {groups.map(([category, categoryItems]) => (
         <section key={category}>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 px-1">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1 px-1">
             {category}
           </h3>
 
-          <div className="hidden 2xl:grid 2xl:grid-cols-[auto_minmax(0,1.45fr)_4.5rem_4.5rem_6.5rem_minmax(10rem,1fr)_7.5rem] 2xl:gap-3 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden 2xl:grid 2xl:grid-cols-[auto_minmax(0,1.45fr)_4.5rem_4.5rem_6.5rem_minmax(10rem,1fr)_7.5rem] 2xl:gap-3 px-4 py-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
