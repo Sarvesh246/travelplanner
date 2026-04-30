@@ -54,11 +54,16 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const effectiveSelectedStopId =
-    selectedStopId && stops.some((s) => s.id === selectedStopId)
-      ? selectedStopId
-      : stops[0]?.id ?? null;
-  const selectedStop = stops.find((s) => s.id === effectiveSelectedStopId) ?? null;
+  const hasExplicitSelection =
+    selectedStopId != null && stops.some((s) => s.id === selectedStopId);
+  const mobileSelectedStop = hasExplicitSelection
+    ? stops.find((s) => s.id === selectedStopId) ?? null
+    : null;
+  const desktopSelectedStop =
+    mobileSelectedStop ?? stops[0] ?? null;
+  const listSelectedStopId = desktop
+    ? (desktopSelectedStop?.id ?? null)
+    : (mobileSelectedStop?.id ?? null);
 
   return (
     <>
@@ -122,13 +127,13 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
           <StopList
             tripId={tripId}
             stops={stops}
-              selectedStopId={effectiveSelectedStopId}
+            selectedStopId={listSelectedStopId}
             onSelectStop={(id) => setSelectedStopId(id)}
           />
           <aside className="hidden min-w-0 md:block md:self-start">
-            {selectedStop ? (
-              <div className="app-surface sticky top-0 max-h-[calc(100dvh-4.75rem)] overflow-hidden rounded-2xl border border-border/80">
-                <StopDetailView stop={selectedStop} tripId={tripId} layout="drawer" />
+            {desktopSelectedStop ? (
+              <div className="app-surface sticky top-0 flex h-[calc(100dvh-4.75rem)] max-h-[calc(100dvh-4.75rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-border/80">
+                <StopDetailView stop={desktopSelectedStop} tripId={tripId} layout="drawer" />
               </div>
             ) : (
               <div className="app-surface rounded-2xl border border-border/80 p-5 text-sm text-muted-foreground">
@@ -160,8 +165,8 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
       <ItineraryFloatingControls />
 
       <StopDetailPanel
-        stop={selectedStop}
-        open={!!selectedStop && !desktop}
+        stop={mobileSelectedStop}
+        open={!!mobileSelectedStop && !desktop}
         onOpenChange={(v) => !v && setSelectedStopId(null)}
       />
 

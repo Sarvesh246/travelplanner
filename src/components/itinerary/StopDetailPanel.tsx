@@ -86,7 +86,7 @@ export function StopDetailPanel({ stop, open, onOpenChange }: StopDetailPanelPro
         transition={{ type: "spring", stiffness: 300, damping: 32 }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="fixed right-0 top-0 bottom-0 w-full sm:w-[440px] bg-card border-l border-border shadow-2xl z-50 flex flex-col"
+        className="fixed right-0 top-0 bottom-0 w-full overflow-hidden bg-card border-l border-border shadow-2xl z-50 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:w-[440px]"
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <StopDetailView
