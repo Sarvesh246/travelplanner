@@ -37,7 +37,7 @@ export function SupplyTable({
             {category}
           </h3>
 
-          <div className="hidden xl:grid xl:grid-cols-[auto_minmax(11rem,1.25fr)_4.5rem_4.5rem_6rem_minmax(9.5rem,0.95fr)_7rem] xl:gap-3 px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="hidden lg:grid lg:grid-cols-[auto_minmax(13rem,1.25fr)_5rem_5rem_5.75rem_5rem_minmax(9rem,12.5rem)_auto] lg:gap-4 px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -51,6 +51,7 @@ export function SupplyTable({
             <span className="text-right">Needed</span>
             <span className="text-right">Owned</span>
             <span className="text-right">Est. cost</span>
+            <span className="text-right">Each</span>
             <span>Bringer</span>
             <span className="text-right">Actions</span>
           </div>
@@ -63,7 +64,11 @@ export function SupplyTable({
               className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
             >
               {categoryItems.map((item) => (
-                <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>
+                <motion.div
+                  key={`${item.id}:${item.quantityNeeded}:${item.quantityOwned}:${item.status}:${item.whoBringsId ?? ""}`}
+                  id={`supply-row-${item.id}`}
+                  variants={listItem}
+                >
                   <SupplyRow
                     tripId={tripId}
                     item={item}
