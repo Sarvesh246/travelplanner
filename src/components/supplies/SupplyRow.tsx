@@ -1,11 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { CheckCircle2, Link2, Trash2 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
-import { ROUTES, SUPPLY_STATUS_COLORS } from "@/lib/constants";
-import { supplyAnchorForId } from "@/lib/deep-link-hash";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { useTripContext } from "@/components/trip/TripContext";
 import {
   deleteSupplyItem,
@@ -13,9 +12,10 @@ import {
   restoreSupplyItem,
   updateSupplyItem,
 } from "@/actions/supplies";
-import { useState } from "react";
-import { toast } from "sonner";
+import { ROUTES, SUPPLY_STATUS_COLORS } from "@/lib/constants";
+import { supplyAnchorForId } from "@/lib/deep-link-hash";
 import { toastWithUndo } from "@/lib/undo-toast";
+import { cn, formatCurrency } from "@/lib/utils";
 import type { SupplyItemSerialized } from "./types";
 
 interface SupplyRowProps {
@@ -51,7 +51,9 @@ export function SupplyRow({
     } catch (err) {
       setNeededValue(item.quantityNeeded);
       setOwnedValue(item.quantityOwned);
-      toast.error(err instanceof Error ? err.message : "Could not update the quantity. Please try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Could not update the quantity. Please try again."
+      );
     }
   }
 
@@ -71,7 +73,9 @@ export function SupplyRow({
       await markBought(item.id);
       toast.success("Marked as covered");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not mark this item covered. Please try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Could not mark this item covered. Please try again."
+      );
     }
   }
 
@@ -110,7 +114,7 @@ export function SupplyRow({
       aria-label={`${item.name} bringer`}
       value={item.whoBringsId ?? ""}
       onChange={(e) => updateBringer(e.target.value || null)}
-      className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring xl:max-w-[12.5rem]"
+      className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring lg:max-w-[11.5rem] xl:max-w-[12rem]"
     >
       <option value="">Unassigned</option>
       {members.map((member) => (
@@ -120,7 +124,7 @@ export function SupplyRow({
       ))}
     </select>
   ) : item.whoBrings ? (
-    <div className="inline-flex h-10 max-w-[12.5rem] items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-3 text-sm">
+    <div className="inline-flex h-10 max-w-[12rem] items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-3 text-sm">
       <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
       <span className="truncate">{item.whoBrings.name}</span>
     </div>
@@ -138,7 +142,7 @@ export function SupplyRow({
           selected && "bg-primary/5"
         )}
       >
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(13rem,1.25fr)_repeat(2,5rem)_5.75rem_5rem_minmax(9rem,12.5rem)_auto] lg:items-center lg:gap-x-4">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_auto] lg:items-center lg:gap-x-4 xl:gap-x-5">
           <div className="row-span-2 flex items-start pt-1 lg:row-span-1 lg:pt-0">
             <input
               type="checkbox"
@@ -152,26 +156,31 @@ export function SupplyRow({
           <button
             type="button"
             onClick={onSelect}
-            className="min-w-0 text-left lg:self-center"
+            className="min-w-0 text-left lg:col-start-2 lg:self-center"
           >
             <div className="flex min-w-0 items-start gap-3">
               <span
-                  className={cn(
-                    "mt-1 h-2.5 w-2.5 shrink-0 rounded-full",
-                    SUPPLY_STATUS_COLORS[optimisticStatus] === "text-success"
-                      ? "[background-color:hsl(var(--success))]"
-                      : SUPPLY_STATUS_COLORS[optimisticStatus] === "text-warning"
-                        ? "[background-color:hsl(var(--warning))]"
-                        : SUPPLY_STATUS_COLORS[optimisticStatus] === "text-destructive"
-                          ? "[background-color:hsl(var(--destructive))]"
-                          : "bg-muted-foreground"
+                className={cn(
+                  "mt-1 h-2.5 w-2.5 shrink-0 rounded-full",
+                  SUPPLY_STATUS_COLORS[optimisticStatus] === "text-success"
+                    ? "[background-color:hsl(var(--success))]"
+                    : SUPPLY_STATUS_COLORS[optimisticStatus] === "text-warning"
+                      ? "[background-color:hsl(var(--warning))]"
+                      : SUPPLY_STATUS_COLORS[optimisticStatus] === "text-destructive"
+                        ? "[background-color:hsl(var(--destructive))]"
+                        : "bg-muted-foreground"
                 )}
               />
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold leading-5 text-foreground">
                   {item.name}
                 </p>
-                <p className={cn("mt-1 text-xs font-medium uppercase tracking-wide", SUPPLY_STATUS_COLORS[optimisticStatus])}>
+                <p
+                  className={cn(
+                    "mt-1 text-xs font-medium uppercase tracking-wide",
+                    SUPPLY_STATUS_COLORS[optimisticStatus]
+                  )}
+                >
                   {optimisticStatus.replace("_", " ")}
                 </p>
               </div>
@@ -179,7 +188,7 @@ export function SupplyRow({
           </button>
 
           {canEdit ? (
-            <div className="col-start-3 row-span-2 flex items-start justify-end gap-2 lg:row-span-1 lg:self-center">
+            <div className="col-start-3 row-span-2 flex items-start justify-end gap-2 lg:col-start-8 lg:row-span-1 lg:self-center lg:justify-self-end">
               <ActionButton
                 label={`Copy trip link for ${item.name}`}
                 title="Copy link"
@@ -187,7 +196,7 @@ export function SupplyRow({
               >
                 <Link2 className="h-4 w-4" />
               </ActionButton>
-              {optimisticStatus !== "COVERED" && (
+              {optimisticStatus !== "COVERED" ? (
                 <ActionButton
                   label={`Mark ${item.name} as covered`}
                   title="Mark covered"
@@ -195,7 +204,7 @@ export function SupplyRow({
                 >
                   <CheckCircle2 className="h-4 w-4" />
                 </ActionButton>
-              )}
+              ) : null}
               <ActionButton
                 label={`Delete ${item.name}`}
                 title="Delete item"
@@ -208,35 +217,39 @@ export function SupplyRow({
           ) : null}
 
           <div className="col-start-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-[5rem_5rem_5.75rem_5rem] sm:justify-start sm:gap-x-4 lg:contents">
-            <MetricField label="Needed">
+            <MetricField label="Needed" className="lg:col-start-3">
               <NumberInput
                 key={`needed:${item.id}:${item.quantityNeeded}`}
                 ariaLabel={`${item.name} quantity needed`}
                 value={neededValue}
                 onValueChange={setNeededValue}
-                  onCommit={(value) => updateQty("quantityNeeded", value)}
-                  canEdit={canEdit}
-                />
-              </MetricField>
-              <MetricField label="Owned">
+                onCommit={(value) => updateQty("quantityNeeded", value)}
+                canEdit={canEdit}
+              />
+            </MetricField>
+            <MetricField label="Owned" className="lg:col-start-4">
               <NumberInput
                 key={`owned:${item.id}:${item.quantityOwned}`}
                 ariaLabel={`${item.name} quantity owned`}
                 value={ownedValue}
                 onValueChange={setOwnedValue}
-                  onCommit={(value) => updateQty("quantityOwned", value)}
-                  canEdit={canEdit}
-                />
-              </MetricField>
-            <MetricField label="Est. cost">
-              <ValuePill>{totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}</ValuePill>
+                onCommit={(value) => updateQty("quantityOwned", value)}
+                canEdit={canEdit}
+              />
             </MetricField>
-            <MetricField label="Each">
-              <ValuePill>{item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}</ValuePill>
+            <MetricField label="Est. cost" className="lg:col-start-5">
+              <ValuePill>
+                {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
+              </ValuePill>
+            </MetricField>
+            <MetricField label="Each" className="lg:col-start-6">
+              <ValuePill>
+                {item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}
+              </ValuePill>
             </MetricField>
           </div>
 
-          <div className="col-start-2 min-w-0 lg:col-start-auto">
+          <div className="col-start-2 min-w-0 lg:col-start-7">
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground lg:hidden">
               Bringer
             </div>
@@ -267,12 +280,14 @@ function computeStatus(needed: number, owned: number) {
 function MetricField({
   label,
   children,
+  className,
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="min-w-0">
+    <div className={cn("min-w-0", className)}>
       <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
