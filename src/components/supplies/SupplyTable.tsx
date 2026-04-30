@@ -37,7 +37,7 @@ export function SupplyTable({
             {category}
           </h3>
 
-          <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden md:grid grid-cols-[auto_minmax(0,1fr)_5rem_5rem_7rem_9rem_9rem] gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -48,11 +48,11 @@ export function SupplyTable({
               />
             </label>
             <span>Item</span>
-            <span className="w-20 text-right">Needed</span>
-            <span className="w-20 text-right">Owned</span>
-            <span className="w-24 text-right">Est. cost</span>
-            <span className="w-36">Bringer</span>
-            <span className="w-6" />
+            <span className="text-right">Needed</span>
+            <span className="text-right">Owned</span>
+            <span className="text-right">Est. cost</span>
+            <span>Bringer</span>
+            <span className="text-right">Actions</span>
           </div>
 
           <div className="overflow-x-auto rounded-2xl [-webkit-overflow-scrolling:touch]">
@@ -61,7 +61,7 @@ export function SupplyTable({
                 variants={staggerContainer}
                 initial="initial"
                 animate="animate"
-                className="app-surface divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 shadow-sm"
+                className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
               >
             {categoryItems.map((item) => (
               <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>

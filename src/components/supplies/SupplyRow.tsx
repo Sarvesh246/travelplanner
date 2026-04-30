@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Trash2, CheckCircle2, Link2 } from "lucide-react";
+import { CheckCircle2, Link2, MoreHorizontal, Trash2 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { SUPPLY_STATUS_COLORS, ROUTES } from "@/lib/constants";
+import { ROUTES, SUPPLY_STATUS_COLORS } from "@/lib/constants";
 import { supplyAnchorForId } from "@/lib/deep-link-hash";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useTripContext } from "@/components/trip/TripContext";
 import {
-  updateSupplyItem,
   deleteSupplyItem,
   markBought,
   restoreSupplyItem,
+  updateSupplyItem,
 } from "@/actions/supplies";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undo-toast";
@@ -40,6 +40,8 @@ export function SupplyRow({
   const { members, canEdit } = useTripContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const totalEstimatedCost =
+    item.estimatedCost !== null ? item.estimatedCost * item.quantityNeeded : null;
 
   async function updateQty(field: "quantityNeeded" | "quantityOwned", value: number) {
     try {
@@ -76,9 +78,11 @@ export function SupplyRow({
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       await navigator.clipboard.writeText(
-        `${origin}${ROUTES.tripSupplies(tripId)}#${supplyAnchorForId(item.id)}`,
+        `${origin}${ROUTES.tripSupplies(tripId)}#${supplyAnchorForId(item.id)}`
       );
-      toast.success("Link copied", { description: "Anyone with trip access can open this item after signing in." });
+      toast.success("Link copied", {
+        description: "Anyone with trip access can open this item after signing in.",
+      });
     } catch {
       toast.error("Could not copy link");
     }
@@ -104,7 +108,8 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "relative group px-4 py-3 md:grid md:grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 items-center flex flex-col md:flex-row",
+          "group px-4 py-3 md:grid md:grid-cols-[auto_minmax(0,1fr)_5rem_5rem_7rem_9rem_9rem] md:items-center md:gap-4",
+          "flex flex-col gap-3",
           selected && "bg-primary/5"
         )}
       >
@@ -117,29 +122,39 @@ export function SupplyRow({
             className="h-4 w-4 rounded border-input"
           />
         </div>
-        <div className="min-w-0 flex items-center gap-3 flex-1 w-full">
-          <span className={cn("w-2 h-2 rounded-full shrink-0", SUPPLY_STATUS_COLORS[item.status] === "text-success" ? "[background-color:hsl(var(--success))]" : SUPPLY_STATUS_COLORS[item.status] === "text-warning" ? "[background-color:hsl(var(--warning))]" : SUPPLY_STATUS_COLORS[item.status] === "text-destructive" ? "[background-color:hsl(var(--destructive))]" : "bg-muted-foreground")} />
-          <button
-            type="button"
-            onClick={onSelect}
-            className="min-w-0 text-left"
-          >
-            <p className="font-medium text-sm truncate">{item.name}</p>
-            <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>{item.status.replace("_", " ")}</p>
+
+        <div className="min-w-0 flex items-center gap-3">
+          <span
+            className={cn(
+              "h-2 w-2 shrink-0 rounded-full",
+              SUPPLY_STATUS_COLORS[item.status] === "text-success"
+                ? "[background-color:hsl(var(--success))]"
+                : SUPPLY_STATUS_COLORS[item.status] === "text-warning"
+                  ? "[background-color:hsl(var(--warning))]"
+                  : SUPPLY_STATUS_COLORS[item.status] === "text-destructive"
+                    ? "[background-color:hsl(var(--destructive))]"
+                    : "bg-muted-foreground"
+            )}
+          />
+          <button type="button" onClick={onSelect} className="min-w-0 text-left">
+            <p className="truncate text-sm font-medium">{item.name}</p>
+            <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>
+              {item.status.replace("_", " ")}
+            </p>
           </button>
         </div>
 
-        <div className="w-20 hidden md:block text-right">
+        <div className="hidden w-20 md:block text-right">
           <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
         </div>
-        <div className="w-20 hidden md:block text-right">
+        <div className="hidden w-20 md:block text-right">
           <NumberInput value={item.quantityOwned} onChange={(v) => updateQty("quantityOwned", v)} canEdit={canEdit} />
         </div>
-        <div className="w-24 hidden md:block text-right text-sm text-muted-foreground">
-          {item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}
+        <div className="hidden w-28 md:block text-right text-sm text-muted-foreground">
+          {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
         </div>
 
-        <div className="w-36 hidden md:block">
+        <div className="hidden w-36 md:block">
           {canEdit ? (
             <select
               value={item.whoBringsId ?? ""}
@@ -147,95 +162,109 @@ export function SupplyRow({
               className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Unassigned</option>
-              {members.map((m) => (
-                <option key={m.userId} value={m.userId}>{m.user.name}</option>
+              {members.map((member) => (
+                <option key={member.userId} value={member.userId}>
+                  {member.user.name}
+                </option>
               ))}
             </select>
           ) : item.whoBrings ? (
             <div className="flex items-center gap-1.5">
               <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
-              <span className="text-xs truncate">{item.whoBrings.name}</span>
+              <span className="truncate text-xs">{item.whoBrings.name}</span>
             </div>
           ) : (
             <span className="text-xs text-muted-foreground">Unassigned</span>
           )}
         </div>
 
-        <div className="md:w-6 w-full flex md:justify-end justify-between md:mt-0 mt-2">
-          <div className="md:hidden flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span>{item.quantityOwned}/{item.quantityNeeded} on hand</span>
-            {item.estimatedCost !== null && <span>{formatCurrency(item.estimatedCost, currency)}</span>}
+        <div className="flex w-full items-center justify-between gap-3 md:w-36 md:justify-end">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground md:hidden">
+            <span>
+              {item.quantityOwned}/{item.quantityNeeded} on hand
+            </span>
+            {totalEstimatedCost !== null && <span>{formatCurrency(totalEstimatedCost, currency)}</span>}
             {item.whoBrings && <span>Brings: {item.whoBrings.name}</span>}
           </div>
-          {canEdit && (
-            <div className="relative z-[6]">
-              <button
-                type="button"
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                aria-label="Item options"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-popover border border-border rounded-xl shadow-lg py-1 z-20">
-                    <button
-                      type="button"
-                      onClick={(e) => void copySupplyDeepLink(e)}
-                      className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors"
-                    >
-                      <Link2 className="w-3.5 h-3.5 shrink-0" /> Copy trip link
-                    </button>
-                    {item.status !== "COVERED" && (
-                      <button onClick={handleMarkBought} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-muted transition-colors">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Mark covered
-                      </button>
-                    )}
-                    <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
 
-        {canEdit ? (
-          <div className="pointer-events-none absolute right-12 top-1/2 z-[5] hidden -translate-y-1/2 items-center gap-1 md:flex md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
-            <button
-              type="button"
-              title="Copy link"
-              aria-label={`Copy trip link for ${item.name}`}
-              className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
-              onClick={(e) => void copySupplyDeepLink(e)}
-            >
-              <Link2 className="h-4 w-4" />
-            </button>
-            {item.status !== "COVERED" && (
-              <button
-                type="button"
-                title="Mark covered"
-                aria-label={`Mark ${item.name} as covered`}
-                className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-success/35 hover:bg-success/10 hover:text-success"
-                onClick={() => void handleMarkBought()}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-              </button>
-            )}
-            <button
-              type="button"
-              title="Delete item"
-              aria-label={`Delete ${item.name}`}
-              className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        ) : null}
+          {canEdit ? (
+            <div className="flex items-center gap-1 md:ml-auto">
+              <div className="hidden md:flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+                <button
+                  type="button"
+                  title="Copy link"
+                  aria-label={`Copy trip link for ${item.name}`}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+                  onClick={(e) => void copySupplyDeepLink(e)}
+                >
+                  <Link2 className="h-4 w-4" />
+                </button>
+                {item.status !== "COVERED" && (
+                  <button
+                    type="button"
+                    title="Mark covered"
+                    aria-label={`Mark ${item.name} as covered`}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-success/35 hover:bg-success/10 hover:text-success"
+                    onClick={() => void handleMarkBought()}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  title="Delete item"
+                  aria-label={`Delete ${item.name}`}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="relative z-[6]">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
+                  aria-label="Item options"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-xl border border-border bg-popover py-1 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={(e) => void copySupplyDeepLink(e)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
+                      >
+                        <Link2 className="h-3.5 w-3.5 shrink-0" /> Copy trip link
+                      </button>
+                      {item.status !== "COVERED" && (
+                        <button
+                          onClick={handleMarkBought}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Mark covered
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setConfirmDelete(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <ConfirmDialog
@@ -250,17 +279,26 @@ export function SupplyRow({
   );
 }
 
-function NumberInput({ value, onChange, canEdit }: { value: number; onChange: (v: number) => void; canEdit: boolean }) {
+function NumberInput({
+  value,
+  onChange,
+  canEdit,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  canEdit: boolean;
+}) {
   if (!canEdit) {
     return <span className="text-sm">{value}</span>;
   }
+
   return (
     <input
       type="number"
       min={0}
       value={value}
       onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-      className="w-16 rounded-lg border border-input bg-background px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-ring"
+      className="w-16 rounded-lg border border-input bg-background px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     />
   );
 }

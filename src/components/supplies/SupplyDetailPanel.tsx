@@ -20,6 +20,9 @@ export function SupplyDetailPanel({
     );
   }
 
+  const totalEstimatedCost =
+    item.estimatedCost !== null ? item.estimatedCost * item.quantityNeeded : null;
+
   return (
     <div className="app-surface rounded-2xl border border-border/80 p-5">
       <h3 className="text-base font-semibold">{item.name}</h3>
@@ -41,9 +44,15 @@ export function SupplyDetailPanel({
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Estimated cost</span>
           <span className="font-medium">
-            {item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}
+            {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
           </span>
         </div>
+        {item.estimatedCost !== null && item.quantityNeeded > 0 ? (
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Each</span>
+            <span>{formatCurrency(item.estimatedCost, currency)}</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5 border-t border-border/70 pt-4">
@@ -73,4 +82,3 @@ export function SupplyDetailPanel({
     </div>
   );
 }
-
