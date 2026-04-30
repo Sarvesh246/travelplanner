@@ -108,162 +108,245 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "group px-4 py-3 md:grid md:grid-cols-[auto_minmax(0,1fr)_5rem_5rem_7rem_9rem_9rem] md:items-center md:gap-4",
-          "flex flex-col gap-3",
+          "rounded-2xl px-4 py-4 transition-colors xl:rounded-none xl:px-4 xl:py-3",
           selected && "bg-primary/5"
         )}
       >
-        <div className="hidden md:block">
+        <div className="flex items-start gap-3 xl:hidden">
           <input
             type="checkbox"
             checked={bulkSelected}
             onChange={() => onToggleBulk?.()}
             aria-label={`Select ${item.name}`}
-            className="h-4 w-4 rounded border-input"
+            className="mt-1 h-4 w-4 shrink-0 rounded border-input"
           />
-        </div>
+          <div className="min-w-0 flex-1">
+            <button type="button" onClick={onSelect} className="min-w-0 text-left">
+              <div className="flex items-start gap-2">
+                <span
+                  className={cn(
+                    "mt-1 h-2.5 w-2.5 shrink-0 rounded-full",
+                    SUPPLY_STATUS_COLORS[item.status] === "text-success"
+                      ? "[background-color:hsl(var(--success))]"
+                      : SUPPLY_STATUS_COLORS[item.status] === "text-warning"
+                        ? "[background-color:hsl(var(--warning))]"
+                        : SUPPLY_STATUS_COLORS[item.status] === "text-destructive"
+                          ? "[background-color:hsl(var(--destructive))]"
+                          : "bg-muted-foreground"
+                  )}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{item.name}</p>
+                  <p className={cn("mt-0.5 text-xs", SUPPLY_STATUS_COLORS[item.status])}>
+                    {item.status.replace("_", " ")}
+                  </p>
+                </div>
+              </div>
+            </button>
 
-        <div className="min-w-0 flex items-center gap-3">
-          <span
-            className={cn(
-              "h-2 w-2 shrink-0 rounded-full",
-              SUPPLY_STATUS_COLORS[item.status] === "text-success"
-                ? "[background-color:hsl(var(--success))]"
-                : SUPPLY_STATUS_COLORS[item.status] === "text-warning"
-                  ? "[background-color:hsl(var(--warning))]"
-                  : SUPPLY_STATUS_COLORS[item.status] === "text-destructive"
-                    ? "[background-color:hsl(var(--destructive))]"
-                    : "bg-muted-foreground"
-            )}
-          />
-          <button type="button" onClick={onSelect} className="min-w-0 text-left">
-            <p className="truncate text-sm font-medium">{item.name}</p>
-            <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>
-              {item.status.replace("_", " ")}
-            </p>
-          </button>
-        </div>
-
-        <div className="hidden w-20 md:block text-right">
-          <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
-        </div>
-        <div className="hidden w-20 md:block text-right">
-          <NumberInput value={item.quantityOwned} onChange={(v) => updateQty("quantityOwned", v)} canEdit={canEdit} />
-        </div>
-        <div className="hidden w-28 md:block text-right text-sm text-muted-foreground">
-          {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
-        </div>
-
-        <div className="hidden w-36 md:block">
-          {canEdit ? (
-            <select
-              value={item.whoBringsId ?? ""}
-              onChange={(e) => updateBringer(e.target.value || null)}
-              className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Unassigned</option>
-              {members.map((member) => (
-                <option key={member.userId} value={member.userId}>
-                  {member.user.name}
-                </option>
-              ))}
-            </select>
-          ) : item.whoBrings ? (
-            <div className="flex items-center gap-1.5">
-              <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
-              <span className="truncate text-xs">{item.whoBrings.name}</span>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <FieldBlock label="Needed">
+                <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
+              </FieldBlock>
+              <FieldBlock label="Owned">
+                <NumberInput value={item.quantityOwned} onChange={(v) => updateQty("quantityOwned", v)} canEdit={canEdit} />
+              </FieldBlock>
+              <FieldBlock label="Est. cost">
+                <span className="text-sm font-medium">
+                  {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
+                </span>
+              </FieldBlock>
+              <FieldBlock label="Each">
+                <span className="text-sm font-medium">
+                  {item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}
+                </span>
+              </FieldBlock>
             </div>
-          ) : (
-            <span className="text-xs text-muted-foreground">Unassigned</span>
-          )}
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Bringer
+                </div>
+                {canEdit ? (
+                  <select
+                    value={item.whoBringsId ?? ""}
+                    onChange={(e) => updateBringer(e.target.value || null)}
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Unassigned</option>
+                    {members.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {member.user.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : item.whoBrings ? (
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-2 text-sm">
+                    <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
+                    <span className="truncate">{item.whoBrings.name}</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Unassigned</p>
+                )}
+              </div>
+
+              {canEdit ? (
+                <div className="flex items-center justify-end gap-2">
+                  <InlineActionButton
+                    label={`Copy trip link for ${item.name}`}
+                    title="Copy link"
+                    onClick={(e) => void copySupplyDeepLink(e)}
+                  >
+                    <Link2 className="h-4 w-4" />
+                  </InlineActionButton>
+                  {item.status !== "COVERED" && (
+                    <InlineActionButton
+                      label={`Mark ${item.name} as covered`}
+                      title="Mark covered"
+                      onClick={() => void handleMarkBought()}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </InlineActionButton>
+                  )}
+                  <InlineActionButton
+                    label={`Delete ${item.name}`}
+                    title="Delete item"
+                    destructive
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </InlineActionButton>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-3 md:w-36 md:justify-end">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground md:hidden">
-            <span>
-              {item.quantityOwned}/{item.quantityNeeded} on hand
-            </span>
-            {totalEstimatedCost !== null && <span>{formatCurrency(totalEstimatedCost, currency)}</span>}
-            {item.whoBrings && <span>Brings: {item.whoBrings.name}</span>}
+        <div className="hidden xl:grid xl:grid-cols-[auto_minmax(0,1.4fr)_5rem_5rem_7rem_minmax(11rem,1fr)_8rem] xl:items-center xl:gap-4">
+          <div className="flex justify-center">
+            <input
+              type="checkbox"
+              checked={bulkSelected}
+              onChange={() => onToggleBulk?.()}
+              aria-label={`Select ${item.name}`}
+              className="h-4 w-4 rounded border-input"
+            />
           </div>
 
-          {canEdit ? (
-            <div className="flex items-center gap-1 md:ml-auto">
-              <div className="hidden md:flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
-                <button
-                  type="button"
-                  title="Copy link"
-                  aria-label={`Copy trip link for ${item.name}`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
-                  onClick={(e) => void copySupplyDeepLink(e)}
-                >
-                  <Link2 className="h-4 w-4" />
-                </button>
-                {item.status !== "COVERED" && (
-                  <button
-                    type="button"
-                    title="Mark covered"
-                    aria-label={`Mark ${item.name} as covered`}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-success/35 hover:bg-success/10 hover:text-success"
-                    onClick={() => void handleMarkBought()}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  title="Delete item"
-                  aria-label={`Delete ${item.name}`}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+          <div className="min-w-0 flex items-center gap-3">
+            <span
+              className={cn(
+                "h-2 w-2 shrink-0 rounded-full",
+                SUPPLY_STATUS_COLORS[item.status] === "text-success"
+                  ? "[background-color:hsl(var(--success))]"
+                  : SUPPLY_STATUS_COLORS[item.status] === "text-warning"
+                    ? "[background-color:hsl(var(--warning))]"
+                    : SUPPLY_STATUS_COLORS[item.status] === "text-destructive"
+                      ? "[background-color:hsl(var(--destructive))]"
+                      : "bg-muted-foreground"
+              )}
+            />
+            <button type="button" onClick={onSelect} className="min-w-0 text-left">
+              <p className="truncate text-sm font-medium">{item.name}</p>
+              <p className={cn("text-xs", SUPPLY_STATUS_COLORS[item.status])}>
+                {item.status.replace("_", " ")}
+              </p>
+            </button>
+          </div>
 
-              <div className="relative z-[6]">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
-                  aria-label="Item options"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-                {menuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-xl border border-border bg-popover py-1 shadow-lg">
+          <div className="text-right">
+            <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
+          </div>
+          <div className="text-right">
+            <NumberInput value={item.quantityOwned} onChange={(v) => updateQty("quantityOwned", v)} canEdit={canEdit} />
+          </div>
+          <div className="text-right text-sm text-muted-foreground">
+            {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
+          </div>
+
+          <div className="min-w-0">
+            {canEdit ? (
+              <select
+                value={item.whoBringsId ?? ""}
+                onChange={(e) => updateBringer(e.target.value || null)}
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Unassigned</option>
+                {members.map((member) => (
+                  <option key={member.userId} value={member.userId}>
+                    {member.user.name}
+                  </option>
+                ))}
+              </select>
+            ) : item.whoBrings ? (
+              <div className="inline-flex items-center gap-2 rounded-lg bg-muted/45 px-2.5 py-2 text-sm">
+                <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
+                <span className="truncate">{item.whoBrings.name}</span>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">Unassigned</span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2">
+            <InlineActionButton
+              label={`Copy trip link for ${item.name}`}
+              title="Copy link"
+              onClick={(e) => void copySupplyDeepLink(e)}
+            >
+              <Link2 className="h-4 w-4" />
+            </InlineActionButton>
+            {item.status !== "COVERED" && (
+              <InlineActionButton
+                label={`Mark ${item.name} as covered`}
+                title="Mark covered"
+                onClick={() => void handleMarkBought()}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+              </InlineActionButton>
+            )}
+            <div className="relative z-[6]">
+              <InlineActionButton
+                label="More options"
+                title="More options"
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </InlineActionButton>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-full z-20 mt-2 w-44 rounded-xl border border-border bg-popover py-1 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={(e) => void copySupplyDeepLink(e)}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
+                    >
+                      <Link2 className="h-3.5 w-3.5 shrink-0" /> Copy trip link
+                    </button>
+                    {item.status !== "COVERED" && (
                       <button
-                        type="button"
-                        onClick={(e) => void copySupplyDeepLink(e)}
+                        onClick={handleMarkBought}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
                       >
-                        <Link2 className="h-3.5 w-3.5 shrink-0" /> Copy trip link
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Mark covered
                       </button>
-                      {item.status !== "COVERED" && (
-                        <button
-                          onClick={handleMarkBought}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted"
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Mark covered
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setConfirmDelete(true);
-                        }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-destructive transition-colors hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setConfirmDelete(true);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-destructive transition-colors hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          ) : null}
+          </div>
         </div>
       </div>
 
@@ -276,6 +359,54 @@ export function SupplyRow({
         onConfirm={handleDelete}
       />
     </>
+  );
+}
+
+function FieldBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function InlineActionButton({
+  label,
+  title,
+  destructive = false,
+  onClick,
+  children,
+}: {
+  label: string;
+  title: string;
+  destructive?: boolean;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={label}
+      className={cn(
+        "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors",
+        destructive
+          ? "hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
+          : "hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+      )}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -298,7 +429,7 @@ function NumberInput({
       min={0}
       value={value}
       onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-      className="w-16 rounded-lg border border-input bg-background px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      className="w-full min-w-0 rounded-xl border border-input bg-background px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     />
   );
 }

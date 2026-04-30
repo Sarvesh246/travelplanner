@@ -35,9 +35,16 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
 
   const [mine, setMine] = useState(() => readTripUiPrefs(tripId).supplyMine ?? false);
   const [statusSel, setStatusSel] = useState<string>("");
+  const [categorySel, setCategorySel] = useState<string>("");
   useEffect(() => {
     writeTripUiPrefs(tripId, { supplyMine: mine });
   }, [tripId, mine]);
+
+  const categoryOptions = useMemo(() => {
+    return Array.from(
+      new Set(items.map((item) => item.category?.trim()).filter((value): value is string => Boolean(value)))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [items]);
 
   const filteredItems = useMemo(() => {
     let list = items;
@@ -47,8 +54,9 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
       );
     }
     if (statusSel) list = list.filter((i) => i.status === statusSel);
+    if (categorySel) list = list.filter((i) => (i.category ?? "Other") === categorySel);
     return list;
-  }, [currentUser.id, items, mine, statusSel]);
+  }, [categorySel, currentUser.id, items, mine, statusSel]);
 
   const stats = useMemo(() => {
     const total = filteredItems.length;
@@ -204,6 +212,22 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
                   {["NEEDED", "PARTIALLY_COVERED", "COVERED", "NOT_NEEDED"].map((s) => (
                     <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
                   ))}
+                </select>
+              </label>
+              <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                Category
+                <select
+                  value={categorySel}
+                  onChange={(e) => setCategorySel(e.target.value)}
+                  className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold normal-case"
+                >
+                  <option value="">All</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                  {!categoryOptions.includes("Other") && <option value="Other">Other</option>}
                 </select>
               </label>
             </div>

@@ -37,7 +37,7 @@ export function SupplyTable({
             {category}
           </h3>
 
-          <div className="hidden md:grid grid-cols-[auto_minmax(0,1fr)_5rem_5rem_7rem_9rem_9rem] gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden xl:grid xl:grid-cols-[auto_minmax(0,1.4fr)_5rem_5rem_7rem_minmax(11rem,1fr)_8rem] xl:gap-4 px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -55,14 +55,13 @@ export function SupplyTable({
             <span className="text-right">Actions</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl [-webkit-overflow-scrolling:touch]">
-            <div className="min-w-[640px]">
-              <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-                className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
-              >
+          <div className="rounded-2xl">
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+              className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
+            >
             {categoryItems.map((item) => (
               <motion.div key={item.id} id={`supply-row-${item.id}`} variants={listItem}>
                 <SupplyRow
@@ -76,8 +75,7 @@ export function SupplyTable({
                 />
               </motion.div>
             ))}
-              </motion.div>
-            </div>
+            </motion.div>
           </div>
         </section>
       ))}
