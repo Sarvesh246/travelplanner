@@ -217,7 +217,7 @@ export function SupplyRow({
           ) : null}
 
           <div className="col-start-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-[5rem_5rem_5.75rem_5rem] sm:justify-start sm:gap-x-4 lg:contents">
-            <MetricField label="Needed" className="lg:col-start-3 lg:self-start lg:pt-1">
+            <MetricField label="Needed" className="lg:col-start-3 lg:row-start-1 lg:self-start">
               <NumberInput
                 key={`needed:${item.id}:${item.quantityNeeded}`}
                 ariaLabel={`${item.name} quantity needed`}
@@ -227,7 +227,7 @@ export function SupplyRow({
                 canEdit={canEdit}
               />
             </MetricField>
-            <MetricField label="Owned" className="lg:col-start-4 lg:self-start lg:pt-1">
+            <MetricField label="Owned" className="lg:col-start-4 lg:row-start-1 lg:self-start">
               <NumberInput
                 key={`owned:${item.id}:${item.quantityOwned}`}
                 ariaLabel={`${item.name} quantity owned`}
@@ -237,19 +237,19 @@ export function SupplyRow({
                 canEdit={canEdit}
               />
             </MetricField>
-            <MetricField label="Est. cost" className="lg:col-start-5 lg:self-start lg:pt-1">
+            <MetricField label="Est. cost" className="lg:col-start-5 lg:row-start-1 lg:self-start">
               <ValuePill>
                 {totalEstimatedCost !== null ? formatCurrency(totalEstimatedCost, currency) : "—"}
               </ValuePill>
             </MetricField>
-            <MetricField label="Each" className="lg:col-start-6 lg:self-start lg:pt-1">
+            <MetricField label="Each" className="lg:col-start-6 lg:row-start-1 lg:self-start">
               <ValuePill>
                 {item.estimatedCost !== null ? formatCurrency(item.estimatedCost, currency) : "—"}
               </ValuePill>
             </MetricField>
           </div>
 
-          <div className="col-start-2 min-w-0 lg:col-start-7 lg:self-start lg:pt-6">
+          <div className="col-start-2 min-w-0 lg:col-start-7 lg:row-start-1 lg:self-start">
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground lg:hidden">
               Bringer
             </div>
