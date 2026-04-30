@@ -189,30 +189,63 @@ export function SupplyRow({
 
           {canEdit ? (
             <div className="col-start-3 row-span-2 flex items-start justify-end gap-2 lg:col-start-8 lg:row-span-1 lg:self-center lg:justify-self-end">
-              <ActionButton
-                label={`Copy trip link for ${item.name}`}
-                title="Copy link"
-                onClick={() => void copySupplyDeepLink()}
-              >
-                <Link2 className="h-4 w-4" />
-              </ActionButton>
-              {optimisticStatus !== "COVERED" ? (
+              <div className="hidden h-10 items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-2 lg:flex">
+                <span className="pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Actions
+                </span>
+                <div className="flex items-center gap-2">
+                  <ActionButton
+                    label={`Copy trip link for ${item.name}`}
+                    title="Copy link"
+                    onClick={() => void copySupplyDeepLink()}
+                  >
+                    <Link2 className="h-4 w-4" />
+                  </ActionButton>
+                  {optimisticStatus !== "COVERED" ? (
+                    <ActionButton
+                      label={`Mark ${item.name} as covered`}
+                      title="Mark covered"
+                      onClick={() => void handleMarkBought()}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </ActionButton>
+                  ) : null}
+                  <ActionButton
+                    label={`Delete ${item.name}`}
+                    title="Delete item"
+                    destructive
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </ActionButton>
+                </div>
+              </div>
+              <div className="flex items-start justify-end gap-2 lg:hidden">
                 <ActionButton
-                  label={`Mark ${item.name} as covered`}
-                  title="Mark covered"
-                  onClick={() => void handleMarkBought()}
+                  label={`Copy trip link for ${item.name}`}
+                  title="Copy link"
+                  onClick={() => void copySupplyDeepLink()}
                 >
-                  <CheckCircle2 className="h-4 w-4" />
+                  <Link2 className="h-4 w-4" />
                 </ActionButton>
-              ) : null}
-              <ActionButton
-                label={`Delete ${item.name}`}
-                title="Delete item"
-                destructive
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </ActionButton>
+                {optimisticStatus !== "COVERED" ? (
+                  <ActionButton
+                    label={`Mark ${item.name} as covered`}
+                    title="Mark covered"
+                    onClick={() => void handleMarkBought()}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </ActionButton>
+                ) : null}
+                <ActionButton
+                  label={`Delete ${item.name}`}
+                  title="Delete item"
+                  destructive
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </ActionButton>
+              </div>
             </div>
           ) : null}
 
@@ -249,7 +282,7 @@ export function SupplyRow({
             </MetricField>
           </div>
 
-          <div className="col-start-2 min-w-0 lg:col-start-7 lg:row-start-1 lg:self-start">
+          <div className="col-start-2 min-w-0 lg:col-start-7 lg:row-start-1 lg:self-start lg:pt-3">
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground lg:hidden">
               Bringer
             </div>

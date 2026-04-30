@@ -53,7 +53,7 @@ export function SupplyTable({
             <span className="text-right">Est. cost</span>
             <span className="text-right">Each</span>
             <span>Bringer</span>
-            <span className="text-right">Actions</span>
+            <span aria-hidden="true" />
           </div>
 
           <div className="rounded-2xl">
