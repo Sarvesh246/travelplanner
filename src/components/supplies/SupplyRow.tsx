@@ -144,7 +144,7 @@ export function SupplyRow({
               </div>
             </button>
 
-            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-[5.5rem_5.5rem_6.5rem_5rem] sm:justify-start sm:gap-x-4">
               <FieldBlock label="Needed">
                 <NumberInput value={item.quantityNeeded} onChange={(v) => updateQty("quantityNeeded", v)} canEdit={canEdit} />
               </FieldBlock>
@@ -163,8 +163,8 @@ export function SupplyRow({
               </FieldBlock>
             </div>
 
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0 flex-1">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1 sm:max-w-[24rem] lg:max-w-[22rem]">
                 <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Bringer
                 </div>
@@ -192,7 +192,7 @@ export function SupplyRow({
               </div>
 
               {canEdit ? (
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-end gap-1.5">
                   <InlineActionButton
                     label={`Copy trip link for ${item.name}`}
                     title="Copy link"
