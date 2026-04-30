@@ -21,12 +21,6 @@ interface StopCardProps {
   dragHandleProps?: DragHandle;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-[hsl(var(--secondary)/0.1)] text-[hsl(var(--secondary))] dark:bg-[hsl(var(--secondary)/0.15)]",
-  CONFIRMED: "bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] dark:bg-[hsl(var(--primary)/0.15)]",
-  CANCELLED: "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] dark:bg-[hsl(var(--destructive)/0.15)]",
-};
-
 export function StopCard({
   tripId,
   stop,
@@ -88,9 +82,6 @@ export function StopCard({
                   {stop.country}
                 </span>
               )}
-              <span className={cn("ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full", STATUS_STYLES[stop.status])}>
-                {stop.status}
-              </span>
             </div>
             {(stop.arrivalDate || stop.departureDate) && (
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">

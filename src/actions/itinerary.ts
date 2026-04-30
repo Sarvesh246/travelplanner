@@ -175,7 +175,21 @@ export async function reorderStops(tripId: string, orderedIds: string[]) {
 
 export async function createStay(
   stopId: string,
-  data: { name: string; address?: string; url?: string; checkIn?: string; checkOut?: string; pricePerNight?: number; totalPrice?: number; notes?: string }
+  data: {
+    name: string;
+    address?: string;
+    url?: string;
+    roomSiteNumbers?: string[];
+    arrivalTime?: string;
+    checkIn?: string;
+    checkInTime?: string;
+    checkOut?: string;
+    checkOutTime?: string;
+    leaveTime?: string;
+    pricePerNight?: number;
+    totalPrice?: number;
+    notes?: string;
+  }
 ) {
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
@@ -189,8 +203,13 @@ export async function createStay(
       name: data.name,
       address: data.address,
       url: data.url,
+      roomSiteNumbers: data.roomSiteNumbers ?? [],
+      arrivalTime: data.arrivalTime,
       checkIn: data.checkIn ? new Date(data.checkIn) : undefined,
+      checkInTime: data.checkInTime,
       checkOut: data.checkOut ? new Date(data.checkOut) : undefined,
+      checkOutTime: data.checkOutTime,
+      leaveTime: data.leaveTime,
       pricePerNight: data.pricePerNight,
       totalPrice: data.totalPrice,
       notes: data.notes,
@@ -214,7 +233,23 @@ export async function createStay(
 
 export async function updateStay(
   stayId: string,
-  data: Partial<{ name: string; address: string; url: string; checkIn: string; checkOut: string; pricePerNight: number; totalPrice: number; notes: string; status: string; confirmationNo: string }>
+  data: Partial<{
+    name: string;
+    address: string;
+    url: string;
+    roomSiteNumbers: string[];
+    arrivalTime: string;
+    checkIn: string;
+    checkInTime: string;
+    checkOut: string;
+    checkOutTime: string;
+    leaveTime: string;
+    pricePerNight: number;
+    totalPrice: number;
+    notes: string;
+    status: string;
+    confirmationNo: string;
+  }>
 ) {
   const user = await getAuthUser();
   const stay = await prisma.stay.findUnique({ where: { id: stayId }, include: { stop: true } });
@@ -227,8 +262,13 @@ export async function updateStay(
       ...(data.name && { name: data.name }),
       ...(data.address !== undefined && { address: data.address }),
       ...(data.url !== undefined && { url: data.url }),
+      ...(data.roomSiteNumbers !== undefined && { roomSiteNumbers: data.roomSiteNumbers }),
+      ...(data.arrivalTime !== undefined && { arrivalTime: data.arrivalTime }),
       ...(data.checkIn && { checkIn: new Date(data.checkIn) }),
+      ...(data.checkInTime !== undefined && { checkInTime: data.checkInTime }),
       ...(data.checkOut && { checkOut: new Date(data.checkOut) }),
+      ...(data.checkOutTime !== undefined && { checkOutTime: data.checkOutTime }),
+      ...(data.leaveTime !== undefined && { leaveTime: data.leaveTime }),
       ...(data.pricePerNight !== undefined && { pricePerNight: data.pricePerNight }),
       ...(data.totalPrice !== undefined && { totalPrice: data.totalPrice }),
       ...(data.notes !== undefined && { notes: data.notes }),
@@ -276,7 +316,16 @@ export async function deleteStay(stayId: string) {
 
 export async function createActivity(
   stopId: string,
-  data: { name: string; description?: string; scheduledDate?: string; scheduledTime?: string; durationMins?: number; estimatedCost?: number; url?: string }
+  data: {
+    name: string;
+    description?: string;
+    scheduledDate?: string;
+    startTime?: string;
+    endTime?: string;
+    durationMins?: number;
+    estimatedCost?: number;
+    url?: string;
+  }
 ) {
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
@@ -290,7 +339,8 @@ export async function createActivity(
       name: data.name,
       description: data.description,
       scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : undefined,
-      scheduledTime: data.scheduledTime,
+      startTime: data.startTime,
+      endTime: data.endTime,
       durationMins: data.durationMins,
       estimatedCost: data.estimatedCost,
       url: data.url,
@@ -314,7 +364,18 @@ export async function createActivity(
 
 export async function updateActivity(
   activityId: string,
-  data: Partial<{ name: string; description: string; scheduledDate: string; scheduledTime: string; durationMins: number; estimatedCost: number; actualCost: number; status: string; url: string }>
+  data: Partial<{
+    name: string;
+    description: string;
+    scheduledDate: string;
+    startTime: string;
+    endTime: string;
+    durationMins: number;
+    estimatedCost: number;
+    actualCost: number;
+    status: string;
+    url: string;
+  }>
 ) {
   const user = await getAuthUser();
   const activity = await prisma.activity.findUnique({ where: { id: activityId }, include: { stop: true } });
@@ -327,7 +388,8 @@ export async function updateActivity(
       ...(data.name && { name: data.name }),
       ...(data.description !== undefined && { description: data.description }),
       ...(data.scheduledDate && { scheduledDate: new Date(data.scheduledDate) }),
-      ...(data.scheduledTime !== undefined && { scheduledTime: data.scheduledTime }),
+      ...(data.startTime !== undefined && { startTime: data.startTime }),
+      ...(data.endTime !== undefined && { endTime: data.endTime }),
       ...(data.durationMins !== undefined && { durationMins: data.durationMins }),
       ...(data.estimatedCost !== undefined && { estimatedCost: data.estimatedCost }),
       ...(data.actualCost !== undefined && { actualCost: data.actualCost }),

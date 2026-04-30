@@ -305,8 +305,14 @@ function ActivitiesTab({ stop, canEdit }: { stop: StopSerialized; canEdit: boole
 function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void }) {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [roomSiteInput, setRoomSiteInput] = useState("");
+  const [roomSiteNumbers, setRoomSiteNumbers] = useState<string[]>([]);
+  const [arrivalTime, setArrivalTime] = useState("");
   const [checkIn, setCheckIn] = useState("");
+  const [checkInTime, setCheckInTime] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [checkOutTime, setCheckOutTime] = useState("");
+  const [leaveTime, setLeaveTime] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const fieldPrefix = `stay-${stopId}`;
@@ -328,8 +334,13 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
       await createStay(stopId, {
         name: name.trim(),
         address: address.trim() || undefined,
+        roomSiteNumbers,
+        arrivalTime: arrivalTime || undefined,
         checkIn: checkIn || undefined,
+        checkInTime: checkInTime || undefined,
         checkOut: checkOut || undefined,
+        checkOutTime: checkOutTime || undefined,
+        leaveTime: leaveTime || undefined,
         totalPrice: totalPrice ? parseFloat(totalPrice) : undefined,
       });
       toast.success("Stay added");
@@ -339,6 +350,17 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
     } finally {
       setLoading(false);
     }
+  }
+
+  function addRoomSiteNumber() {
+    const next = roomSiteInput.trim();
+    if (!next || roomSiteNumbers.includes(next)) return;
+    setRoomSiteNumbers((current) => [...current, next]);
+    setRoomSiteInput("");
+  }
+
+  function removeRoomSiteNumber(value: string) {
+    setRoomSiteNumbers((current) => current.filter((item) => item !== value));
   }
 
   return (
@@ -369,7 +391,56 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         placeholder="Address (optional)"
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
+      <div className="rounded-lg border border-border bg-background/70 p-3">
+        <div className="flex items-center gap-2">
+          <input
+            id={`${fieldPrefix}-room-site`}
+            name="stay-room-site"
+            aria-label="Room or site number"
+            value={roomSiteInput}
+            onChange={(e) => setRoomSiteInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addRoomSiteNumber();
+              }
+            }}
+            placeholder="Add room or site number"
+            className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            type="button"
+            onClick={addRoomSiteNumber}
+            className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Add
+          </button>
+        </div>
+        {roomSiteNumbers.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {roomSiteNumbers.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => removeRoomSiteNumber(value)}
+                className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-destructive/35 hover:text-destructive"
+              >
+                {value} ×
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-2">
+        <input
+          id={`${fieldPrefix}-arrival-time`}
+          name="stay-arrival-time"
+          aria-label="Arrival time"
+          type="time"
+          value={arrivalTime}
+          onChange={(e) => setArrivalTime(e.target.value)}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
         <input
           id={`${fieldPrefix}-check-in`}
           name="stay-check-in"
@@ -377,6 +448,17 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
           type="date"
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          id={`${fieldPrefix}-check-in-time`}
+          name="stay-check-in-time"
+          aria-label="Check-in time"
+          type="time"
+          value={checkInTime}
+          onChange={(e) => setCheckInTime(e.target.value)}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <input
@@ -387,6 +469,26 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
           min={checkIn}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          id={`${fieldPrefix}-check-out-time`}
+          name="stay-check-out-time"
+          aria-label="Check-out time"
+          type="time"
+          value={checkOutTime}
+          onChange={(e) => setCheckOutTime(e.target.value)}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <input
+          id={`${fieldPrefix}-leave-time`}
+          name="stay-leave-time"
+          aria-label="Leave time"
+          type="time"
+          value={leaveTime}
+          onChange={(e) => setLeaveTime(e.target.value)}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
@@ -425,7 +527,8 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
 function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => void }) {
   const [name, setName] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
   const [loading, setLoading] = useState(false);
   const fieldPrefix = `activity-${stopId}`;
@@ -447,7 +550,8 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
       await createActivity(stopId, {
         name: name.trim(),
         scheduledDate: scheduledDate || undefined,
-        scheduledTime: scheduledTime || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : undefined,
       });
       toast.success("Activity added");
@@ -489,14 +593,26 @@ function AddActivityForm({ stopId, onDone }: { stopId: string; onDone: () => voi
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <input
-          id={`${fieldPrefix}-scheduled-time`}
-          name="activity-scheduled-time"
-          aria-label="Activity time"
+          id={`${fieldPrefix}-start-time`}
+          name="activity-start-time"
+          aria-label="Activity start time"
           type="time"
-          value={scheduledTime}
-          onChange={(e) => setScheduledTime(e.target.value)}
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          id={`${fieldPrefix}-end-time`}
+          name="activity-end-time"
+          aria-label="Activity end time"
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <div />
       </div>
       <input
         id={`${fieldPrefix}-estimated-cost`}

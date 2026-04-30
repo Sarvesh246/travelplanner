@@ -50,8 +50,8 @@ function groupByDay(activities: ActivitySerialized[]): [string, ActivitySerializ
   });
   for (const [, items] of entries) {
     items.sort((a, b) => {
-      const ta = a.scheduledTime ?? "99:99";
-      const tb = b.scheduledTime ?? "99:99";
+      const ta = a.startTime ?? "99:99";
+      const tb = b.startTime ?? "99:99";
       return ta.localeCompare(tb);
     });
   }

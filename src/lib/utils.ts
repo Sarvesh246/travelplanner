@@ -150,6 +150,28 @@ export function formatDateRange(
   return `${formatDate(s)} – ${formatDate(e)}`;
 }
 
+export function formatTimeValue(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return value;
+  const [, hours, minutes] = match;
+  const date = new Date(2000, 0, 1, Number(hours), Number(minutes));
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function formatTimeRange(
+  start: string | null | undefined,
+  end: string | null | undefined
+): string | null {
+  const formattedStart = formatTimeValue(start);
+  const formattedEnd = formatTimeValue(end);
+  if (formattedStart && formattedEnd) return `${formattedStart} - ${formattedEnd}`;
+  return formattedStart ?? formattedEnd;
+}
+
 export function daysUntil(date: Date | string | null | undefined): number | null {
   if (!date) return null;
   const now = new Date();

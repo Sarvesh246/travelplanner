@@ -5,8 +5,13 @@ export interface StaySerialized {
   name: string;
   address: string | null;
   url: string | null;
+  roomSiteNumbers: string[];
+  arrivalTime: string | null;
   checkIn: string | null;
+  checkInTime: string | null;
   checkOut: string | null;
+  checkOutTime: string | null;
+  leaveTime: string | null;
   pricePerNight: number | null;
   totalPrice: number | null;
   status: StayStatus;
@@ -19,7 +24,8 @@ export interface ActivitySerialized {
   name: string;
   description: string | null;
   scheduledDate: string | null;
-  scheduledTime: string | null;
+  startTime: string | null;
+  endTime: string | null;
   durationMins: number | null;
   estimatedCost: number | null;
   actualCost: number | null;

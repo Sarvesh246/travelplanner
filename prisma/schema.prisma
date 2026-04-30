@@ -245,8 +245,13 @@ model Stay {
   address        String?
   url            String?
   confirmationNo String?
+  roomSiteNumbers String[]
+  arrivalTime    String?
   checkIn        DateTime?
+  checkInTime    String?
   checkOut       DateTime?
+  checkOutTime   String?
+  leaveTime      String?
   pricePerNight  Decimal?   @db.Decimal(10, 2)
   totalPrice     Decimal?   @db.Decimal(10, 2)
   currency       String?
@@ -272,7 +277,8 @@ model Activity {
   url           String?
   address       String?
   scheduledDate DateTime?
-  scheduledTime String?
+  startTime     String?
+  endTime       String?
   durationMins  Int?
   estimatedCost Decimal?       @db.Decimal(10, 2)
   actualCost    Decimal?       @db.Decimal(10, 2)

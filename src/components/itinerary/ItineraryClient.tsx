@@ -125,9 +125,9 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
               selectedStopId={effectiveSelectedStopId}
             onSelectStop={(id) => setSelectedStopId(id)}
           />
-          <aside className="hidden md:block">
+          <aside className="hidden min-w-0 md:block md:self-start">
             {selectedStop ? (
-              <div className="app-surface sticky top-24 max-h-[calc(100dvh-7.25rem)] overflow-hidden rounded-2xl border border-border/80">
+              <div className="app-surface sticky top-0 max-h-[calc(100dvh-4.75rem)] overflow-hidden rounded-2xl border border-border/80">
                 <StopDetailView stop={selectedStop} tripId={tripId} layout="drawer" />
               </div>
             ) : (
@@ -157,7 +157,7 @@ export function ItineraryClient({ tripId, stops }: ItineraryClientProps) {
         }}
       />
 
-      <ItineraryFloatingControls stops={stops} />
+      <ItineraryFloatingControls />
 
       <StopDetailPanel
         stop={selectedStop}
