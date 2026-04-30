@@ -450,15 +450,15 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         </label>
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Check-in date
+            Departure time
           </span>
           <input
-            id={`${fieldPrefix}-check-in`}
-            name="stay-check-in"
-            aria-label="Check-in date"
-            type="date"
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
+            id={`${fieldPrefix}-leave-time`}
+            name="stay-leave-time"
+            aria-label="Departure time"
+            type="time"
+            value={leaveTime}
+            onChange={(e) => setLeaveTime(e.target.value)}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
@@ -480,16 +480,15 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         </label>
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Check-out date
+            Check-in date
           </span>
           <input
-            id={`${fieldPrefix}-check-out`}
-            name="stay-check-out"
-            aria-label="Check-out date"
+            id={`${fieldPrefix}-check-in`}
+            name="stay-check-in"
+            aria-label="Check-in date"
             type="date"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            min={checkIn}
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
@@ -511,15 +510,16 @@ function AddStayForm({ stopId, onDone }: { stopId: string; onDone: () => void })
         </label>
         <label className="space-y-1">
           <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Leave time
+            Check-out date
           </span>
           <input
-            id={`${fieldPrefix}-leave-time`}
-            name="stay-leave-time"
-            aria-label="Leave time"
-            type="time"
-            value={leaveTime}
-            onChange={(e) => setLeaveTime(e.target.value)}
+            id={`${fieldPrefix}-check-out`}
+            name="stay-check-out"
+            aria-label="Check-out date"
+            type="date"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            min={checkIn}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </label>
