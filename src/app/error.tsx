@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { startTransition, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ErrorPage({
   error,
@@ -10,9 +11,21 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+  const [retrying, setRetrying] = useState(false);
+
   useEffect(() => {
     console.error("App route error:", error);
   }, [error]);
+
+  function handleRetry() {
+    setRetrying(true);
+    startTransition(() => {
+      reset();
+      router.refresh();
+      setRetrying(false);
+    });
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -23,10 +36,12 @@ export default function ErrorPage({
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
           <button
-            onClick={reset}
+            type="button"
+            onClick={handleRetry}
+            disabled={retrying}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            Try again
+            {retrying ? "Retrying..." : "Try again"}
           </button>
           <Link
             href="/dashboard"

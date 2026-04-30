@@ -1,6 +1,8 @@
 "use client";
 
+import { startTransition, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function GlobalError({
   error,
@@ -9,7 +11,19 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+  const [retrying, setRetrying] = useState(false);
+
   console.error("Global app error:", error);
+
+  function handleRetry() {
+    setRetrying(true);
+    startTransition(() => {
+      reset();
+      router.refresh();
+      setRetrying(false);
+    });
+  }
 
   return (
     <html lang="en">
@@ -21,10 +35,12 @@ export default function GlobalError({
           </p>
           <div className="mt-5 flex items-center justify-center gap-3">
             <button
-              onClick={reset}
+              type="button"
+              onClick={handleRetry}
+              disabled={retrying}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              Try again
+              {retrying ? "Retrying..." : "Try again"}
             </button>
             <Link
               href="/"
