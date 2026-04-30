@@ -195,7 +195,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
           }
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="space-y-3" onKeyDown={handleTableRoving}>
             <div className="sticky top-14 z-[8] flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border/60 bg-[hsl(var(--card)/0.92)] p-3 text-xs backdrop-blur-md md:text-sm">
               <label className="flex items-center gap-2 font-medium text-muted-foreground">
@@ -274,7 +274,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
               }
             />
           </div>
-          <aside className="hidden lg:block">
+          <aside className="hidden 2xl:block">
             <div className="sticky top-24">
               <SupplyDetailPanel item={selectedItem} currency={currency} />
             </div>

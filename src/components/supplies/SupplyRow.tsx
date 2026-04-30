@@ -108,11 +108,11 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "rounded-2xl px-4 py-4 transition-colors xl:rounded-none xl:px-4 xl:py-3",
+          "rounded-2xl px-4 py-4 transition-colors 2xl:rounded-none 2xl:px-4 2xl:py-3",
           selected && "bg-primary/5"
         )}
       >
-        <div className="flex items-start gap-3 xl:hidden">
+        <div className="flex items-start gap-3 2xl:hidden">
           <input
             type="checkbox"
             checked={bulkSelected}
@@ -223,7 +223,7 @@ export function SupplyRow({
           </div>
         </div>
 
-        <div className="hidden xl:grid xl:grid-cols-[auto_minmax(0,1.4fr)_5rem_5rem_7rem_minmax(11rem,1fr)_8rem] xl:items-center xl:gap-4">
+        <div className="hidden 2xl:grid 2xl:grid-cols-[auto_minmax(0,1.45fr)_4.5rem_4.5rem_6.5rem_minmax(10rem,1fr)_7.5rem] 2xl:items-center 2xl:gap-3">
           <div className="flex justify-center">
             <input
               type="checkbox"
