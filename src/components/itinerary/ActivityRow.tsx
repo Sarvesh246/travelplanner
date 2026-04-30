@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Circle, Clock, Edit3, Loader2, Save, Trash2, X } from "lucide-react";
 import { cn, deriveDurationMins, formatCurrency, formatTimeRange } from "@/lib/utils";
 import { ACTIVITY_STATUS_COLORS, ACTIVITY_STATUS_LABELS } from "@/lib/constants";
@@ -20,6 +21,7 @@ interface ActivityRowProps {
 const STATUSES: ActivityStatus[] = ["IDEA", "OPTION", "PLANNED", "CONFIRMED", "COMPLETED", "CANCELLED"];
 
 export function ActivityRow({ activity, canEdit, onDirtyChange }: ActivityRowProps) {
+  const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -63,6 +65,7 @@ export function ActivityRow({ activity, canEdit, onDirtyChange }: ActivityRowPro
   async function handleRename(name: string) {
     try {
       await updateActivity(activity.id, { name });
+      router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not rename this activity. Please try again.");
       throw err;
@@ -73,6 +76,7 @@ export function ActivityRow({ activity, canEdit, onDirtyChange }: ActivityRowPro
     setStatusOpen(false);
     try {
       await updateActivity(activity.id, { status });
+      router.refresh();
       toast.success(`Marked ${status.toLowerCase()}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update this activity. Please try again.");
@@ -82,6 +86,7 @@ export function ActivityRow({ activity, canEdit, onDirtyChange }: ActivityRowPro
   async function handleDelete() {
     try {
       await deleteActivity(activity.id);
+      router.refresh();
       toast.success("Activity removed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not remove this activity. Please try again.");
@@ -98,6 +103,7 @@ export function ActivityRow({ activity, canEdit, onDirtyChange }: ActivityRowPro
         durationMins: computedDurationMins,
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
       });
+      router.refresh();
       setEditing(false);
       setShowSaved(true);
       window.setTimeout(() => setShowSaved(false), 1800);

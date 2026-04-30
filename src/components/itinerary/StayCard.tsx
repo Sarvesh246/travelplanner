@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bed,
   Check,
@@ -35,6 +36,7 @@ const STATUS_ICONS: Record<StayStatus, React.ReactNode> = {
 };
 
 export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<StayStatus | null>(null);
@@ -117,6 +119,7 @@ export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
     setPendingStatus(status);
     try {
       await updateStay(stay.id, { status });
+      router.refresh();
       toast.success(`Marked ${status.toLowerCase()}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update this stay. Please try again.");
@@ -129,6 +132,7 @@ export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
     setMenuOpen(false);
     try {
       await deleteStay(stay.id);
+      router.refresh();
       toast.success("Stay removed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not remove this stay. Please try again.");
@@ -152,6 +156,7 @@ export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
         totalPrice: totalPrice ? parseFloat(totalPrice) : 0,
         url,
       });
+      router.refresh();
       setEditing(false);
       setShowSaved(true);
       window.setTimeout(() => setShowSaved(false), 1800);
