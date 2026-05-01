@@ -7,14 +7,26 @@ type StopMapEmptyProps = {
   className?: string;
   variant?: "cta" | "static" | "skeleton";
   onAddLocation?: () => void;
+  compact?: boolean;
 };
 
-export function StopMapEmpty({ className, variant = "static", onAddLocation }: StopMapEmptyProps) {
+const TILE = "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]";
+const TILE_COMPACT = "aspect-[16/9] min-h-[168px] max-h-[min(40dvh,280px)]";
+
+export function StopMapEmpty({
+  className,
+  variant = "static",
+  onAddLocation,
+  compact = false,
+}: StopMapEmptyProps) {
+  const tile = compact ? TILE_COMPACT : TILE;
+
   if (variant === "skeleton") {
     return (
       <div
         className={cn(
-          "app-topo-empty relative w-full overflow-hidden rounded-2xl border border-border bg-muted/15 aspect-[16/9] min-h-[220px] animate-pulse",
+          "app-topo-empty relative w-full overflow-hidden rounded-2xl border border-border bg-muted/15 animate-pulse",
+          tile,
           className
         )}
         aria-hidden
@@ -27,7 +39,8 @@ export function StopMapEmpty({ className, variant = "static", onAddLocation }: S
   return (
     <div
       className={cn(
-        "app-topo-empty relative flex w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/10 aspect-[16/9] min-h-[220px] px-4 py-6 text-center",
+        "app-topo-empty relative flex w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/10 px-4 py-6 text-center",
+        tile,
         className
       )}
     >

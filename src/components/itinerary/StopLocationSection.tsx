@@ -19,6 +19,7 @@ export function StopLocationSection({
   canEdit,
   onDirtyChange,
   className,
+  compact = false,
 }: {
   stopId: string;
   stopName: string;
@@ -28,6 +29,8 @@ export function StopLocationSection({
   canEdit: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   className?: string;
+  /** Tighter map + padding for itinerary drawer / narrow columns. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -129,12 +132,15 @@ export function StopLocationSection({
   return (
     <section
       className={cn(
-        "app-surface-soft relative mb-5 rounded-2xl border border-border/80 bg-card/60 p-4 pb-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200",
+        "app-surface-soft relative mb-5 rounded-2xl border border-border/80 bg-card/60 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200",
+        compact ? "p-3.5 pb-2" : "p-4 pb-2",
         className
       )}
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-semibold">Stop map</h3>
+      <div className={cn("flex flex-wrap items-center gap-2", compact ? "mb-1.5" : "mb-2")}>
+        <h3 className={cn("font-semibold tracking-tight text-foreground", compact ? "text-xs uppercase tracking-wide text-muted-foreground" : "text-sm")}>
+          Stop map
+        </h3>
         {isDirty ? (
           <span className="inline-flex items-center rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
             Unsaved changes
@@ -181,13 +187,19 @@ export function StopLocationSection({
         onChange={editing ? setDraftCoords : undefined}
         canEdit={canEdit}
         onRequestEdit={() => setEditing(true)}
+        compact={compact}
       />
 
-      <StopMapSummary lat={mapLat} lon={mapLon} />
+      <StopMapSummary className={compact ? "mt-1.5" : undefined} lat={mapLat} lon={mapLon} />
 
       {canEdit && editing ? (
-        <div className="sticky bottom-0 z-10 -mx-4 mt-3 border-t border-border/60 bg-gradient-to-t from-card via-card/95 to-transparent px-4 pb-4 pt-3">
-          <div className="flex flex-wrap items-center justify-end gap-2">
+        <div
+          className={cn(
+            "sticky bottom-0 z-10 mt-3 border-t border-border/60 bg-gradient-to-t from-card via-card/95 to-transparent pt-3",
+            compact ? "-mx-3.5 px-3.5 pb-3.5" : "-mx-4 px-4 pb-4"
+          )}
+        >
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={resetDraftToSaved}

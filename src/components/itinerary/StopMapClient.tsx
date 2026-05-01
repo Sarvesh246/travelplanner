@@ -128,6 +128,8 @@ export function StopMapClient({
   editable = false,
   onChange,
   className,
+  compact = false,
+  showCaption = false,
 }: StopMapProps) {
   const isMobile = useIsNarrowMobile();
   const [hintDismissed, setHintDismissed] = useState(false);
@@ -170,13 +172,13 @@ export function StopMapClient({
     return isMobile ? 13 : 11;
   }, [position, editable, isMobile]);
 
+  const tile =
+    (compact ? "aspect-[16/9] min-h-[168px] max-h-[min(42dvh,280px)]" : "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]") +
+    (editable ? " [&_.leaflet-container]:cursor-crosshair" : "");
+
   return (
     <div className={className}>
-      <div
-        className={`relative w-full overflow-hidden rounded-2xl border border-border bg-muted/20 aspect-[16/9] min-h-[220px] ${
-          editable ? "[&_.leaflet-container]:cursor-crosshair" : ""
-        }`}
-      >
+      <div className={`relative w-full overflow-hidden rounded-2xl border border-border bg-muted/20 ${tile}`}>
         <MapContainer
           center={center}
           zoom={initialZoom}
@@ -193,7 +195,7 @@ export function StopMapClient({
         </MapContainer>
         <EditModeOverlay visible={editable} hintVisible={!hintDismissed} />
       </div>
-      {!editable ? (
+      {showCaption && !editable ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
           Approximate stop location for {name} from OpenStreetMap.
         </p>

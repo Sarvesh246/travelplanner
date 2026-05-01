@@ -97,24 +97,26 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   }
 
   const titleBlock = (
-    <div className="flex-1 min-w-0">
+    <div className="min-w-0 flex-1">
       {isPage ? (
-        <h1 className="font-semibold text-xl sm:text-2xl tracking-tight text-balance">{stop.name}</h1>
+        <h1 className="text-balance text-xl font-semibold tracking-tight sm:text-2xl">{stop.name}</h1>
       ) : (
-        <h2 className="font-semibold text-lg truncate">{stop.name}</h2>
+        <h2 className="line-clamp-2 break-words text-lg font-semibold leading-snug tracking-tight" title={stop.name}>
+          {stop.name}
+        </h2>
       )}
       {stop.country && (
         <p
-          className={`text-muted-foreground mt-0.5 flex items-start gap-1.5 ${
+          className={`mt-0.5 flex min-w-0 items-start gap-1.5 break-words text-muted-foreground ${
             isPage ? "text-sm" : "text-xs"
           }`}
         >
-          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          {stop.country}
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0">{stop.country}</span>
         </p>
       )}
       {(stop.arrivalDate || stop.departureDate) && (
-        <p className={`text-muted-foreground mt-0.5 ${isPage ? "text-sm" : "text-xs"}`}>
+        <p className={`mt-0.5 text-muted-foreground ${isPage ? "text-sm" : "text-xs"}`}>
           {formatDateRange(stop.arrivalDate, stop.departureDate)}
         </p>
       )}
@@ -172,13 +174,14 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       longitude={stop.longitude}
       placeId={stop.placeId}
       canEdit={canEdit}
+      compact={!isPage}
       onDirtyChange={(dirty) => registerDirty("location", dirty)}
-      className={isPage ? undefined : "mb-3"}
+      className={isPage ? undefined : "mb-2"}
     />
   );
 
   const tabStrip = (
-    <div className="flex shrink-0 border-b border-border">
+    <div className="flex shrink-0 border-b border-border/80 bg-muted/10">
       <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
         <Bed className="w-3.5 h-3.5" /> Stays ({stop.stays.length})
       </TabButton>
@@ -197,7 +200,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "min-h-0 overflow-y-auto overscroll-y-contain px-5 pt-4 pb-10 [scrollbar-gutter:stable]"
+          : "min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-10 pt-4 [scrollbar-gutter:stable] md:px-5"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -213,8 +216,8 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       {tabPanel}
     </>
   ) : (
-    <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,min(30dvh,13.5rem))_auto_minmax(0,1fr)] overflow-hidden">
-      <div className="min-h-0 overflow-y-auto overscroll-y-contain px-5 pb-2 pt-2 [scrollbar-gutter:stable]">
+    <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,min(52dvh,22rem))_auto_minmax(0,1fr)] overflow-hidden">
+      <div className="min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-2 pt-3 [scrollbar-gutter:stable] md:px-5">
         {locationSection}
       </div>
       {tabStrip}
@@ -268,7 +271,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-border p-5 flex items-start gap-3">
+      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-4 sm:px-5">
         {titleBlock}
         {actionButtons}
       </div>
@@ -302,7 +305,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors relative ${
+      className={`relative flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors duration-200 ${
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >

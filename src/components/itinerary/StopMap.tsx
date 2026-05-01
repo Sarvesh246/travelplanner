@@ -12,6 +12,10 @@ export interface StopMapProps {
   className?: string;
   canEdit?: boolean;
   onRequestEdit?: () => void;
+  /** Shorter tile for narrow drawers; pair with grid row height in parent. */
+  compact?: boolean;
+  /** Default off — StopMapSummary already explains the pin. */
+  showCaption?: boolean;
 }
 
 const StopMapClient = dynamic(() => import("./StopMapClient").then((mod) => mod.StopMapClient), {
@@ -28,6 +32,8 @@ export function StopMap({
   name,
   onChange,
   className,
+  compact = false,
+  showCaption = false,
 }: StopMapProps) {
   const hasCoords = lat != null && lon != null;
   const showEmpty = !hasCoords && !editable;
@@ -38,6 +44,7 @@ export function StopMap({
         variant={canEdit ? "cta" : "static"}
         onAddLocation={canEdit ? onRequestEdit : undefined}
         className={className}
+        compact={compact}
       />
     );
   }
@@ -49,6 +56,8 @@ export function StopMap({
       lon={lon}
       editable={editable ?? false}
       onChange={onChange}
+      compact={compact}
+      showCaption={showCaption}
       className={className}
     />
   );
