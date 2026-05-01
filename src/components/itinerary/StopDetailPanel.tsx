@@ -98,7 +98,7 @@ export function StopDetailPanel({ stop, open, onOpenChange, initialTab }: StopDe
         onTouchEnd={handleTouchEnd}
         className="fixed right-0 top-0 bottom-0 w-full overflow-hidden bg-card border-l border-border shadow-2xl z-50 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:w-[440px]"
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-[1_1_0%] flex-col overflow-hidden">
           <StopDetailView
             key={`${stop.id}:${initialTab ?? "stays"}`}
             stop={stop}

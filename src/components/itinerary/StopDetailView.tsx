@@ -298,7 +298,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-10 pt-4 [scrollbar-gutter:stable] md:px-5"
+          : "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-4 pt-4 [scrollbar-gutter:stable] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.75rem))] md:px-5 md:pb-10"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -306,7 +306,10 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </div>
   );
 
-  /** Drawer: grid so Stays/Activities always get remaining height (flex-1 alone was losing to the map block). */
+  /**
+   * Drawer: flex column (more reliable than grid `1fr` + min-height quirks on mobile WebKit).
+   * Map stack is max-capped so Stays / Activities always retains real scroll height.
+   */
   const body = isPage ? (
     <>
       {locationSection}
@@ -314,8 +317,8 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       {tabPanel}
     </>
   ) : (
-    <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,min(52dvh,22rem))_auto_minmax(0,1fr)] overflow-hidden">
-      <div className="min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-2 pt-3 [scrollbar-gutter:stable] md:px-5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="min-h-0 max-h-[min(38dvh,15.5rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-2 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(42dvh,18rem)] md:max-h-[min(48dvh,22rem)] md:px-5 md:pt-3">
         {locationSection}
       </div>
       {tabStrip}
@@ -368,7 +371,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
       <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-4 sm:px-5">
         {titleBlock}
         {actionButtons}
