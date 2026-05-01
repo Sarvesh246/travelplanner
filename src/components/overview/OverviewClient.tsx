@@ -29,7 +29,7 @@ interface OverviewClientProps {
 
 export function OverviewClient({ stats, recentActivity, tripId }: OverviewClientProps) {
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
       <motion.div
         variants={staggerContainer}
         initial="initial"

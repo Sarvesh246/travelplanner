@@ -37,7 +37,7 @@ export function SupplyTable({
             {category}
           </h3>
 
-          <div className="hidden px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_minmax(7.75rem,8.75rem)] lg:gap-4 xl:gap-5">
+          <div className="hidden px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_8rem] lg:gap-4 xl:gap-5">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"

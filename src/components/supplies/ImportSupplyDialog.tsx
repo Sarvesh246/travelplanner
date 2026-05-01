@@ -164,7 +164,7 @@ export function ImportSupplyDialog({
               <textarea
                 value={text}
                 onChange={(event) => setText(event.target.value)}
-                placeholder="2 tents&#10;Bear Spray&#10;Cooler (Will)&#10;Hiking shoes for each person"
+                placeholder="Examples:&#10;4 camp mugs&#10;First-aid kit&#10;Lantern (Alex)&#10;Rain jacket for each person"
                 className="min-h-48 w-full resize-y rounded-xl border border-input bg-background px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>

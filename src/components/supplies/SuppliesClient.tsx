@@ -215,43 +215,46 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         />
       ) : (
         <div className="min-w-0 max-w-full">
-          <div className="min-w-0 max-w-full space-y-3" onKeyDown={handleTableRoving}>
-            <div className="sticky top-14 z-[8] flex max-w-full flex-wrap items-center gap-x-5 gap-y-3 overflow-hidden rounded-xl border border-border/60 bg-[hsl(var(--card)/0.92)] p-3 text-xs backdrop-blur-md md:text-sm">
-              <label className="flex items-center gap-2 font-medium text-muted-foreground">
-                <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My packing
-              </label>
-              <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
-                Status
-                <select
-                  value={statusSel}
-                  onChange={(e) => setStatusSel(e.target.value)}
-                  className="rounded-lg border border-border bg-background px-2 py-1.5 ml-2 text-xs font-semibold capitalize normal-case"
-                >
-                  <option value="">All</option>
-                  {["NEEDED", "PARTIALLY_COVERED", "COVERED", "NOT_NEEDED"].map((s) => (
-                    <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
-                Category
-                <select
-                  value={categorySel}
-                  onChange={(e) => setCategorySel(e.target.value)}
-                  className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold normal-case"
-                >
-                  <option value="">All</option>
-                  {categoryOptions.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                  {!categoryOptions.includes("Other") && <option value="Other">Other</option>}
-                </select>
-              </label>
+          <div className="min-w-0 max-w-full" onKeyDown={handleTableRoving}>
+            <div className="sticky top-14 z-[8] mb-3 rounded-xl border border-border/65 bg-[hsl(var(--card)/0.92)] p-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.65)] backdrop-blur-md transition-shadow duration-200 dark:bg-card/82">
+              <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-3 text-xs md:text-sm">
+                <label className="flex items-center gap-2 font-medium text-muted-foreground">
+                  <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My packing
+                </label>
+                <span className="hidden h-4 w-px shrink-0 bg-border min-[560px]:block" aria-hidden />
+                <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                  Status
+                  <select
+                    value={statusSel}
+                    onChange={(e) => setStatusSel(e.target.value)}
+                    className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold capitalize normal-case"
+                  >
+                    <option value="">All</option>
+                    {["NEEDED", "PARTIALLY_COVERED", "COVERED", "NOT_NEEDED"].map((s) => (
+                      <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                  Category
+                  <select
+                    value={categorySel}
+                    onChange={(e) => setCategorySel(e.target.value)}
+                    className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold normal-case"
+                  >
+                    <option value="">All</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                    {!categoryOptions.includes("Other") && <option value="Other">Other</option>}
+                  </select>
+                </label>
+              </div>
             </div>
             {bulkIds.length > 0 ? (
-              <div className="app-surface flex flex-wrap items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5 text-sm">
+              <div className="app-surface mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5 text-sm">
                 <span className="font-medium">{bulkIds.length} selected</span>
                 <button
                   type="button"
@@ -276,22 +279,24 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
                 </button>
               </div>
             ) : null}
-            <SupplyTable
-              tripId={tripId}
-              items={filteredItems}
-              currency={currency}
-              selectedItemId={effectiveSelectedItemId}
-              selectedBulkIds={bulkIds}
-              onSelectItem={setSelectedItemId}
-              onToggleBulk={(id) =>
-                setBulkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
-              }
-              onToggleBulkAll={() =>
-                setBulkIds((prev) =>
-                  prev.length === filteredItems.length ? [] : filteredItems.map((item) => item.id)
-                )
-              }
-            />
+            <div className="mt-3">
+              <SupplyTable
+                tripId={tripId}
+                items={filteredItems}
+                currency={currency}
+                selectedItemId={effectiveSelectedItemId}
+                selectedBulkIds={bulkIds}
+                onSelectItem={setSelectedItemId}
+                onToggleBulk={(id) =>
+                  setBulkIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                }
+                onToggleBulkAll={() =>
+                  setBulkIds((prev) =>
+                    prev.length === filteredItems.length ? [] : filteredItems.map((item) => item.id)
+                  )
+                }
+              />
+            </div>
           </div>
         </div>
       )}

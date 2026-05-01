@@ -36,6 +36,6 @@ export function StatCard({ label, value, icon, iconColor, href, className }: Sta
     </motion.div>
   );
 
-  if (href) return <Link href={href}>{content}</Link>;
+  if (href) return <Link href={href} className="block h-full">{content}</Link>;
   return content;
 }
