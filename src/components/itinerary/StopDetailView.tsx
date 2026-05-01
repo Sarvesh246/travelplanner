@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -20,7 +20,7 @@ import { deriveDurationMins, formatDateRange } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { StayCard } from "./StayCard";
 import { DayTimeline } from "./DayTimeline";
-import { createStay, createActivity, deleteStop, restoreStop } from "@/actions/itinerary";
+import { createStay, createActivity, deleteStop, restoreStop, updateStop } from "@/actions/itinerary";
 import { useTripContext } from "@/components/trip/TripContext";
 import {
   useTripEditingPresenceField,
@@ -30,6 +30,102 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
 import { StopLocationSection } from "./StopLocationSection";
 import type { StopDetailTab, StopSerialized } from "./types";
+
+function StopDateFields({
+  stopId,
+  arrivalDate,
+  departureDate,
+  canEdit,
+  isPage,
+}: {
+  stopId: string;
+  arrivalDate: string | null;
+  departureDate: string | null;
+  canEdit: boolean;
+  isPage: boolean;
+}) {
+  const router = useRouter();
+  const [arrive, setArrive] = useState(() => arrivalDate?.slice(0, 10) ?? "");
+  const [depart, setDepart] = useState(() => departureDate?.slice(0, 10) ?? "");
+  const arriveRef = useRef(arrive);
+  const departRef = useRef(depart);
+  arriveRef.current = arrive;
+  departRef.current = depart;
+
+  useEffect(() => {
+    setArrive(arrivalDate?.slice(0, 10) ?? "");
+    setDepart(departureDate?.slice(0, 10) ?? "");
+  }, [arrivalDate, departureDate, stopId]);
+
+  const labelCls = isPage ? "text-sm" : "text-xs";
+
+  if (!canEdit && !arrivalDate && !departureDate) {
+    return null;
+  }
+
+  if (!canEdit) {
+    return (
+      <p className={`mt-0.5 text-muted-foreground ${labelCls}`}>
+        {formatDateRange(arrivalDate, departureDate)}
+      </p>
+    );
+  }
+
+  async function save(nextArrive: string, nextDepart: string) {
+    try {
+      await updateStop(stopId, {
+        arrivalDate: nextArrive || null,
+        departureDate: nextDepart || null,
+      });
+      router.refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update stop dates");
+      setArrive(arrivalDate?.slice(0, 10) ?? "");
+      setDepart(departureDate?.slice(0, 10) ?? "");
+    }
+  }
+
+  return (
+    <div className={`mt-2 space-y-1.5 ${labelCls}`}>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="flex min-w-0 items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2">
+          <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="text-muted-foreground">Arrive</span>
+          <input
+            type="date"
+            value={arrive}
+            onChange={(e) => {
+              const v = e.target.value;
+              setArrive(v);
+              void save(v, departRef.current);
+            }}
+            className="min-w-0 flex-1 bg-transparent outline-none"
+            aria-label="Stop arrival date"
+          />
+        </label>
+        <label className="flex min-w-0 items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2">
+          <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="text-muted-foreground">Depart</span>
+          <input
+            type="date"
+            value={depart}
+            min={arrive || undefined}
+            onChange={(e) => {
+              const v = e.target.value;
+              setDepart(v);
+              void save(arriveRef.current, v);
+            }}
+            className="min-w-0 flex-1 bg-transparent outline-none"
+            aria-label="Stop departure date"
+          />
+        </label>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Shown on the route list and used for forecasts. Updates when stays change check-in/out; editable anytime.
+      </p>
+    </div>
+  );
+}
 
 export type StopDetailLayout = "drawer" | "page";
 
@@ -115,11 +211,13 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
           <span className="min-w-0">{stop.country}</span>
         </p>
       )}
-      {(stop.arrivalDate || stop.departureDate) && (
-        <p className={`mt-0.5 text-muted-foreground ${isPage ? "text-sm" : "text-xs"}`}>
-          {formatDateRange(stop.arrivalDate, stop.departureDate)}
-        </p>
-      )}
+      <StopDateFields
+        stopId={stop.id}
+        arrivalDate={stop.arrivalDate}
+        departureDate={stop.departureDate}
+        canEdit={canEdit}
+        isPage={isPage}
+      />
     </div>
   );
 

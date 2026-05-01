@@ -10,6 +10,7 @@ import {
   assertDateOrder,
   parsePlanningDateInput,
 } from "@/lib/calendar/planning-dates";
+import { compareDateKeys, dateKeyFromDateLike, toDateKeyUtcDate } from "@/lib/dates/date-key";
 
 function revalidateItinerary(tripId: string) {
   revalidatePath(`/trips/${tripId}/itinerary`);
@@ -98,8 +99,8 @@ export async function updateStop(
     name: string;
     country: string;
     description: string;
-    arrivalDate: string;
-    departureDate: string;
+    arrivalDate: string | null;
+    departureDate: string | null;
     status: string;
     latitude: number | null;
     longitude: number | null;
@@ -110,12 +111,37 @@ export async function updateStop(
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
   await assertCanContribute(stop.tripId, user.id);
-  const arrivalDate = await parsePlanningDateInput(data.arrivalDate, "Arrival date");
-  const departureDate = await parsePlanningDateInput(data.departureDate, "Departure date");
-  await assertDateOrder(
-    data.arrivalDate ?? stop.arrivalDate?.toISOString().slice(0, 10) ?? null,
-    data.departureDate ?? stop.departureDate?.toISOString().slice(0, 10) ?? null
-  );
+
+  let nextArrival: Date | null | undefined = undefined;
+  if (data.arrivalDate !== undefined) {
+    const raw = data.arrivalDate;
+    if (raw === null || (typeof raw === "string" && raw.trim() === "")) {
+      nextArrival = null;
+    } else {
+      nextArrival = (await parsePlanningDateInput(raw, "Arrival date")) ?? null;
+    }
+  }
+
+  let nextDeparture: Date | null | undefined = undefined;
+  if (data.departureDate !== undefined) {
+    const raw = data.departureDate;
+    if (raw === null || (typeof raw === "string" && raw.trim() === "")) {
+      nextDeparture = null;
+    } else {
+      nextDeparture = (await parsePlanningDateInput(raw, "Departure date")) ?? null;
+    }
+  }
+
+  const startKey =
+    nextArrival !== undefined
+      ? dateKeyFromDateLike(nextArrival)
+      : dateKeyFromDateLike(stop.arrivalDate);
+  const endKey =
+    nextDeparture !== undefined
+      ? dateKeyFromDateLike(nextDeparture)
+      : dateKeyFromDateLike(stop.departureDate);
+
+  await assertDateOrder(startKey, endKey);
 
   const updated = await prisma.stop.update({
     where: { id: stopId },
@@ -123,8 +149,8 @@ export async function updateStop(
       ...(data.name && { name: data.name }),
       ...(data.country !== undefined && { country: data.country }),
       ...(data.description !== undefined && { description: data.description }),
-      ...(data.arrivalDate && { arrivalDate }),
-      ...(data.departureDate && { departureDate }),
+      ...(nextArrival !== undefined && { arrivalDate: nextArrival }),
+      ...(nextDeparture !== undefined && { departureDate: nextDeparture }),
       ...(data.latitude !== undefined && { latitude: data.latitude }),
       ...(data.longitude !== undefined && { longitude: data.longitude }),
       ...(data.placeId !== undefined && { placeId: data.placeId }),
@@ -204,6 +230,58 @@ export async function reorderStops(tripId: string, orderedIds: string[]) {
   });
 }
 
+/** Sets stop arrival/departure from the span of stay check-in / check-out (earliest→latest). */
+async function syncStopDatesFromStays(stopId: string) {
+  const stays = await prisma.stay.findMany({
+    where: { stopId, deletedAt: null },
+    select: { checkIn: true, checkOut: true },
+  });
+
+  const checkInKeys: string[] = [];
+  const checkOutKeys: string[] = [];
+  for (const s of stays) {
+    const ik = dateKeyFromDateLike(s.checkIn);
+    const ok = dateKeyFromDateLike(s.checkOut);
+    if (ik) checkInKeys.push(ik);
+    if (ok) checkOutKeys.push(ok);
+  }
+
+  let minIn: string | null = null;
+  let maxOut: string | null = null;
+
+  for (const k of checkInKeys) {
+    minIn = minIn == null || compareDateKeys(k, minIn) < 0 ? k : minIn;
+  }
+  for (const k of checkOutKeys) {
+    maxOut = maxOut == null || compareDateKeys(k, maxOut) > 0 ? k : maxOut;
+  }
+
+  if (minIn == null && checkOutKeys.length > 0) {
+    for (const k of checkOutKeys) {
+      minIn = minIn == null || compareDateKeys(k, minIn) < 0 ? k : minIn;
+    }
+  }
+  if (maxOut == null && checkInKeys.length > 0) {
+    for (const k of checkInKeys) {
+      maxOut = maxOut == null || compareDateKeys(k, maxOut) > 0 ? k : maxOut;
+    }
+  }
+
+  if (minIn == null && maxOut == null) return;
+
+  if (minIn == null) minIn = maxOut!;
+  if (maxOut == null) maxOut = minIn;
+  if (compareDateKeys(minIn, maxOut) > 0) maxOut = minIn;
+
+  await prisma.stop.update({
+    where: { id: stopId },
+    data: {
+      arrivalDate: toDateKeyUtcDate(minIn),
+      departureDate: toDateKeyUtcDate(maxOut),
+    },
+  });
+}
+
 // ── Stays ────────────────────────────────────────────────────────────────────
 
 export async function createStay(
@@ -252,6 +330,7 @@ export async function createStay(
     },
   });
 
+  await syncStopDatesFromStays(stopId);
   revalidateItineraryAndStop(stop.tripId, stopId);
   await logAuditEvent({
     action: "stay.created",
@@ -319,6 +398,7 @@ export async function updateStay(
     },
   });
 
+  await syncStopDatesFromStays(stay.stopId);
   revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
   await logAuditEvent({
     action: "stay.updated",
@@ -341,6 +421,7 @@ export async function deleteStay(stayId: string) {
   await assertCanContribute(stay.stop.tripId, user.id);
 
   await prisma.stay.update({ where: { id: stayId }, data: { deletedAt: new Date() } });
+  await syncStopDatesFromStays(stay.stopId);
   revalidateItineraryAndStop(stay.stop.tripId, stay.stopId);
   await logAuditEvent({
     action: "stay.deleted",
