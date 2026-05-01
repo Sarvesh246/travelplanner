@@ -81,7 +81,7 @@ export function StopList({ tripId, stops, selectedStopId, onSelectStop }: StopLi
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((s) => s.id)} strategy={verticalListSortingStrategy}>
         <div
-          className="relative space-y-3 pl-5 before:absolute before:left-2 before:top-5 before:bottom-5 before:w-px before:bg-gradient-to-b before:from-primary/15 before:via-primary/45 before:to-primary/15"
+          className="relative min-w-0 max-w-full space-y-3 pl-5 before:absolute before:left-2 before:top-5 before:bottom-5 before:w-px before:bg-gradient-to-b before:from-primary/15 before:via-primary/45 before:to-primary/15"
           onKeyDown={handleListKeyDown}
         >
           {items.map((stop, index) => (
@@ -133,7 +133,7 @@ function SortableStop({
   };
 
   return (
-    <div id={`trip-stop-${stop.id}`} ref={setNodeRef} style={style}>
+    <div id={`trip-stop-${stop.id}`} ref={setNodeRef} style={style} className="min-w-0 max-w-full">
       <StopCard
         tripId={tripId}
         stop={stop}

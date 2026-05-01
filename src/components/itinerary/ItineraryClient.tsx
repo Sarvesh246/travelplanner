@@ -165,7 +165,7 @@ export function ItineraryClient({ tripId, stops, dayPlans }: ItineraryClientProp
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(20rem,25rem)] md:items-start">
+        <div className="grid min-w-0 max-w-full gap-4 md:grid-cols-[minmax(0,1fr)_minmax(20rem,25rem)] md:items-start">
           {viewMode === "stops" ? (
             <StopList
               tripId={tripId}

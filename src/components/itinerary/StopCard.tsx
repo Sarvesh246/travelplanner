@@ -42,22 +42,23 @@ export function StopCard({
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 max-w-full">
       <span
         className="absolute -left-[1.125rem] top-6 z-10 h-3 w-3 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.12),0_0_14px_hsl(var(--primary)/0.45)]"
         aria-hidden
       />
       <div
         className={cn(
-          "app-surface app-hover-lift group relative flex items-stretch overflow-hidden rounded-2xl",
+          "app-surface app-hover-lift group relative flex min-w-0 max-w-full items-stretch overflow-hidden rounded-2xl",
           selected && "ring-2 ring-primary/35"
         )}
       >
         {dragHandleProps && (
           <button
             type="button"
-            className="flex items-center px-2 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/60 cursor-grab active:cursor-grabbing transition-colors"
+            className="flex touch-none select-none items-center px-2 text-muted-foreground/50 transition-colors hover:bg-muted/60 hover:text-muted-foreground active:cursor-grabbing min-[390px]:px-3 md:cursor-grab"
             aria-label="Drag to reorder"
+            data-no-swipe=""
             {...dragHandleProps}
           >
             <GripVertical className="w-4 h-4" />
