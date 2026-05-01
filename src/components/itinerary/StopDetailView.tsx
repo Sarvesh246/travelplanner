@@ -177,34 +177,49 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     />
   );
 
-  const body = (
+  const tabStrip = (
+    <div className="flex shrink-0 border-b border-border">
+      <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
+        <Bed className="w-3.5 h-3.5" /> Stays ({stop.stays.length})
+      </TabButton>
+      <TabButton
+        active={tab === "activities"}
+        onClick={() => setTab("activities")}
+        layoutIdSuffix={isPage ? "page" : "drawer"}
+      >
+        <CalendarDays className="w-3.5 h-3.5" /> Activities ({stop.activities.length})
+      </TabButton>
+    </div>
+  );
+
+  const tabPanel = (
+    <div
+      className={
+        isPage
+          ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
+          : "min-h-0 overflow-y-auto overscroll-y-contain px-5 pt-4 pb-10 [scrollbar-gutter:stable]"
+      }
+    >
+      {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
+      {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
+    </div>
+  );
+
+  /** Drawer: grid so Stays/Activities always get remaining height (flex-1 alone was losing to the map block). */
+  const body = isPage ? (
     <>
-      {isPage ? (
-        locationSection
-      ) : (
-        <div className="min-h-0 max-h-[min(48dvh,20rem)] shrink-0 overflow-y-auto overscroll-y-contain px-5 pb-2 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(50dvh,24rem)]">
-          {locationSection}
-        </div>
-      )}
-
-      <div className="flex shrink-0 border-b border-border">
-        <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
-          <Bed className="w-3.5 h-3.5" /> Stays ({stop.stays.length})
-        </TabButton>
-        <TabButton
-          active={tab === "activities"}
-          onClick={() => setTab("activities")}
-          layoutIdSuffix={isPage ? "page" : "drawer"}
-        >
-          <CalendarDays className="w-3.5 h-3.5" /> Activities ({stop.activities.length})
-        </TabButton>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]">
-        {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
-        {tab === "activities" && <ActivitiesTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
-      </div>
+      {locationSection}
+      {tabStrip}
+      {tabPanel}
     </>
+  ) : (
+    <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,min(30dvh,13.5rem))_auto_minmax(0,1fr)] overflow-hidden">
+      <div className="min-h-0 overflow-y-auto overscroll-y-contain px-5 pb-2 pt-2 [scrollbar-gutter:stable]">
+        {locationSection}
+      </div>
+      {tabStrip}
+      {tabPanel}
+    </div>
   );
 
   if (isPage) {
