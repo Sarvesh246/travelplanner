@@ -1,4 +1,5 @@
 import type { Activity, Expense, Prisma, Stay, Stop, Trip } from "@prisma/client";
+import { dateToIsoStringOrNull } from "@/lib/dates/to-iso-safe";
 
 /** JSON-safe for React Server / server-action payloads (no Decimal, Date as ISO). */
 export function tripToClientJson(t: Trip) {
@@ -12,8 +13,8 @@ export function tripToClientJson(t: Trip) {
     budgetTarget: decimalToNumberOrNull(t.budgetTarget),
     estimatedCostOverride: decimalToNumberOrNull(t.estimatedCostOverride),
     costSplitMemberCountOverride: t.costSplitMemberCountOverride,
-    startDate: t.startDate ? t.startDate.toISOString() : null,
-    endDate: t.endDate ? t.endDate.toISOString() : null,
+    startDate: dateToIsoStringOrNull(t.startDate),
+    endDate: dateToIsoStringOrNull(t.endDate),
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     deletedAt: t.deletedAt ? t.deletedAt.toISOString() : null,
@@ -37,8 +38,8 @@ export function stopToClientJson(s: Stop) {
     longitude: decimalToNumberOrNull(s.longitude),
     placeId: s.placeId,
     sortOrder: s.sortOrder,
-    arrivalDate: s.arrivalDate ? s.arrivalDate.toISOString() : null,
-    departureDate: s.departureDate ? s.departureDate.toISOString() : null,
+    arrivalDate: dateToIsoStringOrNull(s.arrivalDate),
+    departureDate: dateToIsoStringOrNull(s.departureDate),
     status: s.status,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
@@ -57,9 +58,9 @@ export function stayToClientJson(s: Stay) {
     roomSiteNumbers: s.roomSiteNumbers,
     confirmationNo: s.confirmationNo,
     arrivalTime: s.arrivalTime,
-    checkIn: s.checkIn ? s.checkIn.toISOString() : null,
+    checkIn: dateToIsoStringOrNull(s.checkIn),
     checkInTime: s.checkInTime,
-    checkOut: s.checkOut ? s.checkOut.toISOString() : null,
+    checkOut: dateToIsoStringOrNull(s.checkOut),
     checkOutTime: s.checkOutTime,
     leaveTime: s.leaveTime,
     pricePerNight: decimalToNumberOrNull(s.pricePerNight),
@@ -82,7 +83,7 @@ export function activityToClientJson(a: Activity) {
     description: a.description,
     address: a.address,
     url: a.url,
-    scheduledDate: a.scheduledDate ? a.scheduledDate.toISOString() : null,
+    scheduledDate: dateToIsoStringOrNull(a.scheduledDate),
     startTime: a.startTime,
     endTime: a.endTime,
     durationMins: a.durationMins,
@@ -109,7 +110,7 @@ export function expenseToClientJson(e: Expense) {
     currency: e.currency,
     splitMode: e.splitMode,
     receiptUrl: e.receiptUrl,
-    expenseDate: e.expenseDate.toISOString(),
+    expenseDate: dateToIsoStringOrNull(e.expenseDate) ?? e.createdAt.toISOString(),
     status: e.status,
     createdAt: e.createdAt.toISOString(),
     updatedAt: e.updatedAt.toISOString(),

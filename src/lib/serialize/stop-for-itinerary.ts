@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import type { StopSerialized } from "@/components/itinerary/types";
+import { dateToIsoStringOrNull } from "@/lib/dates/to-iso-safe";
 
 export const itineraryStopInclude = {
   stays: {
@@ -24,8 +25,8 @@ export function serializeItineraryStop(s: StopWithItineraryDetails): StopSeriali
     longitude: s.longitude == null ? null : Number(s.longitude),
     placeId: s.placeId,
     sortOrder: s.sortOrder,
-    arrivalDate: s.arrivalDate?.toISOString() ?? null,
-    departureDate: s.departureDate?.toISOString() ?? null,
+    arrivalDate: dateToIsoStringOrNull(s.arrivalDate),
+    departureDate: dateToIsoStringOrNull(s.departureDate),
     status: s.status,
     stays: s.stays.map((st) => ({
       id: st.id,
@@ -34,9 +35,9 @@ export function serializeItineraryStop(s: StopWithItineraryDetails): StopSeriali
       url: st.url,
       roomSiteNumbers: st.roomSiteNumbers,
       arrivalTime: st.arrivalTime,
-      checkIn: st.checkIn?.toISOString() ?? null,
+      checkIn: dateToIsoStringOrNull(st.checkIn),
       checkInTime: st.checkInTime,
-      checkOut: st.checkOut?.toISOString() ?? null,
+      checkOut: dateToIsoStringOrNull(st.checkOut),
       checkOutTime: st.checkOutTime,
       leaveTime: st.leaveTime,
       pricePerNight: st.pricePerNight ? Number(st.pricePerNight) : null,
@@ -49,7 +50,7 @@ export function serializeItineraryStop(s: StopWithItineraryDetails): StopSeriali
       id: a.id,
       name: a.name,
       description: a.description,
-      scheduledDate: a.scheduledDate?.toISOString() ?? null,
+      scheduledDate: dateToIsoStringOrNull(a.scheduledDate),
       startTime: a.startTime,
       endTime: a.endTime,
       durationMins: a.durationMins,

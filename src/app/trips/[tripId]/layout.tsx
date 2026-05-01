@@ -9,11 +9,7 @@ import { TripProvider } from "@/components/trip/TripContext";
 import { ViewerReadOnlyBanner } from "@/components/trip/ViewerReadOnlyBanner";
 import { TripSwipeHint } from "@/components/layout/TripSwipeHint";
 import { getTripLayoutData } from "@/lib/trip-layout-data";
-
-function toIsoString(value: Date | string | null | undefined): string | null {
-  if (!value) return null;
-  return typeof value === "string" ? value : value.toISOString();
-}
+import { dateToIsoStringOrNull } from "@/lib/dates/to-iso-safe";
 
 export default async function TripLayout({
   children,
@@ -49,8 +45,8 @@ export default async function TripLayout({
         name: trip.name,
         currency: trip.currency,
         status: trip.status,
-        startDate: toIsoString(trip.startDate),
-        endDate: toIsoString(trip.endDate),
+        startDate: dateToIsoStringOrNull(trip.startDate),
+        endDate: dateToIsoStringOrNull(trip.endDate),
         budgetTarget: trip.budgetTarget ? Number(trip.budgetTarget) : null,
         estimatedCostOverride: trip.estimatedCostOverride ? Number(trip.estimatedCostOverride) : null,
         costSplitMemberCountOverride: trip.costSplitMemberCountOverride ?? null,
@@ -61,7 +57,10 @@ export default async function TripLayout({
         id: m.id,
         userId: m.userId,
         role: m.role,
-        joinedAt: typeof m.joinedAt === "string" ? m.joinedAt : m.joinedAt.toISOString(),
+        joinedAt:
+          typeof m.joinedAt === "string"
+            ? m.joinedAt
+            : dateToIsoStringOrNull(m.joinedAt) ?? "1970-01-01T00:00:00.000Z",
         user: m.user,
       }))}
     >
