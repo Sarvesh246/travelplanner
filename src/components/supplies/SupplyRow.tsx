@@ -142,7 +142,7 @@ export function SupplyRow({
           selected && "bg-primary/5"
         )}
       >
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_auto] lg:items-center lg:gap-x-4 xl:gap-x-5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_minmax(7.75rem,8.75rem)] lg:items-start lg:gap-x-4 xl:gap-x-5">
           <div className="row-span-2 flex items-start pt-1 lg:row-span-1 lg:pt-0">
             <input
               type="checkbox"
@@ -188,12 +188,12 @@ export function SupplyRow({
           </button>
 
           {canEdit ? (
-            <div className="col-start-3 row-span-2 flex items-start justify-end gap-2 lg:col-start-8 lg:row-span-1 lg:self-center lg:justify-self-end">
-              <div className="hidden h-10 items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-2 lg:flex">
-                <span className="pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="col-start-3 row-span-2 flex items-start justify-end gap-2 lg:col-start-8 lg:row-span-1 lg:self-start lg:justify-self-stretch">
+              <div className="hidden min-w-0 flex-col items-center lg:flex">
+                <div className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Actions
-                </span>
-                <div className="flex items-center gap-2">
+                </div>
+                <div className="flex h-10 min-w-0 items-center justify-center gap-2">
                   <ActionButton
                     label={`Copy trip link for ${item.name}`}
                     title="Copy link"
@@ -282,8 +282,8 @@ export function SupplyRow({
             </MetricField>
           </div>
 
-          <div className="col-start-2 min-w-0 lg:col-start-7 lg:row-start-1 lg:self-start lg:pt-3">
-            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground lg:hidden">
+          <div className="col-start-2 min-w-0 lg:col-start-7 lg:row-start-1 lg:self-start">
+            <div className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Bringer
             </div>
             {bringerControl}
@@ -321,7 +321,7 @@ function MetricField({
 }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
       {children}
@@ -330,7 +330,7 @@ function MetricField({
 }
 
 function ValuePill({ children }: { children: React.ReactNode }) {
-  return <div className="flex h-10 items-center text-sm font-semibold text-foreground">{children}</div>;
+  return <div className="flex h-10 items-center justify-center text-sm font-semibold text-foreground">{children}</div>;
 }
 
 function ActionButton({
@@ -380,7 +380,7 @@ function NumberInput({
   const [draft, setDraft] = useState(String(value));
 
   if (!canEdit) {
-    return <div className="flex h-10 items-center text-sm font-semibold text-foreground">{value}</div>;
+    return <div className="flex h-10 items-center justify-center text-sm font-semibold text-foreground">{value}</div>;
   }
 
   function normalize(next: string) {
@@ -416,7 +416,7 @@ function NumberInput({
           e.currentTarget.blur();
         }
       }}
-      className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-right text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+      className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-center text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
     />
   );
 }
