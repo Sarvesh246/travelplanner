@@ -11,7 +11,7 @@ type StopMapEmptyProps = {
 };
 
 const TILE = "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]";
-const TILE_COMPACT = "aspect-[16/9] min-h-[140px] max-h-[min(32dvh,240px)]";
+const TILE_COMPACT = "aspect-[16/9] min-h-[120px] max-h-[min(26dvh,210px)]";
 
 export function StopMapEmpty({
   className,

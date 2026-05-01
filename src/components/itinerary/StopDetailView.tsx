@@ -279,7 +279,12 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   );
 
   const tabStrip = (
-    <div className="flex shrink-0 gap-px border-b border-border/85 bg-muted/20 px-1 pt-1">
+    <div
+      className={cn(
+        "flex shrink-0 gap-px border-b border-border/85 bg-muted/20 px-1 pt-1",
+        !isPage && "[&_button]:py-2.5"
+      )}
+    >
       <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
         <Bed className="w-3.5 h-3.5" /> Stays ({stop.stays.length})
       </TabButton>
@@ -298,7 +303,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-3 [scrollbar-gutter:stable] pb-[max(2.75rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] md:px-5 md:pb-10 md:pt-4"
+          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-2.5 [scrollbar-gutter:stable] scroll-pb-6 pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))] md:scroll-pb-8 md:px-5 md:pb-10 md:pt-4"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -318,7 +323,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="min-h-0 max-h-[min(28dvh,11.75rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1.5 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(33dvh,13.75rem)] md:max-h-[min(39dvh,17.25rem)] md:px-5 md:pb-2 md:pt-2.5">
+      <div className="min-h-0 max-h-[min(24dvh,9.875rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:max-h-[min(28dvh,11.625rem)] md:max-h-[min(34dvh,15.25rem)] md:px-5 md:pb-1.5 md:pt-2">
         {locationSection}
       </div>
       {tabStrip}
@@ -372,7 +377,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   return (
     <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-3 sm:px-5 sm:py-4">
+      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-2.5 sm:px-5 sm:py-3.5 md:py-4">
         {titleBlock}
         {actionButtons}
       </div>
