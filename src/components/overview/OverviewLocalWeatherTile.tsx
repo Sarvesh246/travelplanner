@@ -21,8 +21,6 @@ export function OverviewLocalWeatherTile({ weather }: { weather: WeatherState | 
             <p className="truncate text-[13px] font-medium text-foreground">
               {resolved.data.locationLabel?.trim() || "Nearby"}
             </p>
-          ) : resolved.state === "loading" ? (
-            <p className="truncate text-[12px] text-muted-foreground">Checking nearby conditions…</p>
           ) : null}
         </div>
       </div>
