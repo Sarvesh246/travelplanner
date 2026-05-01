@@ -298,7 +298,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-4 pt-4 [scrollbar-gutter:stable] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.75rem))] md:px-5 md:pb-10"
+          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-3 [scrollbar-gutter:stable] pb-[max(2.75rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] md:px-5 md:pb-10 md:pt-4"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -308,7 +308,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   /**
    * Drawer: flex column (more reliable than grid `1fr` + min-height quirks on mobile WebKit).
-   * Map stack is max-capped so Stays / Activities always retains real scroll height.
+   * Map stack stays short (scrollable) so Stays / Activities gets most of the drawer height.
    */
   const body = isPage ? (
     <>
@@ -318,7 +318,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="min-h-0 max-h-[min(38dvh,15.5rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-2 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(42dvh,18rem)] md:max-h-[min(48dvh,22rem)] md:px-5 md:pt-3">
+      <div className="min-h-0 max-h-[min(28dvh,11.75rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1.5 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(33dvh,13.75rem)] md:max-h-[min(39dvh,17.25rem)] md:px-5 md:pb-2 md:pt-2.5">
         {locationSection}
       </div>
       {tabStrip}
@@ -372,7 +372,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   return (
     <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-4 sm:px-5">
+      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-3 sm:px-5 sm:py-4">
         {titleBlock}
         {actionButtons}
       </div>

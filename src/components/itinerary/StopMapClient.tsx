@@ -173,7 +173,7 @@ export function StopMapClient({
   }, [position, editable, isMobile]);
 
   const tile =
-    (compact ? "aspect-[16/9] min-h-[168px] max-h-[min(42dvh,280px)]" : "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]") +
+    (compact ? "aspect-[16/9] min-h-[140px] max-h-[min(32dvh,240px)]" : "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]") +
     (editable ? " [&_.leaflet-container]:cursor-crosshair" : "");
 
   return (

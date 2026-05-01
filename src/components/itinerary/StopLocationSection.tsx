@@ -132,8 +132,8 @@ export function StopLocationSection({
   return (
     <section
       className={cn(
-        "app-surface-soft relative mb-5 rounded-2xl border border-border/80 bg-card/60 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200",
-        compact ? "p-3.5 pb-2" : "p-4 pb-2",
+        "app-surface-soft relative rounded-2xl border border-border/80 bg-card/60 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200",
+        compact ? "mb-0 p-3 pb-1.5" : "mb-5 p-4 pb-2",
         className
       )}
     >
