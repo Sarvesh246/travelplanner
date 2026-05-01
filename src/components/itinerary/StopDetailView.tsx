@@ -16,7 +16,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { deriveDurationMins, formatDateRange } from "@/lib/utils";
+import { cn, deriveDurationMins, formatDateRange } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { StayCard } from "./StayCard";
 import { DayTimeline } from "./DayTimeline";
@@ -279,7 +279,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   );
 
   const tabStrip = (
-    <div className="flex shrink-0 border-b border-border/80 bg-muted/10">
+    <div className="flex shrink-0 gap-px border-b border-border/85 bg-muted/20 px-1 pt-1">
       <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
         <Bed className="w-3.5 h-3.5" /> Stays ({stop.stays.length})
       </TabButton>
@@ -406,16 +406,19 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors duration-200 ${
-        active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-      }`}
+      className={cn(
+        "relative flex flex-1 items-center justify-center gap-2 rounded-t-xl py-3.5 text-sm transition-colors transition-[background-color,box-shadow] duration-200 [&_svg]:shrink-0",
+        active
+          ? "z-[1] font-semibold text-foreground bg-muted/55 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] dark:bg-muted/40 dark:text-foreground [&_svg]:text-primary [&_svg]:opacity-100"
+          : "font-medium text-muted-foreground/90 hover:z-[1] hover:text-foreground hover:bg-muted/30 [&_svg]:opacity-65 hover:[&_svg]:opacity-90"
+      )}
     >
       {children}
       {active && (
         <motion.div
           layoutId={`stop-detail-tab-${layoutIdSuffix}`}
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          className="pointer-events-none absolute bottom-0 left-1 right-1 h-[3px] rounded-full bg-primary shadow-[0_0_14px_-1px_hsl(var(--primary)/0.65)] dark:shadow-[0_0_18px_-2px_hsl(var(--primary)/0.55)]"
+          transition={{ type: "spring", stiffness: 420, damping: 32 }}
         />
       )}
     </button>

@@ -204,10 +204,10 @@ export function StayCard({ stay, canEdit, onDirtyChange }: StayCardProps) {
   const leaveLabel = formatTimeValue(stay.leaveTime);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 pb-5">
+    <div className="app-surface-soft rounded-xl border border-border/90 bg-card p-4 pb-5 shadow-sm dark:border-primary/22">
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-          <Bed className="w-4 h-4 text-primary" />
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/14 ring-1 ring-primary/25 dark:bg-primary/18">
+          <Bed className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
