@@ -86,22 +86,29 @@ export function StopLocationHeader({
   return (
     <div
       className={cn(
-        "mb-3 flex flex-col gap-2 rounded-xl border border-border/80 bg-background/50 px-3 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between"
+        "mb-3 flex flex-col gap-3 rounded-xl border border-border/80 bg-background/50 px-3 py-2.5",
+        /** 440px itinerary drawer lands here — keep stacked so coords never collide with Edit/Use current/Remove. */
+        "min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-between min-[520px]:gap-3"
       )}
     >
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 max-w-full flex-1 overflow-hidden">
         <p className="truncate text-sm font-semibold text-foreground">{title}</p>
         {labelLoading && displayCoords ? (
           <p className="mt-0.5 text-[11px] text-muted-foreground animate-pulse">Looking up place…</p>
         ) : coordsLine ? (
-          <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">{coordsLine}</p>
+          <p
+            className="mt-0.5 truncate font-mono text-[11px] tabular-nums text-muted-foreground"
+            title={coordsLine}
+          >
+            {coordsLine}
+          </p>
         ) : (
           <p className="mt-0.5 text-[11px] text-muted-foreground">No coordinates yet</p>
         )}
       </div>
 
       {canEdit ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-1 min-[420px]:justify-end">
+        <div className="flex min-w-0 w-full shrink-0 flex-wrap items-center gap-x-2 gap-y-1 min-[520px]:w-auto min-[520px]:justify-end">
           <button
             type="button"
             onClick={onEdit}
