@@ -86,7 +86,7 @@ export function StopLocationHeader({
 
   if (canEdit) {
     return (
-      <div className="mb-3 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded-xl border border-border/80 bg-background/50 px-3 py-2.5">
+      <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-xl border border-border/80 bg-background/50 px-3 py-2.5">
         <button
           type="button"
           onClick={onEdit}
