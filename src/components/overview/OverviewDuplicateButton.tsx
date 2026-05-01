@@ -30,7 +30,7 @@ export function OverviewDuplicateButton({ tripId }: { tripId: string }) {
       type="button"
       disabled={busy}
       onClick={() => void handleClick()}
-      className="app-hover-lift inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted sm:py-2"
+      className="app-hover-lift inline-flex min-h-11 min-w-[44px] items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors duration-200 hover:bg-muted sm:py-2"
     >
       <Copy className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
       <span>Duplicate trip</span>

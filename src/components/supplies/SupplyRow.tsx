@@ -114,7 +114,7 @@ export function SupplyRow({
       aria-label={`${item.name} bringer`}
       value={item.whoBringsId ?? ""}
       onChange={(e) => updateBringer(e.target.value || null)}
-      className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring lg:max-w-[11.5rem] xl:max-w-[12rem]"
+      className="h-10 w-full max-w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring lg:max-w-[10rem]"
     >
       <option value="">Unassigned</option>
       {members.map((member) => (
@@ -124,7 +124,7 @@ export function SupplyRow({
       ))}
     </select>
   ) : item.whoBrings ? (
-    <div className="inline-flex h-10 max-w-[12rem] items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-3 text-sm">
+    <div className="inline-flex h-10 max-w-[10rem] min-w-0 items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-2 text-sm">
       <UserAvatar name={item.whoBrings.name} avatarUrl={item.whoBrings.avatarUrl} size="xs" />
       <span className="truncate">{item.whoBrings.name}</span>
     </div>
@@ -138,11 +138,11 @@ export function SupplyRow({
     <>
       <div
         className={cn(
-          "rounded-2xl px-3 py-3 transition-colors hover:border-primary/20 hover:bg-primary/[0.03] md:px-4",
+          "rounded-2xl px-3 py-3 transition-colors hover:border-primary/20 hover:bg-primary/[0.03] md:px-3 md:pr-4",
           selected && "bg-primary/5"
         )}
       >
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_8rem] lg:items-start lg:gap-x-4 xl:gap-x-5">
+        <div className="grid min-w-0 max-w-full grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[auto_minmax(0,1fr)_5rem_5rem_5.75rem_5rem_minmax(8rem,10rem)_8rem] lg:items-start lg:gap-x-3 xl:gap-x-4">
           <div className="row-span-2 flex items-start pt-1 lg:row-span-1 lg:pt-0">
             <input
               type="checkbox"
@@ -188,12 +188,12 @@ export function SupplyRow({
           </button>
 
           {canEdit ? (
-            <div className="col-start-3 row-span-2 flex items-start justify-end gap-1.5 lg:col-start-8 lg:row-span-1 lg:w-[8rem] lg:min-w-[8rem] lg:self-start lg:justify-self-stretch">
-                <div className="hidden min-w-0 flex-col items-center lg:flex">
+            <div className="col-start-3 row-span-2 flex items-start justify-end gap-1.5 lg:col-start-8 lg:row-span-1 lg:min-w-0 lg:self-start lg:justify-self-center">
+                <div className="hidden min-w-0 w-full flex-col items-stretch px-1 lg:flex">
                   <div className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Actions
                   </div>
-                  <div className="flex h-10 min-w-0 items-center justify-center gap-1.5 pr-1">
+                  <div className="flex min-h-[2.25rem] min-w-0 w-full items-center justify-center gap-1 px-1">
                   <ActionButton
                     label={`Copy trip link for ${item.name}`}
                     title="Copy link"
@@ -352,7 +352,7 @@ function ActionButton({
       aria-label={label}
       title={title}
       className={cn(
-        "inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-[1rem] border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors",
+        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border border-border/70 bg-card/90 text-muted-foreground shadow-sm transition-colors",
         destructive
           ? "hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive"
           : "hover:border-primary/35 hover:bg-primary/10 hover:text-primary"

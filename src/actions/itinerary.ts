@@ -94,7 +94,17 @@ export async function createStop(
 
 export async function updateStop(
   stopId: string,
-  data: Partial<{ name: string; country: string; description: string; arrivalDate: string; departureDate: string; status: string }>
+  data: Partial<{
+    name: string;
+    country: string;
+    description: string;
+    arrivalDate: string;
+    departureDate: string;
+    status: string;
+    latitude: number | null;
+    longitude: number | null;
+    placeId: string | null;
+  }>
 ) {
   const user = await getAuthUser();
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
@@ -115,6 +125,9 @@ export async function updateStop(
       ...(data.description !== undefined && { description: data.description }),
       ...(data.arrivalDate && { arrivalDate }),
       ...(data.departureDate && { departureDate }),
+      ...(data.latitude !== undefined && { latitude: data.latitude }),
+      ...(data.longitude !== undefined && { longitude: data.longitude }),
+      ...(data.placeId !== undefined && { placeId: data.placeId }),
       ...(data.status && { status: data.status as never }),
     },
   });

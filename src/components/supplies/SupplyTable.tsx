@@ -37,7 +37,7 @@ export function SupplyTable({
             {category}
           </h3>
 
-          <div className="hidden px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[auto_minmax(12rem,1.15fr)_5.25rem_5.25rem_6.25rem_5.5rem_minmax(9.5rem,11.5rem)_8rem] lg:gap-4 xl:gap-5">
+          <div className="hidden px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[auto_minmax(0,1fr)_5rem_5rem_5.75rem_5rem_minmax(8rem,10rem)_8rem] lg:items-center lg:gap-x-3 lg:gap-y-1 xl:gap-x-4">
             <label className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -47,13 +47,13 @@ export function SupplyTable({
                 className="h-4 w-4 rounded border-input"
               />
             </label>
-            <span>Item</span>
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
+            <span className="min-w-0">Item</span>
+            <span className="text-center">Needed</span>
+            <span className="text-center">Owned</span>
+            <span className="text-center leading-tight">Est. cost</span>
+            <span className="text-center">Each</span>
+            <span className="text-center leading-tight">Bringer</span>
+            <span className="text-center leading-tight">Actions</span>
           </div>
 
           <div className="min-w-0 max-w-full rounded-2xl">

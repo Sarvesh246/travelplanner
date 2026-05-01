@@ -464,6 +464,19 @@
       inset 0 1px 0 hsl(var(--foreground) / 0.05);
   }
 
+  /* Softer inset + lift for dashboard chips next to `.app-glass` */
+  .app-surface-soft {
+    box-shadow:
+      inset 0 1px 0 hsl(var(--foreground) / 0.035),
+      0 12px 34px -30px hsl(var(--primary) / 0.45);
+  }
+
+  .dark .app-surface-soft {
+    box-shadow:
+      inset 0 1px 0 hsl(var(--foreground) / 0.045),
+      0 16px 42px -36px hsl(var(--primary) / 0.6);
+  }
+
   .app-surface {
     position: relative;
     overflow: hidden;
@@ -480,6 +493,49 @@
     background:
       linear-gradient(135deg, hsl(var(--card) / 0.94), hsl(135 8% 16% / 0.84)),
       radial-gradient(circle at 90% 8%, hsl(var(--primary) / 0.12), transparent 18rem);
+  }
+
+  /* Empty / skeleton map — subtle topo + grid, outdoors-neutral */
+  .app-topo-empty {
+    background-color: hsl(var(--muted) / 0.35);
+    background-image:
+      radial-gradient(circle at 18% 22%, hsl(var(--primary) / 0.06), transparent 42%),
+      radial-gradient(circle at 82% 78%, hsl(var(--secondary) / 0.08), transparent 38%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 11px,
+        hsl(var(--border) / 0.45) 11px,
+        hsl(var(--border) / 0.45) 12px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 11px,
+        hsl(var(--border) / 0.35) 11px,
+        hsl(var(--border) / 0.35) 12px
+      );
+  }
+
+  .dark .app-topo-empty {
+    background-color: hsl(135 8% 14% / 0.55);
+    background-image:
+      radial-gradient(circle at 20% 24%, hsl(var(--primary) / 0.1), transparent 44%),
+      radial-gradient(circle at 80% 76%, hsl(var(--secondary) / 0.06), transparent 40%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 11px,
+        hsl(var(--border) / 0.25) 11px,
+        hsl(var(--border) / 0.25) 12px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 11px,
+        hsl(var(--border) / 0.18) 11px,
+        hsl(var(--border) / 0.18) 12px
+      );
   }
 
   @media (max-width: 767.98px) {

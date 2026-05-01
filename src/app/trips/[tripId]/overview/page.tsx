@@ -1,11 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { formatCurrency } from "@/lib/utils";
+import { headers } from "next/headers";
+import { formatCurrency, formatDateRange } from "@/lib/utils";
 import { CalendarDays, Plane, WalletCards } from "lucide-react";
 import { OverviewClient } from "@/components/overview/OverviewClient";
+import { OverviewLocalWeatherTile } from "@/components/overview/OverviewLocalWeatherTile";
 import { OverviewShareButton } from "@/components/overview/OverviewShareButton";
-import { OverviewHeroEditor } from "@/components/overview/OverviewHeroEditor";
+import {
+  OverviewCostPanels,
+  OverviewHeroEditor,
+} from "@/components/overview/OverviewHeroEditor";
 import { OverviewQuickAdds } from "@/components/overview/OverviewQuickAdds";
 import { OverviewDuplicateButton } from "@/components/overview/OverviewDuplicateButton";
 import { OverviewContextHints } from "@/components/overview/OverviewContextHints";
@@ -14,6 +19,9 @@ import {
   daysUntilPlanningDate,
   tripDurationFromPlanningDates,
 } from "@/lib/calendar/planning-dates";
+import { getApproxUserLocationFromIp } from "@/lib/location/ipapi";
+import { getCurrentWeatherByCoords } from "@/lib/weather/openweather";
+import type { WeatherState } from "@/lib/weather/types";
 
 export const metadata = { title: "Overview" };
 
@@ -87,6 +95,17 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((estimatedTripCost / budgetTarget) * 100)) : null;
   const coveredItems = supplyItems.filter((item) => item.status === "COVERED").length;
   const totalItems = supplyItems.length;
+  const requestHeaders = await headers();
+  const approxLocation = await getApproxUserLocationFromIp(requestHeaders);
+  const localWeather: WeatherState = approxLocation
+    ? await getCurrentWeatherByCoords(approxLocation.lat, approxLocation.lon)
+    : { state: "empty", message: "Outlook unavailable locally" };
+
+  if (localWeather.state === "ready" && approxLocation) {
+    localWeather.data.locationLabel =
+      [approxLocation.city, approxLocation.region].filter(Boolean).join(", ") ||
+      localWeather.data.locationLabel;
+  }
   const recentActivity = [
     ...recentStops.map((s) => ({ id: s.id, label: `Stop updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "stop" as const })),
     ...recentSupplies.map((s) => ({ id: s.id, label: `Supply updated: ${s.name}`, at: s.updatedAt.toISOString(), kind: "supply" as const })),
@@ -98,7 +117,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   return (
     <div className="space-y-5">
       <section className="app-page-band app-surface">
-        <div className="relative z-10 flex flex-col gap-5">
+        <div className="relative z-10 flex flex-col gap-4">
           <div className="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-between">
             <div className="min-w-0 flex-1">
               <p className="app-kicker mb-3">
@@ -106,27 +125,43 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 Trip overview
               </p>
               <OverviewHeroEditor
+                key={`overview-hero:${tripId}:${trip.startDate?.toISOString() ?? "none"}:${trip.endDate?.toISOString() ?? "none"}`}
                 tripId={tripId}
                 name={trip.name}
                 startDate={trip.startDate ? trip.startDate.toISOString().slice(0, 10) : null}
                 endDate={trip.endDate ? trip.endDate.toISOString().slice(0, 10) : null}
-                estimatedCost={estimatedTripCost}
-                automaticCost={automaticTripCost}
-                individualCost={individualTripCost}
-                actualMemberCount={memberCount}
-                splitMemberCount={splitMemberCount}
-                hasManualEstimate={trip.estimatedCostOverride !== null}
                 currency={trip.currency}
               />
             </div>
-            <div className="flex shrink-0 flex-col gap-3 items-stretch min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-end">
+            <div className="flex shrink-0 flex-col gap-2 items-stretch min-[520px]:flex-row min-[520px]:items-start min-[520px]:justify-end min-[520px]:gap-3">
               <OverviewDuplicateButton tripId={tripId} />
               <OverviewShareButton />
             </div>
           </div>
 
-          <div className="grid gap-3 min-[560px]:grid-cols-2">
-            <div className="app-glass flex items-center gap-3 rounded-xl px-3 py-3">
+          <OverviewCostPanels
+            key={`overview-costs:${tripId}:${estimatedTripCost}:${individualTripCost}:${splitMemberCount}:${trip.estimatedCostOverride ?? "auto"}`}
+            tripId={tripId}
+            currency={trip.currency}
+            estimatedCost={estimatedTripCost}
+            automaticCost={automaticTripCost}
+            individualCost={individualTripCost}
+            actualMemberCount={memberCount}
+            splitMemberCount={splitMemberCount}
+            hasManualEstimate={trip.estimatedCostOverride !== null}
+          />
+
+          <p className="text-sm text-muted-foreground">
+            {trip.startDate || trip.endDate
+              ? formatDateRange(
+                  trip.startDate ? trip.startDate.toISOString().slice(0, 10) : null,
+                  trip.endDate ? trip.endDate.toISOString().slice(0, 10) : null,
+                )
+              : "Set dates to frame the itinerary"}
+          </p>
+
+          <div className="grid gap-3 min-[560px]:grid-cols-2 xl:grid-cols-3">
+            <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <Plane className="w-5 h-5 rotate-45" />
               </div>
@@ -141,7 +176,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
             </div>
 
             {budgetPct !== null ? (
-              <div className="app-glass flex items-center gap-3 rounded-xl px-3 py-3">
+              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <WalletCards className="w-5 h-5" />
                 </div>
@@ -159,7 +194,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 </div>
               </div>
             ) : (
-              <div className="app-glass flex items-center gap-3 rounded-xl px-3 py-3">
+              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <CalendarDays className="w-5 h-5" />
                 </div>
@@ -169,6 +204,8 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 </div>
               </div>
             )}
+
+            <OverviewLocalWeatherTile weather={localWeather} />
           </div>
         </div>
       </section>

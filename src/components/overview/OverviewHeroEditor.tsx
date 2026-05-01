@@ -12,38 +12,28 @@ import { nextSaturday } from "date-fns/nextSaturday";
 import { InlineEdit } from "@/components/shared/InlineEdit";
 import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
-import { formatCurrency, formatDateRange, getStandardTimeZoneLabel } from "@/lib/utils";
+import { formatCurrency, getStandardTimeZoneLabel } from "@/lib/utils";
 
 export function OverviewHeroEditor({
   tripId,
   name,
   startDate,
   endDate,
-  estimatedCost,
-  automaticCost,
-  individualCost,
-  actualMemberCount,
-  splitMemberCount,
-  hasManualEstimate,
   currency,
 }: {
   tripId: string;
   name: string;
   startDate: string | null;
   endDate: string | null;
-  estimatedCost: number;
-  automaticCost: number;
-  individualCost: number;
-  actualMemberCount: number;
-  splitMemberCount: number;
-  hasManualEstimate: boolean;
   currency: string;
 }) {
   const router = useRouter();
   const [localStart, setLocalStart] = useState(startDate ?? "");
   const [localEnd, setLocalEnd] = useState(endDate ?? "");
-  const [customMemberCount, setCustomMemberCount] = useState(splitMemberCount.toString());
-  const [isEditingMemberCount, setIsEditingMemberCount] = useState(false);
+  useEffect(() => {
+    setLocalStart(startDate ?? "");
+    setLocalEnd(endDate ?? "");
+  }, [startDate, endDate]);
   const { canManage } = useTripContext();
   const startDatePresence = useTripEditingPresenceField({
     surfaceId: `trip-overview:${tripId}`,
@@ -61,60 +51,10 @@ export function OverviewHeroEditor({
     fieldKey: "end-date",
     fieldLabel: "end date",
   });
-  const estimatePresence = useTripEditingPresenceField({
-    surfaceId: `trip-overview:${tripId}`,
-    surfaceLabel: "Trip overview",
-    resourceId: tripId,
-    resourceLabel: "Trip overview",
-    fieldKey: "estimated-cost",
-    fieldLabel: "estimated cost",
-  });
 
   const tzLabel = useMemo(() => {
     return getStandardTimeZoneLabel();
   }, []);
-
-  useEffect(() => {
-    setCustomMemberCount(splitMemberCount.toString());
-  }, [splitMemberCount]);
-
-  function saveManualEstimate(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      void updateTrip(tripId, { estimatedCostOverride: null });
-      return;
-    }
-
-    const parsed = Number(trimmed.replace(/,/g, ""));
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      return;
-    }
-
-    void updateTrip(tripId, { estimatedCostOverride: parsed });
-  }
-
-  function saveSplitMemberCount(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      setCustomMemberCount(actualMemberCount.toString());
-      setIsEditingMemberCount(false);
-      void updateTrip(tripId, { costSplitMemberCountOverride: null });
-      return;
-    }
-
-    const parsed = Number(trimmed);
-    if (!Number.isInteger(parsed) || parsed < 1) {
-      setCustomMemberCount(splitMemberCount.toString());
-      setIsEditingMemberCount(false);
-      return;
-    }
-
-    setCustomMemberCount(parsed.toString());
-    setIsEditingMemberCount(false);
-    void updateTrip(tripId, {
-      costSplitMemberCountOverride: parsed === actualMemberCount ? null : parsed,
-    });
-  }
 
   async function applyQuickRange(kind: "weekend7" | "plusWeek") {
     const now = new Date();
@@ -136,14 +76,6 @@ export function OverviewHeroEditor({
     setLocalEnd(endStr);
     await updateTrip(tripId, { startDate: startStr, endDate: endStr });
     router.refresh();
-  }
-
-  function formatCostValue(value: number) {
-    const hasCents = Math.abs(value % 1) > 0.0001;
-    return new Intl.NumberFormat(undefined, {
-      minimumFractionDigits: hasCents ? 2 : 0,
-      maximumFractionDigits: 2,
-    }).format(value);
   }
 
   return (
@@ -205,7 +137,10 @@ export function OverviewHeroEditor({
                 const next = e.target.value;
                 setLocalStart(next);
                 startDatePresence.activate();
-                void updateTrip(tripId, { startDate: next || null });
+                void (async () => {
+                  await updateTrip(tripId, { startDate: next || null });
+                  router.refresh();
+                })();
               }}
               onFocus={startDatePresence.activate}
               onBlur={startDatePresence.clear}
@@ -225,7 +160,10 @@ export function OverviewHeroEditor({
                 const next = e.target.value;
                 setLocalEnd(next);
                 endDatePresence.activate();
-                void updateTrip(tripId, { endDate: next || null });
+                void (async () => {
+                  await updateTrip(tripId, { endDate: next || null });
+                  router.refresh();
+                })();
               }}
               onFocus={endDatePresence.activate}
               onBlur={endDatePresence.clear}
@@ -235,160 +173,240 @@ export function OverviewHeroEditor({
           <EditingPresenceNotice editors={endDatePresence.fieldEditors} />
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="grid gap-3 xl:grid-cols-2">
-        <div className="w-full rounded-2xl border border-border/75 bg-card/70 px-4 py-3.5 sm:px-4.5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/12">
-              <WalletCards className="h-4.5 w-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Estimated cost
-                  </p>
-                  <div className="mt-2 flex min-w-0 items-end gap-2">
-                    <span className="shrink-0 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {currency}
-                    </span>
-                    {canManage ? (
-                      <input
-                        key={`${estimatedCost}:${hasManualEstimate}`}
-                        type="text"
-                        inputMode="decimal"
-                        defaultValue={estimatedCost.toString()}
-                        onBlur={(e) => {
-                          estimatePresence.clear();
-                          saveManualEstimate(e.target.value);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") e.currentTarget.blur();
-                          if (e.key === "Escape") {
-                            e.currentTarget.value = estimatedCost.toString();
-                            e.currentTarget.blur();
-                          }
-                        }}
-                        onFocus={estimatePresence.activate}
-                        onChange={estimatePresence.activate}
-                        className="min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-[2rem] font-semibold leading-none tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
-                        aria-label="Estimated group trip cost"
-                      />
-                    ) : (
-                      <span className="min-w-0 truncate text-[2rem] font-semibold leading-none tracking-tight text-foreground">
-                        {formatCostValue(estimatedCost)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {canManage && hasManualEstimate ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void updateTrip(tripId, { estimatedCostOverride: null });
-                    }}
-                    className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-2.5 py-1 text-[11px] font-semibold text-primary transition-[background-color,border-color,color] duration-300 hover:border-primary/32 hover:bg-primary/12"
-                  >
-                    Use auto
-                  </button>
-                ) : null}
-              </div>
+/** Full-width cost row (matches overview `min-[560px]:grid-cols-2` used for departure / route length). */
+export function OverviewCostPanels({
+  tripId,
+  currency,
+  estimatedCost,
+  automaticCost,
+  individualCost,
+  actualMemberCount,
+  splitMemberCount,
+  hasManualEstimate,
+}: {
+  tripId: string;
+  currency: string;
+  estimatedCost: number;
+  automaticCost: number;
+  individualCost: number;
+  actualMemberCount: number;
+  splitMemberCount: number;
+  hasManualEstimate: boolean;
+}) {
+  const { canManage } = useTripContext();
+  const [customMemberCount, setCustomMemberCount] = useState(splitMemberCount.toString());
+  const [isEditingMemberCount, setIsEditingMemberCount] = useState(false);
+  useEffect(() => {
+    if (!isEditingMemberCount) {
+      setCustomMemberCount(splitMemberCount.toString());
+    }
+  }, [splitMemberCount, isEditingMemberCount]);
+  const estimatePresence = useTripEditingPresenceField({
+    surfaceId: `trip-overview:${tripId}`,
+    surfaceLabel: "Trip overview",
+    resourceId: tripId,
+    resourceLabel: "Trip overview",
+    fieldKey: "estimated-cost",
+    fieldLabel: "estimated cost",
+  });
 
-              <p className="mt-2.5 text-xs leading-5 text-muted-foreground">
-                {hasManualEstimate
-                  ? `Manual group estimate. Auto total is ${formatCurrency(automaticCost, currency)}.`
-                  : "Auto-calculated as the total group cost from expenses and supplies."}
-              </p>
-              <EditingPresenceNotice editors={estimatePresence.fieldEditors} className="mt-2" />
-            </div>
+  function formatCostValue(value: number) {
+    const hasCents = Math.abs(value % 1) > 0.0001;
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: hasCents ? 2 : 0,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  function saveManualEstimate(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      void updateTrip(tripId, { estimatedCostOverride: null });
+      return;
+    }
+
+    const parsed = Number(trimmed.replace(/,/g, ""));
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return;
+    }
+
+    void updateTrip(tripId, { estimatedCostOverride: parsed });
+  }
+
+  function saveSplitMemberCount(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setCustomMemberCount(actualMemberCount.toString());
+      setIsEditingMemberCount(false);
+      void updateTrip(tripId, { costSplitMemberCountOverride: null });
+      return;
+    }
+
+    const parsed = Number(trimmed);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      setCustomMemberCount(splitMemberCount.toString());
+      setIsEditingMemberCount(false);
+      return;
+    }
+
+    setCustomMemberCount(parsed.toString());
+    setIsEditingMemberCount(false);
+    void updateTrip(tripId, {
+      costSplitMemberCountOverride: parsed === actualMemberCount ? null : parsed,
+    });
+  }
+
+  return (
+    <div className="grid min-w-0 grid-cols-1 gap-3 min-[560px]:grid-cols-2">
+      <div className="min-w-0 w-full rounded-2xl border border-border/75 bg-card/70 px-4 py-3.5 sm:px-4.5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/12">
+            <WalletCards className="h-4.5 w-4.5" />
           </div>
-        </div>
-
-        <div className="w-full rounded-2xl border border-border/75 bg-card/70 px-4 py-3.5 sm:px-4.5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/12">
-              <Users className="h-4.5 w-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Individual cost
-              </p>
-              <div className="mt-2 flex min-w-0 items-end gap-2">
-                <span className="shrink-0 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  {currency}
-                </span>
-                <span className="min-w-0 truncate text-[2rem] font-semibold leading-none tracking-tight text-foreground">
-                  {formatCostValue(individualCost)}
-                </span>
-              </div>
-
-              <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-border/70 bg-background/40 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Split by {splitMemberCount} {splitMemberCount === 1 ? "person" : "people"}
-                </span>
-                {canManage ? (
-                  isEditingMemberCount ? (
-                    <>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={customMemberCount}
-                        onChange={(e) => setCustomMemberCount(e.target.value)}
-                        onBlur={(e) => saveSplitMemberCount(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") e.currentTarget.blur();
-                          if (e.key === "Escape") {
-                            setCustomMemberCount(splitMemberCount.toString());
-                            setIsEditingMemberCount(false);
-                          }
-                        }}
-                        autoFocus
-                        className="w-20 rounded-full border border-border/70 bg-background/70 px-3 py-1 text-sm outline-none transition-colors duration-300 focus:border-primary/35"
-                        aria-label="Members included in individual cost split"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomMemberCount(actualMemberCount.toString());
-                          setIsEditingMemberCount(false);
-                          void updateTrip(tripId, { costSplitMemberCountOverride: null });
-                        }}
-                        className="rounded-full border border-border/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors duration-300 hover:border-primary/35 hover:text-primary"
-                      >
-                        Use roster
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCustomMemberCount(splitMemberCount.toString());
-                        setIsEditingMemberCount(true);
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Estimated cost
+                </p>
+                <div className="mt-2 flex min-w-0 items-end gap-2">
+                  <span className="shrink-0 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {currency}
+                  </span>
+                  {canManage ? (
+                    <input
+                      key={`${estimatedCost}:${hasManualEstimate}`}
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={estimatedCost.toString()}
+                      onBlur={(e) => {
+                        estimatePresence.clear();
+                        saveManualEstimate(e.target.value);
                       }}
-                      className="rounded-full border border-border/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors duration-300 hover:border-primary/35 hover:text-primary"
-                    >
-                      Adjust split
-                    </button>
-                  )
-                ) : null}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") e.currentTarget.blur();
+                        if (e.key === "Escape") {
+                          e.currentTarget.value = estimatedCost.toString();
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      onFocus={estimatePresence.activate}
+                      onChange={estimatePresence.activate}
+                      className="min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-[2rem] font-semibold leading-none tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
+                      aria-label="Estimated group trip cost"
+                    />
+                  ) : (
+                    <span className="min-w-0 truncate text-[2rem] font-semibold leading-none tracking-tight text-foreground">
+                      {formatCostValue(estimatedCost)}
+                    </span>
+                  )}
+                </div>
               </div>
-
-              <p className="mt-2.5 text-xs leading-5 text-muted-foreground">
-                {splitMemberCount === actualMemberCount
-                  ? `Based on the ${actualMemberCount} active ${actualMemberCount === 1 ? "member" : "members"} on this trip.`
-                  : `Using a custom split of ${splitMemberCount} people instead of the ${actualMemberCount} active ${actualMemberCount === 1 ? "member" : "members"} on the trip.`}
-              </p>
+              {canManage && hasManualEstimate ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void updateTrip(tripId, { estimatedCostOverride: null });
+                  }}
+                  className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-2.5 py-1 text-[11px] font-semibold text-primary transition-[background-color,border-color,color] duration-300 hover:border-primary/32 hover:bg-primary/12"
+                >
+                  Use auto
+                </button>
+              ) : null}
             </div>
+
+            <p className="mt-2.5 text-xs leading-5 text-muted-foreground">
+              {hasManualEstimate
+                ? `Manual group estimate. Auto total is ${formatCurrency(automaticCost, currency)}.`
+                : "Auto-calculated as the total group cost from expenses and supplies."}
+            </p>
+            <EditingPresenceNotice editors={estimatePresence.fieldEditors} className="mt-2" />
           </div>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {localStart || localEnd
-          ? formatDateRange(localStart || null, localEnd || null)
-          : "Set dates to frame the itinerary"}
-      </p>
+      <div className="min-w-0 w-full rounded-2xl border border-border/75 bg-card/70 px-4 py-3.5 sm:px-4.5">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/12">
+            <Users className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Individual cost
+            </p>
+            <div className="mt-2 flex min-w-0 items-end gap-2">
+              <span className="shrink-0 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {currency}
+              </span>
+              <span className="min-w-0 truncate text-[2rem] font-semibold leading-none tracking-tight text-foreground">
+                {formatCostValue(individualCost)}
+              </span>
+            </div>
+
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-border/70 bg-background/40 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Split by {splitMemberCount} {splitMemberCount === 1 ? "person" : "people"}
+              </span>
+              {canManage ? (
+                isEditingMemberCount ? (
+                  <>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={customMemberCount}
+                      onChange={(e) => setCustomMemberCount(e.target.value)}
+                      onBlur={(e) => saveSplitMemberCount(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") e.currentTarget.blur();
+                        if (e.key === "Escape") {
+                          setCustomMemberCount(splitMemberCount.toString());
+                          setIsEditingMemberCount(false);
+                        }
+                      }}
+                      autoFocus
+                      className="w-20 rounded-full border border-border/70 bg-background/70 px-3 py-1 text-sm outline-none transition-colors duration-300 focus:border-primary/35"
+                      aria-label="Members included in individual cost split"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomMemberCount(actualMemberCount.toString());
+                        setIsEditingMemberCount(false);
+                        void updateTrip(tripId, { costSplitMemberCountOverride: null });
+                      }}
+                      className="rounded-full border border-border/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors duration-300 hover:border-primary/35 hover:text-primary"
+                    >
+                      Use roster
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomMemberCount(splitMemberCount.toString());
+                      setIsEditingMemberCount(true);
+                    }}
+                    className="rounded-full border border-border/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors duration-300 hover:border-primary/35 hover:text-primary"
+                  >
+                    Adjust split
+                  </button>
+                )
+              ) : null}
+            </div>
+
+            <p className="mt-2.5 text-xs leading-5 text-muted-foreground">
+              {splitMemberCount === actualMemberCount
+                ? `Based on the ${actualMemberCount} active ${actualMemberCount === 1 ? "member" : "members"} on this trip.`
+                : `Using a custom split of ${splitMemberCount} people instead of the ${actualMemberCount} active ${actualMemberCount === 1 ? "member" : "members"} on the trip.`}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight, Map, Link2 } from "lucide-react";
+import { MapPin, GripVertical, Bed, CalendarDays, ChevronRight, Map, Link2, CircleDot } from "lucide-react";
 import { formatDateRange } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { toast } from "sonner";
 import type { StopSerialized } from "./types";
 import type { HTMLAttributes, DOMAttributes } from "react";
+import { StopWeatherPill } from "@/components/weather/StopWeatherPill";
 
 type DragHandle = HTMLAttributes<HTMLButtonElement> & DOMAttributes<HTMLButtonElement>;
 
@@ -19,6 +20,13 @@ interface StopCardProps {
   onSelect: () => void;
   onButtonRef?: (el: HTMLButtonElement | null) => void;
   dragHandleProps?: DragHandle;
+}
+
+function formatStopStatus(status: string) {
+  return status
+    .split("_")
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export function StopCard({
@@ -40,6 +48,9 @@ export function StopCard({
       toast.error("Could not copy link");
     }
   }
+
+  const hasCoords = stop.latitude != null && stop.longitude != null;
+  const stopPageHref = ROUTES.tripStop(tripId, stop.id);
 
   return (
     <div className="relative min-w-0 max-w-full">
@@ -69,39 +80,73 @@ export function StopCard({
           onClick={onSelect}
           ref={onButtonRef}
           aria-pressed={selected}
-          className="min-w-0 flex-1 text-left p-4 pr-14 md:pr-32 flex items-start gap-3"
+          className="min-w-0 flex-1 text-left p-4 pr-14 md:pr-32 flex flex-col gap-2"
         >
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
-            <span className="font-bold text-primary text-sm">{index + 1}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-base truncate">{stop.name}</h3>
-              {stop.country && (
-                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                  <MapPin className="w-3 h-3" />
-                  {stop.country}
-                </span>
-              )}
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-lg font-bold text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14)]">
+              #{index + 1}
             </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-lg font-semibold tracking-tight text-foreground">{stop.name}</h3>
+              {stop.country ? (
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                  <span className="truncate">{stop.country}</span>
+                </p>
+              ) : null}
+            </div>
+            <ChevronRight className="mt-1 h-4 w-4 shrink-0 self-start text-muted-foreground/60 transition-colors group-hover:text-muted-foreground md:hidden" />
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground sm:flex-nowrap sm:gap-x-2">
             {(stop.arrivalDate || stop.departureDate) && (
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                <CalendarDays className="w-3 h-3" />
-                {formatDateRange(stop.arrivalDate, stop.departureDate)}
-              </p>
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <CalendarDays className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
+                <span className="truncate">{formatDateRange(stop.arrivalDate, stop.departureDate)}</span>
+              </span>
             )}
-            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <Bed className="w-3 h-3" />
-                {stop.stays.length} stay{stop.stays.length !== 1 ? "s" : ""}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays className="w-3 h-3" />
-                {stop.activities.length} activit{stop.activities.length !== 1 ? "ies" : "y"}
-              </span>
-            </div>
+            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
+              {hasCoords ? (
+                <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
+                  {stop.latitude!.toFixed(2)}, {stop.longitude!.toFixed(2)}
+                </span>
+              ) : (
+                <span>No pin</span>
+              )}
+            </span>
+            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
+              ·
+            </span>
+            <StopWeatherPill
+              latitude={stop.latitude}
+              longitude={stop.longitude}
+              arrivalDate={stop.arrivalDate}
+              departureDate={stop.departureDate}
+              addLocationHref={!hasCoords ? stopPageHref : undefined}
+            />
+            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <CircleDot className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
+              <span className="truncate">{formatStopStatus(stop.status)}</span>
+            </span>
           </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground/60 shrink-0 self-center group-hover:text-muted-foreground transition-colors md:hidden" />
+
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground/90">
+            <span className="inline-flex items-center gap-1">
+              <Bed className="h-3 w-3" aria-hidden />
+              {stop.stays.length} stay{stop.stays.length !== 1 ? "s" : ""}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="h-3 w-3" aria-hidden />
+              {stop.activities.length} activit{stop.activities.length !== 1 ? "ies" : "y"}
+            </span>
+          </div>
         </button>
         <div className="pointer-events-none absolute inset-y-0 right-4 z-[1] hidden w-auto items-center justify-end gap-1.5 md:flex">
           <button
@@ -114,7 +159,7 @@ export function StopCard({
             <Link2 className="h-4 w-4" />
           </button>
           <Link
-            href={ROUTES.tripStop(tripId, stop.id)}
+            href={stopPageHref}
             title="Open stop map view"
             aria-label={`Open ${stop.name} on map`}
             className="pointer-events-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-primary/35 hover:bg-primary/10 hover:text-primary group-hover:opacity-100"

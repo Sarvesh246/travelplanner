@@ -28,7 +28,7 @@ import {
 import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { toast } from "sonner";
-import { OsmMapEmbed, StopMapPlaceholder } from "./OsmMapEmbed";
+import { StopLocationSection } from "./StopLocationSection";
 import type { StopDetailTab, StopSerialized } from "./types";
 
 export type StopDetailLayout = "drawer" | "page";
@@ -50,7 +50,6 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   const [dirtyMap, setDirtyMap] = useState<Record<string, boolean>>({});
 
   const isPage = layout === "page";
-  const hasMapCoords = stop.latitude != null && stop.longitude != null;
   const hasUnsavedChanges = useMemo(() => Object.values(dirtyMap).some(Boolean), [dirtyMap]);
 
   useEffect(() => {
@@ -134,7 +133,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
             }
             onCloseDrawer?.();
           }}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="min-h-10 min-w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
           title="Open full page with map"
           aria-label="Expand stop to full page"
         >
@@ -145,7 +144,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
         <button
           type="button"
           onClick={() => setConfirmDelete(true)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="min-h-10 min-w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
           aria-label="Delete stop"
         >
           <Trash2 className="w-4 h-4" />
@@ -155,7 +154,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
         <button
           type="button"
           onClick={closeIfDrawer}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+          className="min-h-10 min-w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors duration-200"
           aria-label="Close stop details"
         >
           <X className="w-4 h-4" />
@@ -166,19 +165,16 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   const body = (
     <>
-      {isPage && (
-        <div className="mb-6">
-          {hasMapCoords ? (
-            <OsmMapEmbed
-              latitude={stop.latitude!}
-              longitude={stop.longitude!}
-              title={`Map: ${stop.name}`}
-            />
-          ) : (
-            <StopMapPlaceholder />
-          )}
-        </div>
-      )}
+      <StopLocationSection
+        key={`stop-location:${stop.id}:${stop.latitude ?? "none"}:${stop.longitude ?? "none"}:${stop.placeId ?? "none"}`}
+        stopId={stop.id}
+        stopName={stop.name}
+        latitude={stop.latitude}
+        longitude={stop.longitude}
+        placeId={stop.placeId}
+        canEdit={canEdit}
+        onDirtyChange={(dirty) => registerDirty("location", dirty)}
+      />
 
       <div className="flex shrink-0 border-b border-border">
         <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
@@ -221,7 +217,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="min-h-10 min-w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
                   aria-label="Delete stop"
                 >
                   <Trash2 className="w-4 h-4" />
