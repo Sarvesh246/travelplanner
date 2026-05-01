@@ -58,7 +58,7 @@ export function StopMapSummary({ lat, lon, className }: StopMapSummaryProps) {
       {loading ? (
         <p className="animate-pulse rounded bg-muted/60 text-transparent">Resolving place name…</p>
       ) : label ? (
-        <p className="text-foreground/90">{label}</p>
+        <p className="hyphens-auto break-words text-foreground/90">{label}</p>
       ) : null}
       <p className="font-mono tabular-nums text-muted-foreground">{coords}</p>
       <p className="text-[10px] text-muted-foreground/70">Place name via Nominatim / OSM.</p>

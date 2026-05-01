@@ -112,12 +112,7 @@ export function StopWeatherPill({
   }
 
   return (
-    <div
-      className={cn(
-        "inline-flex max-w-[min(14rem,calc(100vw-13rem))] flex-col gap-1 align-top",
-        className
-      )}
-    >
+    <div className={cn("inline-flex min-w-0 max-w-full flex-col gap-1 align-top", className)}>
       {showTiming && timingCaption ? (
         <span className="truncate text-[10px] font-semibold uppercase tracking-wide leading-none text-muted-foreground/90">
           {timingCaption}

@@ -9,9 +9,9 @@ function iconUrl(iconCode: string) {
   return `https://openweathermap.org/img/wn/${iconCode}.png`;
 }
 
-/** Shared width so itinerary rows avoid layout jitter between loading / empty / ready. */
+/** Stable footprint with min/max tied to parent width (avoid viewport math that overflows narrow cards). */
 export const WEATHER_PILL_SHELL =
-  "min-h-8 min-w-[11rem] max-w-[min(13rem,calc(100vw-12rem))] justify-center px-3 py-1";
+  "box-border min-h-8 max-w-[min(13rem,100%)] min-w-[min(11rem,100%)] justify-center px-3 py-1";
 
 export function WeatherPill({
   weather,

@@ -98,28 +98,22 @@ export function StopCard({
             <ChevronRight className="mt-1 h-4 w-4 shrink-0 self-start text-muted-foreground/60 transition-colors group-hover:text-muted-foreground md:hidden" />
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground sm:flex-nowrap sm:gap-x-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
             {(stop.arrivalDate || stop.departureDate) && (
-              <span className="inline-flex min-w-0 items-center gap-1">
+              <span className="inline-flex min-w-0 max-w-full items-center gap-1">
                 <CalendarDays className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
                 <span className="truncate">{formatDateRange(stop.arrivalDate, stop.departureDate)}</span>
               </span>
             )}
-            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
-              ·
-            </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex max-w-full min-w-0 items-center gap-1">
               <MapPin className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
               {hasCoords ? (
-                <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
+                <span className="min-w-0 truncate font-mono tabular-nums text-[11px] text-muted-foreground">
                   {stop.latitude!.toFixed(2)}, {stop.longitude!.toFixed(2)}
                 </span>
               ) : (
                 <span>No pin</span>
               )}
-            </span>
-            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
-              ·
             </span>
             <StopWeatherPill
               latitude={stop.latitude}
@@ -128,10 +122,7 @@ export function StopCard({
               departureDate={stop.departureDate}
               addLocationHref={!hasCoords ? stopPageHref : undefined}
             />
-            <span className="hidden text-muted-foreground/50 sm:inline" aria-hidden>
-              ·
-            </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex max-w-full min-w-0 items-center gap-1">
               <CircleDot className="h-3 w-3 shrink-0 text-primary/70" aria-hidden />
               <span className="truncate">{formatStopStatus(stop.status)}</span>
             </span>

@@ -31,7 +31,7 @@ export function PageHeader({ title, description, actions, className, eyebrow }: 
         )}
       </div>
       {actions && (
-        <div className="relative z-10 flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end lg:pt-1 [&_button]:min-h-10 lg:[&_button]:min-h-0">
+        <div className="relative z-10 flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end lg:pt-1 [&_button]:min-h-10 [&_button]:min-w-10 lg:[&_button]:min-h-10 lg:[&_button]:min-w-0">
           {actions}
         </div>
       )}
