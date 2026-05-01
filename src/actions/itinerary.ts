@@ -6,6 +6,10 @@ import { activityToClientJson, stayToClientJson, stopToClientJson } from "@/lib/
 import { assertCanContribute, getAuthUser } from "@/lib/auth/trip-permissions";
 import { logAuditEvent } from "@/lib/observability/audit";
 import { deriveDurationMins } from "@/lib/utils";
+import {
+  assertDateOrder,
+  parsePlanningDateInput,
+} from "@/lib/calendar/planning-dates";
 
 function revalidateItinerary(tripId: string) {
   revalidatePath(`/trips/${tripId}/itinerary`);
@@ -49,6 +53,9 @@ export async function createStop(
 ) {
   const user = await getAuthUser();
   await assertCanContribute(tripId, user.id);
+  const arrivalDate = await parsePlanningDateInput(data.arrivalDate, "Arrival date");
+  const departureDate = await parsePlanningDateInput(data.departureDate, "Departure date");
+  await assertDateOrder(data.arrivalDate ?? null, data.departureDate ?? null);
 
   const maxOrder = await prisma.stop.aggregate({
     where: { tripId, deletedAt: null },
@@ -64,8 +71,8 @@ export async function createStop(
       latitude: Number.isFinite(data.latitude) ? data.latitude : undefined,
       longitude: Number.isFinite(data.longitude) ? data.longitude : undefined,
       placeId: data.placeId,
-      arrivalDate: data.arrivalDate ? new Date(data.arrivalDate) : undefined,
-      departureDate: data.departureDate ? new Date(data.departureDate) : undefined,
+      arrivalDate,
+      departureDate,
       sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
     },
   });
@@ -93,6 +100,12 @@ export async function updateStop(
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
   await assertCanContribute(stop.tripId, user.id);
+  const arrivalDate = await parsePlanningDateInput(data.arrivalDate, "Arrival date");
+  const departureDate = await parsePlanningDateInput(data.departureDate, "Departure date");
+  await assertDateOrder(
+    data.arrivalDate ?? stop.arrivalDate?.toISOString().slice(0, 10) ?? null,
+    data.departureDate ?? stop.departureDate?.toISOString().slice(0, 10) ?? null
+  );
 
   const updated = await prisma.stop.update({
     where: { id: stopId },
@@ -100,8 +113,8 @@ export async function updateStop(
       ...(data.name && { name: data.name }),
       ...(data.country !== undefined && { country: data.country }),
       ...(data.description !== undefined && { description: data.description }),
-      ...(data.arrivalDate && { arrivalDate: new Date(data.arrivalDate) }),
-      ...(data.departureDate && { departureDate: new Date(data.departureDate) }),
+      ...(data.arrivalDate && { arrivalDate }),
+      ...(data.departureDate && { departureDate }),
       ...(data.status && { status: data.status as never }),
     },
   });
@@ -202,6 +215,9 @@ export async function createStay(
   const stop = await prisma.stop.findUnique({ where: { id: stopId } });
   if (!stop) throw new Error("Stop not found");
   await assertCanContribute(stop.tripId, user.id);
+  const checkIn = await parsePlanningDateInput(data.checkIn, "Check-in date");
+  const checkOut = await parsePlanningDateInput(data.checkOut, "Check-out date");
+  await assertDateOrder(data.checkIn ?? null, data.checkOut ?? null);
 
   const stay = await prisma.stay.create({
     data: {
@@ -212,9 +228,9 @@ export async function createStay(
       url: data.url,
       roomSiteNumbers: data.roomSiteNumbers ?? [],
       arrivalTime: data.arrivalTime,
-      checkIn: data.checkIn ? new Date(data.checkIn) : undefined,
+      checkIn,
       checkInTime: data.checkInTime,
-      checkOut: data.checkOut ? new Date(data.checkOut) : undefined,
+      checkOut,
       checkOutTime: data.checkOutTime,
       leaveTime: data.leaveTime,
       pricePerNight: data.pricePerNight,
@@ -262,6 +278,12 @@ export async function updateStay(
   const stay = await prisma.stay.findUnique({ where: { id: stayId }, include: { stop: true } });
   if (!stay) throw new Error("Stay not found");
   await assertCanContribute(stay.stop.tripId, user.id);
+  const checkIn = await parsePlanningDateInput(data.checkIn, "Check-in date");
+  const checkOut = await parsePlanningDateInput(data.checkOut, "Check-out date");
+  await assertDateOrder(
+    data.checkIn ?? stay.checkIn?.toISOString().slice(0, 10) ?? null,
+    data.checkOut ?? stay.checkOut?.toISOString().slice(0, 10) ?? null
+  );
 
   const updated = await prisma.stay.update({
     where: { id: stayId },
@@ -271,9 +293,9 @@ export async function updateStay(
       ...(data.url !== undefined && { url: data.url }),
       ...(data.roomSiteNumbers !== undefined && { roomSiteNumbers: data.roomSiteNumbers }),
       ...(data.arrivalTime !== undefined && { arrivalTime: data.arrivalTime }),
-      ...(data.checkIn && { checkIn: new Date(data.checkIn) }),
+      ...(data.checkIn && { checkIn }),
       ...(data.checkInTime !== undefined && { checkInTime: data.checkInTime }),
-      ...(data.checkOut && { checkOut: new Date(data.checkOut) }),
+      ...(data.checkOut && { checkOut }),
       ...(data.checkOutTime !== undefined && { checkOutTime: data.checkOutTime }),
       ...(data.leaveTime !== undefined && { leaveTime: data.leaveTime }),
       ...(data.pricePerNight !== undefined && { pricePerNight: data.pricePerNight }),
@@ -350,6 +372,7 @@ export async function createActivity(
   });
 
   const scheduledDate = normalizeOptionalText(data.scheduledDate);
+  const parsedScheduledDate = await parsePlanningDateInput(scheduledDate, "Scheduled date");
   const startTime = normalizeOptionalText(data.startTime);
   const endTime = normalizeOptionalText(data.endTime);
   const durationMins =
@@ -362,9 +385,7 @@ export async function createActivity(
       createdById: user.id,
       name: data.name,
       description: data.description,
-      scheduledDate: scheduledDate
-        ? new Date(scheduledDate)
-        : previousActivityDate?.scheduledDate ?? undefined,
+      scheduledDate: parsedScheduledDate ?? previousActivityDate?.scheduledDate ?? undefined,
       startTime: startTime ?? undefined,
       endTime: endTime ?? undefined,
       durationMins,
@@ -410,6 +431,10 @@ export async function updateActivity(
 
   const normalizedScheduledDate =
     data.scheduledDate === undefined ? undefined : normalizeOptionalText(data.scheduledDate);
+  const parsedScheduledDate = await parsePlanningDateInput(
+    normalizedScheduledDate,
+    "Scheduled date"
+  );
   const normalizedStartTime =
     data.startTime === undefined ? undefined : normalizeOptionalText(data.startTime);
   const normalizedEndTime =
@@ -427,7 +452,7 @@ export async function updateActivity(
       ...(data.name && { name: data.name }),
       ...(data.description !== undefined && { description: data.description }),
       ...(normalizedScheduledDate !== undefined && {
-        scheduledDate: normalizedScheduledDate ? new Date(normalizedScheduledDate) : null,
+        scheduledDate: normalizedScheduledDate ? parsedScheduledDate : null,
       }),
       ...(normalizedStartTime !== undefined && { startTime: normalizedStartTime }),
       ...(normalizedEndTime !== undefined && { endTime: normalizedEndTime }),

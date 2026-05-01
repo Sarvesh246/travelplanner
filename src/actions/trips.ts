@@ -17,23 +17,13 @@ import { TripStatus } from "@prisma/client";
 import { logAuditEvent } from "@/lib/observability/audit";
 import { reportServerError } from "@/lib/observability/errors";
 import { publishTripMembershipEvent } from "@/lib/supabase/trip-membership-realtime";
+import {
+  assertDateOrder,
+  normalizePlanningDateKey,
+  parsePlanningDateInput,
+} from "@/lib/calendar/planning-dates";
 
 const currencyCodes = CURRENCIES.map((currency) => currency.code) as [string, ...string[]];
-
-function parseDateInput(value: string | null | undefined, label: string) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    throw new Error(`${label} is not a valid date`);
-  }
-  return date;
-}
-
-function assertDateOrder(startDate: Date | undefined, endDate: Date | undefined) {
-  if (startDate && endDate && startDate > endDate) {
-    throw new Error("End date must be after the start date");
-  }
-}
 
 const createTripSchema = z.object({
   name: z.string().trim().min(1, "Trip name is required").max(100, "Trip name is too long"),
@@ -43,6 +33,7 @@ const createTripSchema = z.object({
   currency: z.enum(currencyCodes).default("USD"),
   budgetTarget: z.number().finite().nonnegative("Budget must be 0 or more").optional(),
   estimatedCostOverride: z.number().finite().nonnegative("Estimated cost must be 0 or more").nullable().optional(),
+  costSplitMemberCountOverride: z.number().int().positive("Member count must be at least 1").nullable().optional(),
 });
 
 const updateTripSchema = createTripSchema.partial().extend({
@@ -55,9 +46,12 @@ const updateTripSchema = createTripSchema.partial().extend({
 export async function createTrip(input: z.infer<typeof createTripSchema>) {
   const user = await getAuthUser();
   const data = createTripSchema.parse(input);
-  const startDate = parseDateInput(data.startDate, "Start date");
-  const endDate = parseDateInput(data.endDate, "End date");
-  assertDateOrder(startDate, endDate);
+  const startDate = await parsePlanningDateInput(data.startDate, "Start date");
+  const endDate = await parsePlanningDateInput(data.endDate, "End date");
+  await assertDateOrder(
+    normalizePlanningDateKey(data.startDate),
+    normalizePlanningDateKey(data.endDate)
+  );
 
   const trip = await prisma.trip.create({
     data: {
@@ -68,6 +62,7 @@ export async function createTrip(input: z.infer<typeof createTripSchema>) {
       currency: data.currency,
       budgetTarget: data.budgetTarget,
       estimatedCostOverride: data.estimatedCostOverride,
+      costSplitMemberCountOverride: data.costSplitMemberCountOverride,
       members: {
         create: { userId: user.id, role: "OWNER" },
       },
@@ -96,8 +91,8 @@ export async function updateTrip(
   const user = await getAuthUser();
   await assertCanManage(tripId, user.id);
   const data = updateTripSchema.parse(input);
-  const startDate = parseDateInput(data.startDate, "Start date");
-  const endDate = parseDateInput(data.endDate, "End date");
+  const startDate = await parsePlanningDateInput(data.startDate, "Start date");
+  const endDate = await parsePlanningDateInput(data.endDate, "End date");
 
   if (startDate || endDate) {
     const existing = await prisma.trip.findUnique({
@@ -105,7 +100,10 @@ export async function updateTrip(
       select: { startDate: true, endDate: true },
     });
     if (!existing) throw new Error("Trip not found");
-    assertDateOrder(startDate ?? existing.startDate ?? undefined, endDate ?? existing.endDate ?? undefined);
+    await assertDateOrder(
+      normalizePlanningDateKey(startDate ?? existing.startDate),
+      normalizePlanningDateKey(endDate ?? existing.endDate)
+    );
   }
 
   const trip = await prisma.trip.update({
@@ -118,6 +116,9 @@ export async function updateTrip(
       ...(data.currency !== undefined && { currency: data.currency }),
       ...(data.budgetTarget !== undefined && { budgetTarget: data.budgetTarget }),
       ...(data.estimatedCostOverride !== undefined && { estimatedCostOverride: data.estimatedCostOverride }),
+      ...(data.costSplitMemberCountOverride !== undefined && {
+        costSplitMemberCountOverride: data.costSplitMemberCountOverride,
+      }),
       ...(data.status !== undefined && { status: data.status }),
       ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
     },
@@ -137,6 +138,7 @@ export async function updateTrip(
       status: data.status ?? null,
       coverImageUrlUpdated: data.coverImageUrl !== undefined,
       estimatedCostOverride: data.estimatedCostOverride ?? null,
+      costSplitMemberCountOverride: data.costSplitMemberCountOverride ?? null,
     },
   });
   return { trip: tripToClientJson(trip) };
@@ -170,6 +172,7 @@ export async function duplicateTrip(sourceTripId: string) {
       status: "PLANNING",
       budgetTarget: src.budgetTarget,
       estimatedCostOverride: null,
+      costSplitMemberCountOverride: null,
       startDate: null,
       endDate: null,
       members: {

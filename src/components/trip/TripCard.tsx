@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Users, MapPin, Calendar, Clock, Camera, ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDateRange, daysUntil, gradientForId, tripDuration } from "@/lib/utils";
+import { formatDateRange, gradientForId, tripDuration } from "@/lib/utils";
 import { osmStaticMapImageUrl } from "@/lib/osm/static-map-image";
 import { AvatarGroup } from "@/components/shared/AvatarGroup";
 import { ROUTES, TRIP_STATUS_OPTIONS } from "@/lib/constants";
@@ -29,6 +29,7 @@ interface TripCardProps {
   memberCount: number;
   members: { id: string; name: string; avatarUrl?: string | null }[];
   stopCount: number;
+  daysUntilStart: number | null;
   /** First itinerary stop with lat/lon — used for a default map thumbnail when there is no cover. */
   mapPreview: { lat: number; lon: number } | null;
   canEditCover: boolean;
@@ -48,6 +49,7 @@ function TripCardImpl({
   memberCount,
   members,
   stopCount,
+  daysUntilStart,
   mapPreview,
   canEditCover,
   canEditStatus,
@@ -60,7 +62,6 @@ function TripCardImpl({
   const [statusBusy, setStatusBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const gradient = gradientForId(trip.id);
-  const days = daysUntil(trip.startDate);
   const duration = tripDuration(trip.startDate, trip.endDate);
   const overviewHref = ROUTES.tripOverview(trip.id);
   const showMap = !trip.coverImageUrl && mapPreview != null;
@@ -293,15 +294,17 @@ function TripCardImpl({
             </div>
           </div>
 
-          {days !== null && days >= 0 && (
+          {daysUntilStart !== null && daysUntilStart >= 0 && (
             <div className="mt-3 pt-3 border-t border-border">
               <p className="flex items-center gap-2 text-xs font-medium text-primary">
                 <span className="app-waypoint h-1.5 w-1.5" aria-hidden />
-                {days === 0 ? "Trip starts today" : `${days} day${days !== 1 ? "s" : ""} to go`}
+                {daysUntilStart === 0
+                  ? "Trip starts today"
+                  : `${daysUntilStart} day${daysUntilStart !== 1 ? "s" : ""} to go`}
               </p>
             </div>
           )}
-          {days !== null && days < 0 && (
+          {daysUntilStart !== null && daysUntilStart < 0 && (
             <div className="mt-3 pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground">Completed</p>
             </div>

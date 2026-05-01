@@ -28,6 +28,7 @@ interface TripInfo {
   endDate: string | null;
   budgetTarget: number | null;
   estimatedCostOverride: number | null;
+  costSplitMemberCountOverride: number | null;
   coverImageUrl: string | null;
 }
 

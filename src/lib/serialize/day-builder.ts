@@ -1,9 +1,13 @@
 import { ROUTES } from "@/lib/constants";
 import { formatDate, formatTimeRange, formatTimeValue } from "@/lib/utils";
 import type { DayPlan, DayPlanItem, StopSerialized, StopDetailTab } from "@/components/itinerary/types";
+import {
+  compareDateKeys,
+  dateKeyFromDateLike,
+} from "@/lib/dates/date-key";
 
 function toDateKey(value: string | null | undefined) {
-  return value?.slice(0, 10) ?? null;
+  return dateKeyFromDateLike(value);
 }
 
 function enumerateDateKeys(startKey: string, endKey: string) {
@@ -193,7 +197,7 @@ export function buildDayPlans(tripId: string, stops: StopSerialized[]): DayPlan[
   }
 
   return Array.from(dayMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => compareDateKeys(a, b))
     .map(([date, items]) => {
       items.sort((a, b) => {
         const [aPriority, aTime, aStopOrder, aTie] = a._order;

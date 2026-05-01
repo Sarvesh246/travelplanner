@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
   publishTripMembershipEvent: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  parsePlanningDateInput: vi.fn(),
+  assertDateOrder: vi.fn(),
+  normalizePlanningDateKey: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
@@ -33,6 +36,11 @@ vi.mock("@/lib/observability/errors", () => ({
 vi.mock("@/lib/supabase/trip-membership-realtime", () => ({
   publishTripMembershipEvent: mocks.publishTripMembershipEvent,
 }));
+vi.mock("@/lib/calendar/planning-dates", () => ({
+  parsePlanningDateInput: mocks.parsePlanningDateInput,
+  assertDateOrder: mocks.assertDateOrder,
+  normalizePlanningDateKey: mocks.normalizePlanningDateKey,
+}));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
@@ -46,6 +54,19 @@ describe("trip actions", () => {
     vi.clearAllMocks();
     mocks.getAuthUser.mockResolvedValue({ id: "user-1" });
     mocks.assertCanManage.mockResolvedValue({ role: "OWNER" });
+    mocks.parsePlanningDateInput.mockImplementation(async (value: string | null | undefined) =>
+      value ? new Date(`${value}T00:00:00.000Z`) : undefined
+    );
+    mocks.assertDateOrder.mockImplementation(async (startDate: string | null | undefined, endDate: string | null | undefined) => {
+      if (startDate && endDate && startDate > endDate) {
+        throw new Error("End date must be after the start date");
+      }
+    });
+    mocks.normalizePlanningDateKey.mockImplementation((value: string | Date | null | undefined) => {
+      if (!value) return null;
+      if (typeof value === "string") return value.slice(0, 10);
+      return value.toISOString().slice(0, 10);
+    });
     mocks.prisma.trip.findUnique.mockResolvedValue({
       startDate: new Date("2026-06-01T00:00:00.000Z"),
       endDate: new Date("2026-06-05T00:00:00.000Z"),
@@ -83,6 +104,7 @@ describe("trip actions", () => {
       currency: "USD",
       budgetTarget: null,
       estimatedCostOverride: null,
+      costSplitMemberCountOverride: null,
       startDate: null,
       endDate: null,
       createdAt: new Date("2026-04-28T00:00:00.000Z"),
@@ -112,6 +134,7 @@ describe("trip actions", () => {
       currency: "USD",
       budgetTarget: null,
       estimatedCostOverride: null,
+      costSplitMemberCountOverride: null,
       startDate: null,
       endDate: null,
       createdAt: new Date("2026-04-28T00:00:00.000Z"),
@@ -126,6 +149,35 @@ describe("trip actions", () => {
         data: expect.objectContaining({
           startDate: null,
           endDate: null,
+        }),
+      })
+    );
+  });
+
+  it("stores a custom split member count override", async () => {
+    mocks.prisma.trip.update.mockResolvedValue({
+      id: "trip-1",
+      name: "Alpine Loop",
+      description: null,
+      coverImageUrl: null,
+      status: "PLANNING",
+      currency: "USD",
+      budgetTarget: null,
+      estimatedCostOverride: null,
+      costSplitMemberCountOverride: 5,
+      startDate: null,
+      endDate: null,
+      createdAt: new Date("2026-04-28T00:00:00.000Z"),
+      updatedAt: new Date("2026-04-28T00:00:00.000Z"),
+      deletedAt: null,
+    });
+
+    await updateTrip("trip-1", { costSplitMemberCountOverride: 5 });
+
+    expect(mocks.prisma.trip.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          costSplitMemberCountOverride: 5,
         }),
       })
     );

@@ -11,6 +11,7 @@ export function tripToClientJson(t: Trip) {
     currency: t.currency,
     budgetTarget: decimalToNumberOrNull(t.budgetTarget),
     estimatedCostOverride: decimalToNumberOrNull(t.estimatedCostOverride),
+    costSplitMemberCountOverride: t.costSplitMemberCountOverride,
     startDate: t.startDate ? t.startDate.toISOString() : null,
     endDate: t.endDate ? t.endDate.toISOString() : null,
     createdAt: t.createdAt.toISOString(),

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { formatCurrency, daysUntil, tripDuration } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { CalendarDays, Plane, WalletCards } from "lucide-react";
 import { OverviewClient } from "@/components/overview/OverviewClient";
 import { OverviewShareButton } from "@/components/overview/OverviewShareButton";
@@ -10,6 +10,10 @@ import { OverviewQuickAdds } from "@/components/overview/OverviewQuickAdds";
 import { OverviewDuplicateButton } from "@/components/overview/OverviewDuplicateButton";
 import { OverviewContextHints } from "@/components/overview/OverviewContextHints";
 import { computeEstimatedTripCost } from "@/lib/trip-metrics";
+import {
+  daysUntilPlanningDate,
+  tripDurationFromPlanningDates,
+} from "@/lib/calendar/planning-dates";
 
 export const metadata = { title: "Overview" };
 
@@ -30,7 +34,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
       prisma.stop.count({ where: { tripId, deletedAt: null } }),
       prisma.supplyItem.findMany({
         where: { tripId, deletedAt: null },
-        select: { status: true, estimatedCost: true, actualCost: true },
+        select: { status: true, estimatedCost: true, actualCost: true, quantityNeeded: true },
       }),
       prisma.expense.aggregate({
         where: { tripId, deletedAt: null },
@@ -60,8 +64,8 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
 
   if (!trip || trip.deletedAt) notFound();
 
-  const days = daysUntil(trip.startDate);
-  const duration = tripDuration(trip.startDate, trip.endDate);
+  const days = await daysUntilPlanningDate(trip.startDate);
+  const duration = tripDurationFromPlanningDates(trip.startDate, trip.endDate);
   const totalExpenses = Number(expenseStats._sum.totalAmount ?? 0);
   const supplyCosts = supplyItems.map((item) => ({
     ...item,
@@ -77,6 +81,8 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
           ? Number(trip.estimatedCostOverride)
           : null,
     });
+  const splitMemberCount = Math.max(1, trip.costSplitMemberCountOverride ?? memberCount ?? 1);
+  const individualTripCost = estimatedTripCost / splitMemberCount;
   const budgetTarget = Number(trip.budgetTarget ?? 0);
   const budgetPct = budgetTarget > 0 ? Math.min(100, Math.round((estimatedTripCost / budgetTarget) * 100)) : null;
   const coveredItems = supplyItems.filter((item) => item.status === "COVERED").length;
@@ -106,6 +112,9 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 endDate={trip.endDate ? trip.endDate.toISOString().slice(0, 10) : null}
                 estimatedCost={estimatedTripCost}
                 automaticCost={automaticTripCost}
+                individualCost={individualTripCost}
+                actualMemberCount={memberCount}
+                splitMemberCount={splitMemberCount}
                 hasManualEstimate={trip.estimatedCostOverride !== null}
                 currency={trip.currency}
               />

@@ -1,4 +1,9 @@
 import type { StopSerialized } from "@/components/itinerary/types";
+import {
+  compareDateKeys,
+  dateKeyInRange,
+  todayDateKey,
+} from "@/lib/dates/date-key";
 
 function dayFromIso(iso: string | null | undefined): string | null {
   if (!iso) return null;
@@ -12,12 +17,12 @@ function dayFromIso(iso: string | null | undefined): string | null {
  */
 export function findRelevantStopForToday(stops: StopSerialized[]): string | null {
   if (stops.length === 0) return null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayDateKey();
 
   for (const stop of stops) {
     const a = dayFromIso(stop.arrivalDate);
     const d = dayFromIso(stop.departureDate);
-    if (a && d && today >= a && today <= d) return stop.id;
+    if (a && d && dateKeyInRange(today, a, d)) return stop.id;
     if (a && !d && today === a) return stop.id;
   }
 
@@ -25,8 +30,8 @@ export function findRelevantStopForToday(stops: StopSerialized[]): string | null
   let upcomingDay: string | null = null;
   for (const stop of stops) {
     const a = dayFromIso(stop.arrivalDate);
-    if (!a || a < today) continue;
-    if (!upcomingDay || a < upcomingDay) {
+    if (!a || compareDateKeys(a, today) < 0) continue;
+    if (!upcomingDay || compareDateKeys(a, upcomingDay) < 0) {
       upcomingDay = a;
       upcomingBest = stop;
     }
@@ -38,7 +43,7 @@ export function findRelevantStopForToday(stops: StopSerialized[]): string | null
   for (const stop of stops) {
     const a = dayFromIso(stop.arrivalDate);
     if (!a) continue;
-    if (!earliestDay || a < earliestDay) {
+    if (!earliestDay || compareDateKeys(a, earliestDay) < 0) {
       earliestDay = a;
       earliest = stop;
     }

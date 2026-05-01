@@ -152,6 +152,7 @@ model Trip {
   currency      String     @default("USD")
   budgetTarget  Decimal?   @db.Decimal(12, 2)
   estimatedCostOverride Decimal? @db.Decimal(12, 2)
+  costSplitMemberCountOverride Int?
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime   @default(now())

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { daysUntil, formatDateRange, tripDuration } from "@/lib/utils";
+import { formatDateRange } from "@/lib/utils";
+import {
+  daysUntilPlanningDate,
+  tripDurationFromPlanningDates,
+} from "@/lib/calendar/planning-dates";
 
 describe("date utilities", () => {
   it("keeps date-only strings on the selected calendar day", () => {
@@ -15,14 +19,16 @@ describe("date utilities", () => {
     ).toBe("Jul 5–10, 2026");
   });
 
-  it("uses the same calendar-day math for countdowns and durations", () => {
+  it("uses the same calendar-day math for countdowns and durations", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-29T12:00:00.000-05:00"));
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
-    expect(daysUntil("2026-07-05")).toBe(67);
-    expect(daysUntil(new Date("2026-07-05T00:00:00.000Z"))).toBe(67);
-    expect(tripDuration("2026-07-05", "2026-07-10")).toBe(6);
+    await expect(daysUntilPlanningDate("2026-07-05")).resolves.toBe(67);
+    await expect(daysUntilPlanningDate(new Date("2026-07-05T00:00:00.000Z"))).resolves.toBe(67);
+    expect(tripDurationFromPlanningDates("2026-07-05", "2026-07-10")).toBe(6);
 
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 });

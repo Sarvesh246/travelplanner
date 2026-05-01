@@ -9,6 +9,10 @@ import {
   getAuthUser,
 } from "@/lib/auth/trip-permissions";
 import { logAuditEvent } from "@/lib/observability/audit";
+import {
+  assertDateOrder,
+  parsePlanningDateInput,
+} from "@/lib/calendar/planning-dates";
 
 interface VoteOptionInput {
   label: string;
@@ -32,6 +36,12 @@ export async function createVote(tripId: string, input: CreateVoteInput) {
 
   if (!input.title?.trim()) throw new Error("Title is required");
   if (input.options.length < 2) throw new Error("At least two options required");
+
+  for (const option of input.options) {
+    await parsePlanningDateInput(option.dateStart, "Option start date");
+    await parsePlanningDateInput(option.dateEnd, "Option end date");
+    await assertDateOrder(option.dateStart ?? null, option.dateEnd ?? null);
+  }
 
   const vote = await prisma.$transaction(async (tx) => {
     const created = await tx.vote.create({

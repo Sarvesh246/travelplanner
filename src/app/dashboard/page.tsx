@@ -10,6 +10,11 @@ import { DashboardTripSortSelect } from "@/components/dashboard/DashboardTripSor
 import { parseDashboardTripSort, sortDashboardMemberships } from "@/lib/dashboard-trip-sort";
 import { formatDate } from "@/lib/utils";
 import { ensureAppUserForAuth } from "@/lib/auth/ensure-app-user";
+import {
+  comparePlanningDates,
+  daysUntilPlanningDate,
+  normalizePlanningDateKey,
+} from "@/lib/calendar/planning-dates";
 
 export const metadata = { title: "Dashboard" };
 
@@ -62,16 +67,24 @@ export default async function DashboardPage({
 
   const visibleMemberships = memberships.filter((m) => !m.trip.deletedAt);
   const sortedMemberships = sortDashboardMemberships(visibleMemberships, sort);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   const planningCount = sortedMemberships.filter((m) =>
     ["DRAFT", "PLANNING", "IN_PROGRESS"].includes(m.trip.status)
   ).length;
+  const membershipCountdowns = await Promise.all(
+    sortedMemberships.map(async (membership) => ({
+      tripId: membership.trip.id,
+      daysUntilStart: membership.trip.startDate
+        ? await daysUntilPlanningDate(membership.trip.startDate)
+        : null,
+    }))
+  );
+  const countdownByTripId = new Map(
+    membershipCountdowns.map((entry) => [entry.tripId, entry.daysUntilStart])
+  );
   const upcomingMembership = sortedMemberships.find((m) => {
-    if (!m.trip.startDate) return false;
-    const start = new Date(m.trip.startDate);
-    start.setHours(0, 0, 0, 0);
-    return start >= today;
+    const dateKey = normalizePlanningDateKey(m.trip.startDate);
+    if (!dateKey) return false;
+    return comparePlanningDates(dateKey, new Date()) !== null && (countdownByTripId.get(m.trip.id) ?? -1) >= 0;
   });
   const recentlyUpdated = sortedMemberships[0]?.trip.updatedAt ?? null;
 
@@ -178,6 +191,7 @@ export default async function DashboardPage({
                 memberCount={trip.members.length}
                 members={trip.members.map((mem) => mem.user)}
                 stopCount={trip._count.stops}
+                daysUntilStart={countdownByTripId.get(trip.id) ?? null}
                 mapPreview={mapPreview}
                 canEditCover={m.role === "OWNER" || m.role === "ADMIN"}
                 canEditStatus={m.role === "OWNER" || m.role === "ADMIN"}
