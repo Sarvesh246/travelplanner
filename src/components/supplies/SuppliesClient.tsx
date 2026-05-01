@@ -11,6 +11,7 @@ import { ROUTES } from "@/lib/constants";
 import { SupplySummaryBar } from "./SupplySummaryBar";
 import { SupplyTable } from "./SupplyTable";
 import { AddSupplyDialog } from "./AddSupplyDialog";
+import { ImportSupplyDialog } from "./ImportSupplyDialog";
 import { useTripContext } from "@/components/trip/TripContext";
 import { readTripUiPrefs, writeTripUiPrefs } from "@/lib/trip-ui-preferences";
 import { bulkDeleteSupplyItems, bulkMarkBought, restoreSupplyItem } from "@/actions/supplies";
@@ -29,6 +30,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
   const router = useRouter();
   const { canEdit, currentUser } = useTripContext();
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [bulkIds, setBulkIds] = useState<string[]>([]);
 
@@ -147,14 +149,24 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         description={`Showing ${filteredItems.length} of ${items.length} item${items.length !== 1 ? "s" : ""}`}
         actions={
           canEdit && items.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="app-hover-lift hidden md:inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Item
-            </button>
+            <div className="hidden items-center gap-2 md:inline-flex">
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="app-hover-lift inline-flex items-center gap-2 rounded-xl border border-border bg-card/85 px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted/70"
+              >
+                <Package className="w-4 h-4" />
+                Import list
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="app-hover-lift inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Item
+              </button>
+            </div>
           )
         }
       />
@@ -169,13 +181,22 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
           action={
             <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
               {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => setAddOpen(true)}
-                  className="app-hover-lift inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 min-h-11 text-sm font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Add first item
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setImportOpen(true)}
+                    className="app-hover-lift inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/70"
+                  >
+                    <Package className="w-4 h-4" /> Import list
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddOpen(true)}
+                    className="app-hover-lift inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 min-h-11 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" /> Add first item
+                  </button>
+                </>
               )}
               <Link
                 href={ROUTES.tripItinerary(tripId)}
@@ -282,17 +303,34 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
         onSupplyCreated={(id) => revealSupply(id, { syncUrl: true })}
       />
 
+      <ImportSupplyDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        tripId={tripId}
+        currency={currency}
+      />
+
       {canEdit && items.length > 0 ? (
         <StickyActionBar
           primary={
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" />
-              Add item
-            </button>
+            <div className="grid w-full grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold shadow-sm transition-colors hover:bg-muted"
+              >
+                <Package className="h-4 w-4" />
+                Import
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                Add item
+              </button>
+            </div>
           }
         />
       ) : null}

@@ -1,5 +1,6 @@
 "use server";
 
+import { GoogleGenAI } from "@google/genai";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { SupplyItemStatus } from "@prisma/client";
@@ -10,6 +11,14 @@ import {
 } from "@/lib/auth/trip-permissions";
 import { issueUndoToken } from "@/actions/undo";
 import { logAuditEvent } from "@/lib/observability/audit";
+import {
+  getSupplyImportSchema,
+  normalizeSupplyImportRows,
+  SUPPLY_IMPORT_MAX_FILE_SIZE,
+  validateSupplyImportRowsForCommit,
+  type RawSupplyImportDraftRow,
+  type SupplyImportMember,
+} from "@/lib/supplies/import";
 
 function computeStatus(needed: number, owned: number): SupplyItemStatus {
   if (needed <= 0) return "NOT_NEEDED";
@@ -26,6 +35,11 @@ interface CreateSupplyInput {
   estimatedCost?: number;
   whoBringsId?: string;
   notes?: string;
+}
+
+interface CommitSupplyImportInput {
+  sourceType: "text" | "pdf";
+  rows: RawSupplyImportDraftRow[];
 }
 
 function assertNonNegativeNumber(value: number | undefined | null, label: string) {
@@ -105,6 +119,97 @@ export async function createSupplyItem(tripId: string, input: CreateSupplyInput)
     },
   });
   return { item };
+}
+
+export async function parseSupplyImport(tripId: string, formData: FormData) {
+  const user = await getAuthUser();
+  await assertCanContribute(tripId, user.id);
+
+  const { sourceType, contents } = await readSupplyImportInput(formData);
+  const members = await getSupplyImportMembers(tripId);
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("Gemini is not configured. Add GEMINI_API_KEY to your environment.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = buildSupplyImportPrompt(members);
+  const response = await ai.models.generateContent({
+    model: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+    contents:
+      sourceType === "pdf"
+        ? [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "application/pdf",
+                data: contents,
+              },
+            },
+          ]
+        : [{ text: `${prompt}\n\nSupply list text:\n${contents}` }],
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: getSupplyImportSchema(),
+      temperature: 0.1,
+    },
+  });
+
+  const parsed = parseGeminiImportResponse(response.text);
+  const rows = normalizeSupplyImportRows(parsed.items, { members });
+  if (rows.length === 0) {
+    throw new Error("No supply items were found. Try pasting a cleaner checklist or a text-based PDF.");
+  }
+
+  return { sourceType, rows };
+}
+
+export async function commitSupplyImport(
+  tripId: string,
+  input: CommitSupplyImportInput
+) {
+  const user = await getAuthUser();
+  await assertCanContribute(tripId, user.id);
+
+  const members = await getSupplyImportMembers(tripId);
+  const rows = validateSupplyImportRowsForCommit(input.rows, { members });
+
+  const items = await prisma.$transaction(
+    rows.map((row) => {
+      const quantityOwned = 0;
+      const status = computeStatus(row.quantityNeeded, quantityOwned);
+      return prisma.supplyItem.create({
+        data: {
+          tripId,
+          createdById: user.id,
+          name: row.name,
+          category: row.category,
+          quantityNeeded: row.quantityNeeded,
+          quantityOwned,
+          quantityRemaining: Math.max(0, row.quantityNeeded - quantityOwned),
+          estimatedCost: row.estimatedCost,
+          whoBringsId: row.whoBringsId,
+          notes: row.notes,
+          status,
+        },
+      });
+    })
+  );
+
+  revalidateSupplyViews(tripId);
+  await logAuditEvent({
+    action: "supply.imported",
+    actorUserId: user.id,
+    tripId,
+    summary: `Imported ${items.length} supply item${items.length === 1 ? "" : "s"}`,
+    metadata: {
+      sourceType: input.sourceType,
+      itemCount: items.length,
+      itemIds: items.map((item) => item.id),
+    },
+  });
+
+  return { count: items.length, itemIds: items.map((item) => item.id) };
 }
 
 interface UpdateSupplyInput {
@@ -354,4 +459,95 @@ export async function bulkDeleteSupplyItems(itemIds: string[]) {
       itemIds: items.map((item) => item.id),
     },
   });
+}
+
+async function getSupplyImportMembers(tripId: string): Promise<SupplyImportMember[]> {
+  const members = await prisma.tripMember.findMany({
+    where: {
+      tripId,
+      status: "ACTIVE",
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { joinedAt: "asc" },
+  });
+
+  return members.map((member) => ({
+    userId: member.userId,
+    name: member.user.name,
+    email: member.user.email,
+  }));
+}
+
+async function readSupplyImportInput(formData: FormData) {
+  const text = formData.get("text");
+  const file = formData.get("file");
+  const pastedText = typeof text === "string" ? text.trim() : "";
+
+  if (pastedText) {
+    if (pastedText.length > 30_000) {
+      throw new Error("Pasted text must be 30,000 characters or less");
+    }
+    return { sourceType: "text" as const, contents: pastedText };
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Paste a supply list or choose a PDF to import");
+  }
+  if (file.type !== "application/pdf") {
+    throw new Error("Supply import only supports PDF files");
+  }
+  if (file.size > SUPPLY_IMPORT_MAX_FILE_SIZE) {
+    throw new Error("PDF must be 5MB or smaller");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return { sourceType: "pdf" as const, contents: buffer.toString("base64") };
+}
+
+function buildSupplyImportPrompt(members: SupplyImportMember[]) {
+  const memberCount = members.length;
+  const memberLines = members
+    .map((member) => `- ${member.name} (${member.email ?? "no email"}): ${member.userId}`)
+    .join("\n");
+
+  return `Extract a trip supply checklist into structured supply items.
+
+Rules:
+- Return only items that should become supply rows.
+- Use exactly one of the allowed categories from the schema.
+- Infer quantityNeeded from leading quantities like "2 tents".
+- If a line says "for each person" or "each person", use ${memberCount} as quantityNeeded.
+- Parentheses containing an active member name mean that member is bringing it only when the name uniquely matches the active member list.
+- Parentheses that are not a member assignment should become notes.
+- estimatedCost is the per-item cost only when explicitly clear. Use null for missing or ambiguous costs.
+- whoBringsId must be one of the active member userIds below or null.
+- sourceText should preserve the original line when possible.
+- Add warnings for ambiguous assignees, costs, quantities, or jokes/slang that should be reviewed.
+
+Active trip members:
+${memberLines || "- None"}`;
+}
+
+function parseGeminiImportResponse(text: string | undefined): { items: RawSupplyImportDraftRow[] } {
+  if (!text?.trim()) {
+    throw new Error("Gemini did not return a parseable supply list");
+  }
+
+  try {
+    const parsed = JSON.parse(text) as { items?: unknown };
+    if (!Array.isArray(parsed.items)) {
+      throw new Error("Missing items array");
+    }
+    return { items: parsed.items as RawSupplyImportDraftRow[] };
+  } catch {
+    throw new Error("Gemini returned an invalid supply list. Try again with cleaner input.");
+  }
 }
