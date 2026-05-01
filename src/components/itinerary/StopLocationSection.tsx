@@ -8,6 +8,7 @@ import { StopMap } from "@/components/itinerary/StopMap";
 import { StopLocationHeader } from "@/components/itinerary/StopLocationHeader";
 import { StopMapSummary } from "@/components/itinerary/StopMapSummary";
 import { updateStop } from "@/actions/itinerary";
+import { cn } from "@/lib/utils";
 
 export function StopLocationSection({
   stopId,
@@ -17,6 +18,7 @@ export function StopLocationSection({
   placeId,
   canEdit,
   onDirtyChange,
+  className,
 }: {
   stopId: string;
   stopName: string;
@@ -25,6 +27,7 @@ export function StopLocationSection({
   placeId: string | null;
   canEdit: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  className?: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -124,7 +127,12 @@ export function StopLocationSection({
   }, [draftCoords, hasSavedLocation]);
 
   return (
-    <section className="app-surface-soft relative mb-5 rounded-2xl border border-border/80 bg-card/60 p-4 pb-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200">
+    <section
+      className={cn(
+        "app-surface-soft relative mb-5 rounded-2xl border border-border/80 bg-card/60 p-4 pb-2 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-shadow duration-200",
+        className
+      )}
+    >
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-semibold">Stop map</h3>
         {isDirty ? (

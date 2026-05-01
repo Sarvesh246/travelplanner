@@ -163,18 +163,29 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </div>
   );
 
+  const locationSection = (
+    <StopLocationSection
+      key={`stop-location:${stop.id}:${stop.latitude ?? "none"}:${stop.longitude ?? "none"}:${stop.placeId ?? "none"}`}
+      stopId={stop.id}
+      stopName={stop.name}
+      latitude={stop.latitude}
+      longitude={stop.longitude}
+      placeId={stop.placeId}
+      canEdit={canEdit}
+      onDirtyChange={(dirty) => registerDirty("location", dirty)}
+      className={isPage ? undefined : "mb-3"}
+    />
+  );
+
   const body = (
     <>
-      <StopLocationSection
-        key={`stop-location:${stop.id}:${stop.latitude ?? "none"}:${stop.longitude ?? "none"}:${stop.placeId ?? "none"}`}
-        stopId={stop.id}
-        stopName={stop.name}
-        latitude={stop.latitude}
-        longitude={stop.longitude}
-        placeId={stop.placeId}
-        canEdit={canEdit}
-        onDirtyChange={(dirty) => registerDirty("location", dirty)}
-      />
+      {isPage ? (
+        locationSection
+      ) : (
+        <div className="min-h-0 max-h-[min(48dvh,20rem)] shrink-0 overflow-y-auto overscroll-y-contain px-5 pb-2 pt-2 [scrollbar-gutter:stable] sm:max-h-[min(50dvh,24rem)]">
+          {locationSection}
+        </div>
+      )}
 
       <div className="flex shrink-0 border-b border-border">
         <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
