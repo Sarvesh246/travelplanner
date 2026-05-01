@@ -122,10 +122,14 @@ export function MobileNav({ tripId }: MobileNavProps) {
   return (
     <>
       <nav
-        className="app-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/75 bg-background/92 shadow-[0_-14px_36px_-30px_hsl(var(--primary)/0.7)] backdrop-blur-xl md:hidden"
+        className="app-mobile-nav fixed bottom-0 left-0 right-0 z-40 isolate overflow-hidden border-t border-border/90 bg-card/96 shadow-[0_-18px_48px_-30px_hsl(var(--primary)/0.72),0_-10px_30px_-22px_hsl(var(--foreground)/0.38)] backdrop-blur-3xl backdrop-saturate-150 md:hidden"
         aria-label="Trip sections"
       >
-        <div className="mx-auto grid max-w-5xl grid-cols-5 gap-1 px-[max(0.3rem,env(safe-area-inset-left,0px))] pb-[max(0.18rem,env(safe-area-inset-bottom,0px))] pr-[max(0.3rem,env(safe-area-inset-right,0px))] pt-1">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--card)/0.94),hsl(var(--card)/0.98))]"
+        />
+        <div className="relative z-10 mx-auto grid max-w-5xl grid-cols-5 gap-1 px-[max(0.3rem,env(safe-area-inset-left,0px))] pb-[max(0.18rem,env(safe-area-inset-bottom,0px))] pr-[max(0.3rem,env(safe-area-inset-right,0px))] pt-1">
           {primary.map((item) => renderNavButton(item))}
 
           <button

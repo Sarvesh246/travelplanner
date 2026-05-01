@@ -30,7 +30,7 @@ export function SupplyTable({
   const allSelected = items.length > 0 && selectedBulkIds.length === items.length;
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 max-w-full space-y-4">
       {groups.map(([category, categoryItems]) => (
         <section key={category}>
           <h3 className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -56,12 +56,12 @@ export function SupplyTable({
             <span aria-hidden="true" />
           </div>
 
-          <div className="rounded-2xl">
+          <div className="min-w-0 max-w-full rounded-2xl">
             <motion.div
               variants={staggerContainer}
               initial="initial"
               animate="animate"
-              className="app-surface divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
+              className="app-surface min-w-0 max-w-full divide-y divide-border/70 rounded-2xl border border-border/70 shadow-sm"
             >
               {categoryItems.map((item) => (
                 <motion.div

@@ -78,7 +78,7 @@ export default async function TripLayout({
               className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
             >
               <TripShellClient tripId={tripId} userId={dbUser.id}>
-                <div className="mx-auto max-w-[72rem] px-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] pt-3 min-[400px]:px-4 min-[400px]:pt-4 sm:px-6 sm:pt-6 md:pb-6 md:pt-6">
+                <div className="mx-auto max-w-[72rem] px-3 pb-[calc(10.75rem+env(safe-area-inset-bottom,0px))] pt-3 min-[400px]:px-4 min-[400px]:pt-4 sm:px-6 sm:pt-6 md:pb-6 md:pt-6">
                   <TripSwipeHint />
                   <ViewerReadOnlyBanner />
                   {children}
