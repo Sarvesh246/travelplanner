@@ -303,7 +303,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-2.5 [scrollbar-gutter:stable] scroll-pb-4 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1rem))] md:scroll-pb-6 md:px-5 md:pb-6 md:pt-4"
+          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-2.5 [scrollbar-gutter:stable] scroll-pb-2 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] md:scroll-pb-3 md:px-5 md:pb-3 md:pt-4"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
