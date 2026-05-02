@@ -323,11 +323,14 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="min-h-0 max-h-[min(24dvh,9.875rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:max-h-[min(28dvh,11.625rem)] md:max-h-[min(34dvh,15.25rem)] md:px-5 md:pb-1.5 md:pt-2">
+      {/* Split drawer body ~40% map stack / ~60% tabs so stays & activities stay readable without crowding the map tile itself. */}
+      <div className="min-h-0 flex-[2] basis-0 max-h-[40%] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:px-5 sm:pb-1.5 sm:pt-2 md:px-5 md:pb-1.5 md:pt-2">
         {locationSection}
       </div>
-      {tabStrip}
-      {tabPanel}
+      <div className="flex min-h-0 min-w-0 flex-[3] basis-0 flex-col overflow-hidden">
+        {tabStrip}
+        {tabPanel}
+      </div>
     </div>
   );
 
