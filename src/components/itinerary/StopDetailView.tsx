@@ -482,7 +482,7 @@ function StaysTab({
   const [adding, setAdding] = useState(false);
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col min-h-0 flex-1 space-y-2">
       {stop.stays.length === 0 && !adding && (
         <p className="text-sm text-muted-foreground text-center py-6">No stays yet.</p>
       )}
@@ -526,7 +526,7 @@ function ActivitiesTab({
       .find((activity) => activity.scheduledDate)?.scheduledDate ?? null;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col min-h-0 flex-1 space-y-2">
       <DayTimeline activities={stop.activities} canEdit={canEdit} onDirtyChange={onDirtyChange} />
       {adding && (
         <AddActivityForm
