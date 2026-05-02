@@ -323,7 +323,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="min-h-0 max-h-[min(20dvh,8.75rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:max-h-[min(22dvh,9.625rem)] md:max-h-[min(26dvh,11.25rem)] md:px-5 md:pb-1.5 md:pt-2">
+      <div className="min-h-0 max-h-[min(24dvh,9.875rem)] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:max-h-[min(28dvh,11.625rem)] md:max-h-[min(34dvh,15.25rem)] md:px-5 md:pb-1.5 md:pt-2">
         {locationSection}
       </div>
       {tabStrip}
