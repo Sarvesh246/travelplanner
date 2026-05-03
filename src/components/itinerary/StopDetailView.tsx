@@ -295,7 +295,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "flex min-h-[55dvh] min-w-0 flex-col px-4 pt-3 [scrollbar-gutter:stable] scroll-pb-2 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] sm:min-h-[520px] md:min-h-[460px] md:scroll-pb-3 md:px-5 md:pb-5 md:pt-4"
+          : "flex min-h-[clamp(34rem,64dvh,44rem)] min-w-0 flex-col px-4 pt-3 [scrollbar-gutter:stable] scroll-pb-2 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] sm:min-h-[620px] md:min-h-[560px] md:scroll-pb-3 md:px-5 md:pb-5 md:pt-4"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -311,7 +311,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]">
-      <div className="flex min-h-[clamp(38rem,76dvh,48rem)] border-b border-border/40 px-4 pb-3 pt-2 sm:px-5 sm:pb-4 sm:pt-3 md:min-h-[clamp(42rem,82dvh,52rem)] md:px-5">
+      <div className="flex min-h-[clamp(34rem,58dvh,39rem)] border-b border-border/40 px-4 pb-3 pt-2 sm:px-5 sm:pb-4 sm:pt-3 md:min-h-[clamp(36rem,62dvh,42rem)] md:px-5">
         {locationSection}
       </div>
       {tabStrip}
