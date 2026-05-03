@@ -182,7 +182,7 @@ export function ItineraryClient({ tripId, stops, dayPlans }: ItineraryClientProp
           )}
           <aside className="hidden min-w-0 md:block md:self-start">
             {desktopSelectedStop ? (
-              <div className="app-surface sticky top-0 flex h-[calc(100dvh-4.75rem)] max-h-[calc(100dvh-4.75rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-border/80">
+              <div className="app-surface sticky top-0 flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] min-h-[min(56rem,calc(100dvh-1rem))] flex-col overflow-hidden rounded-2xl border border-border/80">
                 <StopDetailView
                   key={`${desktopSelectedStop.id}:${selectedTab}`}
                   stop={desktopSelectedStop}
