@@ -306,7 +306,8 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </>
   ) : (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]">
-      <div className="flex min-h-[clamp(38rem,76dvh,48rem)] border-b border-border/40 px-4 pb-3 pt-2 sm:px-5 sm:pb-4 sm:pt-3 md:min-h-[clamp(42rem,82dvh,52rem)] md:px-5">
+      {/* Height follows map + summary; avoid min-h clamps that leave dead space under the Nominatim line */}
+      <div className="shrink-0 border-b border-border/40 px-4 pb-2 pt-2 sm:px-5 sm:pb-2.5 sm:pt-3 md:px-5">
         {locationSection}
       </div>
       {tabStrip}

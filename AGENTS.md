@@ -4,6 +4,7 @@
 - Prefers compact, efficient navigation on narrow/mobile widths (avoid redundant controls and excessive empty spacing).
 - Wants pre-login/public surfaces to use visible UI controls (for example, a theme toggle) instead of app-only keyboard shortcuts or command palette interactions.
 - Prefers smooth, gradual CSS transitions for interactive effects (hover glows, color shifts); abrupt or instant state changes should be avoided.
+- Wants the itinerary stop-detail drawer (compact map/location stack plus Stays/Activities) to reserve enough vertical space for stay and activity lists—primary rows and add actions should be readable without excessive scrolling; the map block should not dominate that pane.
 
 ## Learned Workspace Facts
 
@@ -20,4 +21,4 @@
 - Tailwind `screens` use pixel breakpoints; keep custom `min-[…]` / `max-[…]` breakpoints in px as well so production builds do not mix rem-based and px-based media queries.
 - On Windows, `npm ci` can fail with `EPERM` when replacing Next’s SWC native binary under `node_modules/@next/swc-*` while `next dev`, tests, or another Node process holds the file—stop those processes (or reboot in stubborn cases) before reinstalling dependencies.
 - The `.app-surface-soft` utility in `src/app/globals.css` adds a softer inset highlight and lift for dashboard and trip surfaces that pair with `.app-glass` (overview stat tiles, hero-band chips, stop location section, and similar).
-- Stop and trip-overview weather use OpenWeather-backed helpers under `src/lib/weather/` (forecast window/gap copy, stop timing captions, shared pill styling and tones); the trip overview surfaces approximate “local” conditions via `OverviewLocalWeatherTile` in the hero band.
+- Stop and trip-overview weather use OpenWeather-backed helpers under `src/lib/weather/` (forecast window/gap copy, stop timing captions, shared pill styling and tones); the trip overview “Local outlook” tile (`OverviewLocalWeatherTile`) approximates conditions near the browsing client via IP geolocation and OpenWeather—typical localhost dev lacks a usable public client IP, so that tile usually stays empty until deploy/staging/tunnel with real client IPs (`OPENWEATHER_API_KEY` required for live data).

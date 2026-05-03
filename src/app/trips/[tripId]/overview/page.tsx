@@ -161,7 +161,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
           </p>
 
           <div className="grid gap-3 min-[560px]:grid-cols-2 xl:grid-cols-3">
-            <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
+            <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200 xl:order-1">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <Plane className="w-5 h-5 rotate-45" />
               </div>
@@ -176,7 +176,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
             </div>
 
             {budgetPct !== null ? (
-              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
+              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200 xl:order-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <WalletCards className="w-5 h-5" />
                 </div>
@@ -194,7 +194,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
                 </div>
               </div>
             ) : (
-              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200">
+              <div className="app-glass app-surface-soft flex min-h-[4.875rem] items-center gap-3 rounded-xl px-3 py-3 transition-shadow duration-200 xl:order-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <CalendarDays className="w-5 h-5" />
                 </div>
@@ -205,7 +205,9 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
               </div>
             )}
 
-            <OverviewLocalWeatherTile weather={localWeather} />
+            <div className="xl:order-2">
+              <OverviewLocalWeatherTile weather={localWeather} />
+            </div>
           </div>
         </div>
       </section>
