@@ -10,19 +10,15 @@ type StopMapSummaryProps = {
 };
 
 export function StopMapSummary({ lat, lon, className }: StopMapSummaryProps) {
-  const [label, setLabel] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ key: string; label: string | null } | null>(null);
+  const reverseKey = lat != null && lon != null ? `${lat.toFixed(6)},${lon.toFixed(6)}` : null;
+  const label = result?.key === reverseKey ? result.label : null;
+  const loading = reverseKey != null && result?.key !== reverseKey;
 
   useEffect(() => {
-    if (lat == null || lon == null) {
-      setLabel(null);
-      setLoading(false);
-      return;
-    }
+    if (lat == null || lon == null || !reverseKey) return;
 
     const controller = new AbortController();
-    setLoading(true);
-    setLabel(null);
 
     const params = new URLSearchParams({ lat: String(lat), lon: String(lon) });
     fetch(`/api/locations/reverse?${params}`, {
@@ -37,17 +33,14 @@ export function StopMapSummary({ lat, lon, className }: StopMapSummaryProps) {
         return typeof data.label === "string" ? data.label : null;
       })
       .then((next) => {
-        setLabel(next);
+        setResult({ key: reverseKey, label: next });
       })
       .catch(() => {
-        setLabel(null);
-      })
-      .finally(() => {
-        setLoading(false);
+        setResult({ key: reverseKey, label: null });
       });
 
     return () => controller.abort();
-  }, [lat, lon]);
+  }, [lat, lon, reverseKey]);
 
   if (lat == null || lon == null) return null;
 

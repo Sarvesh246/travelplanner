@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, Users, WalletCards } from "lucide-react";
 import {
@@ -19,7 +19,6 @@ export function OverviewHeroEditor({
   name,
   startDate,
   endDate,
-  currency,
 }: {
   tripId: string;
   name: string;
@@ -30,10 +29,6 @@ export function OverviewHeroEditor({
   const router = useRouter();
   const [localStart, setLocalStart] = useState(startDate ?? "");
   const [localEnd, setLocalEnd] = useState(endDate ?? "");
-  useEffect(() => {
-    setLocalStart(startDate ?? "");
-    setLocalEnd(endDate ?? "");
-  }, [startDate, endDate]);
   const { canManage } = useTripContext();
   const startDatePresence = useTripEditingPresenceField({
     surfaceId: `trip-overview:${tripId}`,
@@ -200,11 +195,6 @@ export function OverviewCostPanels({
   const { canManage } = useTripContext();
   const [customMemberCount, setCustomMemberCount] = useState(splitMemberCount.toString());
   const [isEditingMemberCount, setIsEditingMemberCount] = useState(false);
-  useEffect(() => {
-    if (!isEditingMemberCount) {
-      setCustomMemberCount(splitMemberCount.toString());
-    }
-  }, [splitMemberCount, isEditingMemberCount]);
   const estimatePresence = useTripEditingPresenceField({
     surfaceId: `trip-overview:${tripId}`,
     surfaceLabel: "Trip overview",

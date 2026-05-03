@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -47,15 +47,6 @@ function StopDateFields({
   const router = useRouter();
   const [arrive, setArrive] = useState(() => arrivalDate?.slice(0, 10) ?? "");
   const [depart, setDepart] = useState(() => departureDate?.slice(0, 10) ?? "");
-  const arriveRef = useRef(arrive);
-  const departRef = useRef(depart);
-  arriveRef.current = arrive;
-  departRef.current = depart;
-
-  useEffect(() => {
-    setArrive(arrivalDate?.slice(0, 10) ?? "");
-    setDepart(departureDate?.slice(0, 10) ?? "");
-  }, [arrivalDate, departureDate, stopId]);
 
   const labelCls = isPage ? "text-sm" : "text-xs";
 
@@ -97,7 +88,7 @@ function StopDateFields({
             onChange={(e) => {
               const v = e.target.value;
               setArrive(v);
-              void save(v, departRef.current);
+              void save(v, depart);
             }}
             className="min-w-0 flex-1 bg-transparent outline-none"
             aria-label="Stop arrival date"
@@ -113,7 +104,7 @@ function StopDateFields({
             onChange={(e) => {
               const v = e.target.value;
               setDepart(v);
-              void save(arriveRef.current, v);
+              void save(arrive, v);
             }}
             className="min-w-0 flex-1 bg-transparent outline-none"
             aria-label="Stop departure date"
@@ -212,6 +203,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
         </p>
       )}
       <StopDateFields
+        key={`stop-dates:${stop.id}:${stop.arrivalDate ?? "none"}:${stop.departureDate ?? "none"}`}
         stopId={stop.id}
         arrivalDate={stop.arrivalDate}
         departureDate={stop.departureDate}
@@ -274,7 +266,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       canEdit={canEdit}
       compact={!isPage}
       onDirtyChange={(dirty) => registerDirty("location", dirty)}
-      className={isPage ? undefined : "mb-2"}
+      className={isPage ? undefined : "mb-0"}
     />
   );
 
@@ -282,7 +274,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     <div
       className={cn(
         "flex shrink-0 gap-px border-b border-border/85 bg-muted/20 px-1 pt-1",
-        !isPage && "[&_button]:py-2.5"
+        !isPage && "sticky top-0 z-20 border-t border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 [&_button]:py-2.5"
       )}
     >
       <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
@@ -303,7 +295,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       className={
         isPage
           ? "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pt-5 pb-10 [scrollbar-gutter:stable]"
-          : "flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-y-auto overscroll-y-contain px-4 pt-2.5 [scrollbar-gutter:stable] scroll-pb-2 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] md:scroll-pb-3 md:px-5 md:pb-3 md:pt-4"
+          : "flex min-h-[55dvh] min-w-0 flex-col px-4 pt-3 [scrollbar-gutter:stable] scroll-pb-2 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] sm:min-h-[520px] md:min-h-[460px] md:scroll-pb-3 md:px-5 md:pb-5 md:pt-4"
       }
     >
       {tab === "stays" && <StaysTab stop={stop} canEdit={canEdit} onDirtyChange={registerDirty} />}
@@ -311,10 +303,6 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
     </div>
   );
 
-  /**
-   * Drawer: flex column (more reliable than grid `1fr` + min-height quirks on mobile WebKit).
-   * Map stack stays short (scrollable) so Stays / Activities gets most of the drawer height.
-   */
   const body = isPage ? (
     <>
       {locationSection}
@@ -322,15 +310,12 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
       {tabPanel}
     </>
   ) : (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      {/* Split drawer body ~40% map stack / ~60% tabs so stays & activities stay readable without crowding the map tile itself. */}
-      <div className="min-h-0 flex-[2] basis-0 max-h-[40%] shrink-0 overflow-y-auto overscroll-y-contain border-b border-border/40 px-4 pb-1 pt-1.5 [scrollbar-gutter:stable] sm:px-5 sm:pb-1.5 sm:pt-2 md:px-5 md:pb-1.5 md:pt-2">
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]">
+      <div className="border-b border-border/40 px-4 pb-2 pt-2 sm:px-5 sm:pb-3 sm:pt-3 md:px-5">
         {locationSection}
       </div>
-      <div className="flex min-h-0 min-w-0 flex-[3] basis-0 flex-col overflow-hidden">
-        {tabStrip}
-        {tabPanel}
-      </div>
+      {tabStrip}
+      {tabPanel}
     </div>
   );
 

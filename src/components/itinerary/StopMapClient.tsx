@@ -135,10 +135,7 @@ export function StopMapClient({
   const [hintDismissed, setHintDismissed] = useState(false);
 
   useEffect(() => {
-    if (!editable) {
-      setHintDismissed(false);
-      return;
-    }
+    if (!editable) return;
     const timer = window.setTimeout(() => setHintDismissed(true), 4000);
     return () => window.clearTimeout(timer);
   }, [editable]);
@@ -173,7 +170,9 @@ export function StopMapClient({
   }, [position, editable, isMobile]);
 
   const tile =
-    (compact ? "aspect-[16/9] min-h-[120px] max-h-[min(26dvh,210px)]" : "aspect-[16/9] min-h-[220px] max-h-[min(52dvh,340px)]") +
+    (compact
+      ? "h-[clamp(230px,36dvh,320px)] md:h-[clamp(280px,38dvh,340px)]"
+      : "h-[clamp(360px,46dvh,420px)]") +
     (editable ? " [&_.leaflet-container]:cursor-crosshair" : "");
 
   return (

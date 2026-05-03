@@ -33,24 +33,24 @@ export function StopLocationHeader({
   onRemove,
 }: StopLocationHeaderProps) {
   const showGeo = useSecureGeolocationAvailable();
-  const [reverseLabel, setReverseLabel] = useState<string | null>(null);
-  const [labelLoading, setLabelLoading] = useState(false);
+  const [reverseResult, setReverseResult] = useState<{ key: string; label: string | null } | null>(null);
 
   const coordsLine =
     displayCoords != null
       ? `${displayCoords.lat.toFixed(4)}, ${displayCoords.lon.toFixed(4)}`
       : null;
+  const reverseKey =
+    !canEdit && displayCoords
+      ? `${displayCoords.lat.toFixed(6)},${displayCoords.lon.toFixed(6)}`
+      : null;
+  const reverseLabel = reverseResult?.key === reverseKey ? reverseResult.label : null;
+  const labelLoading = reverseKey != null && reverseResult?.key !== reverseKey;
 
   /** Place label is only shown for viewers — editors use buttons only (coords stay in Stop map summary). */
   useEffect(() => {
-    if (canEdit || !displayCoords) {
-      setReverseLabel(null);
-      setLabelLoading(false);
-      return;
-    }
+    if (!reverseKey || !displayCoords) return;
 
     const controller = new AbortController();
-    setLabelLoading(true);
     const params = new URLSearchParams({
       lat: String(displayCoords.lat),
       lon: String(displayCoords.lon),
@@ -67,12 +67,11 @@ export function StopLocationHeader({
         const data = (await response.json()) as { label?: string };
         return typeof data.label === "string" ? data.label : null;
       })
-      .then(setReverseLabel)
-      .catch(() => setReverseLabel(null))
-      .finally(() => setLabelLoading(false));
+      .then((label) => setReverseResult({ key: reverseKey, label }))
+      .catch(() => setReverseResult({ key: reverseKey, label: null }));
 
     return () => controller.abort();
-  }, [canEdit, displayCoords?.lat, displayCoords?.lon]);
+  }, [displayCoords, reverseKey]);
 
   const title = reverseLabel?.trim() || stopName;
 
