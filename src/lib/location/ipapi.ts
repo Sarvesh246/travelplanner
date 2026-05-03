@@ -31,9 +31,33 @@ function normalizeClientIp(value: string | null | undefined): string | null {
   return cleaned;
 }
 
+function normalizeHeaderText(value: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function getApproxLocationFromVercelHeaders(headersLike: Headers): ApproxUserLocation | null {
+  const lat = Number(headersLike.get("x-vercel-ip-latitude"));
+  const lon = Number(headersLike.get("x-vercel-ip-longitude"));
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  return {
+    city: normalizeHeaderText(headersLike.get("x-vercel-ip-city")),
+    region:
+      normalizeHeaderText(headersLike.get("x-vercel-ip-country-region")) ??
+      normalizeHeaderText(headersLike.get("x-vercel-ip-country")),
+    lat,
+    lon,
+  };
+}
+
 export function getClientIpFromHeaders(headersLike: Headers): string | null {
   return normalizeClientIp(
     firstHeaderValue(headersLike.get("x-forwarded-for")) ??
+      firstHeaderValue(headersLike.get("x-vercel-forwarded-for")) ??
       firstHeaderValue(headersLike.get("cf-connecting-ip")) ??
       firstHeaderValue(headersLike.get("x-real-ip"))
   );
@@ -42,6 +66,13 @@ export function getClientIpFromHeaders(headersLike: Headers): string | null {
 export async function getApproxUserLocationFromIp(
   input?: Headers | string | null
 ): Promise<ApproxUserLocation | null> {
+  if (input instanceof Headers) {
+    const vercelLocation = getApproxLocationFromVercelHeaders(input);
+    if (vercelLocation) {
+      return vercelLocation;
+    }
+  }
+
   const ip =
     typeof input === "string" || input == null
       ? normalizeClientIp(input)

@@ -99,7 +99,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
   const approxLocation = await getApproxUserLocationFromIp(requestHeaders);
   const localWeather: WeatherState = approxLocation
     ? await getCurrentWeatherByCoords(approxLocation.lat, approxLocation.lon)
-    : { state: "empty", message: "Shows near your browsing region—not on localhost." };
+    : { state: "empty", message: "Local weather unavailable." };
 
   if (localWeather.state === "ready" && approxLocation) {
     localWeather.data.locationLabel =
