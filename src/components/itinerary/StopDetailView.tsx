@@ -50,8 +50,8 @@ function StopDateFields({
   const [depart, setDepart] = useState(() => departureDate?.slice(0, 10) ?? "");
 
   const labelCls = isPage ? "text-sm" : "text-xs";
-  const fieldsGridCls = isPage ? "grid gap-2 sm:grid-cols-2" : "grid gap-2 xl:grid-cols-2";
-  const fieldWidthCls = isPage ? "sm:min-w-[12.5rem]" : "xl:min-w-[11.5rem] 2xl:min-w-[12.5rem]";
+  /** Inline-size of parent `@container` (title column); stack below ~360px, two columns when the drawer/page column is wide enough */
+  const fieldsGridCls = "grid grid-cols-1 gap-2 @min-[360px]:grid-cols-2";
 
   if (!canEdit && !arrivalDate && !departureDate) {
     return null;
@@ -85,7 +85,7 @@ function StopDateFields({
         <DatePillField
           value={arrive}
           ariaLabel="Stop arrival date"
-          className={fieldWidthCls}
+          className="min-w-0 w-full"
           onChange={(v) => {
             setArrive(v);
             void save(v, depart);
@@ -98,7 +98,7 @@ function StopDateFields({
           value={depart}
           min={arrive || undefined}
           ariaLabel="Stop departure date"
-          className={fieldWidthCls}
+          className="min-w-0 w-full"
           onChange={(v) => {
             setDepart(v);
             void save(arrive, v);
@@ -181,7 +181,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   }
 
   const titleBlock = (
-    <div className="min-w-0 flex-1">
+    <div className="min-w-0 flex-1 @container">
       {isPage ? (
         <h1 className="text-balance text-xl font-semibold tracking-tight sm:text-2xl">{stop.name}</h1>
       ) : (
@@ -270,8 +270,10 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
   const tabStrip = (
     <div
       className={cn(
-        "flex shrink-0 gap-px border-b border-border/85 bg-muted/20 px-1 pt-1",
-        !isPage && "sticky top-0 z-20 border-t border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 [&_button]:py-2.5"
+        "flex shrink-0 gap-2 border-b border-border/85 px-1 pt-1",
+        isPage
+          ? "bg-transparent"
+          : "sticky top-0 z-20 border-t border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 [&_button]:py-2.5"
       )}
     >
       <TabButton active={tab === "stays"} onClick={() => setTab("stays")} layoutIdSuffix={isPage ? "page" : "drawer"}>
@@ -363,7 +365,7 @@ export function StopDetailView({ stop, tripId, layout, initialTab = "stays", onC
 
   return (
     <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-start gap-3 border-b border-border/80 px-4 py-2.5 sm:px-5 sm:py-3.5 md:py-4">
+      <div className="relative z-30 flex shrink-0 items-start gap-3 border-b border-border/80 bg-card/95 px-4 py-2.5 shadow-[0_1px_0_hsl(var(--border)/0.6)] backdrop-blur supports-[backdrop-filter]:bg-card/88 sm:px-5 sm:py-3.5 md:py-4">
         {titleBlock}
         {actionButtons}
       </div>

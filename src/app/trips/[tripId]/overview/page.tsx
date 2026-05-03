@@ -205,7 +205,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ tripI
               </div>
             )}
 
-            <div className="xl:order-2">
+            <div className="w-full min-[560px]:max-xl:col-span-2 min-[560px]:max-xl:max-w-[calc((100%-0.75rem)/2)] min-[560px]:max-xl:justify-self-center xl:order-2">
               <OverviewLocalWeatherTile weather={localWeather} />
             </div>
           </div>
