@@ -216,7 +216,7 @@ export function SuppliesClient({ tripId, currency, items }: SuppliesClientProps)
       ) : (
         <div className="min-w-0 max-w-full">
           <div className="min-w-0 max-w-full" onKeyDown={handleTableRoving}>
-            <div className="sticky top-14 z-[8] mb-3 rounded-xl border border-border/65 bg-[hsl(var(--card)/0.92)] p-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.65)] backdrop-blur-md transition-shadow duration-200 dark:bg-card/82">
+            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+3.6rem)] z-[8] mb-3 rounded-xl border border-border/65 bg-[hsl(var(--card)/0.92)] p-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.65)] backdrop-blur-md transition-shadow duration-200 dark:bg-card/82 sm:top-[calc(env(safe-area-inset-top,0px)+3.7rem)]">
               <div className="flex max-w-full flex-wrap items-center gap-x-5 gap-y-3 text-xs md:text-sm">
                 <label className="flex items-center gap-2 font-medium text-muted-foreground">
                   <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My packing

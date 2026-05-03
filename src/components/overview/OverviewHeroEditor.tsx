@@ -9,10 +9,24 @@ import {
 import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { addDays } from "date-fns/addDays";
 import { nextSaturday } from "date-fns/nextSaturday";
+import { DatePillField } from "@/components/shared/DatePillField";
 import { InlineEdit } from "@/components/shared/InlineEdit";
 import { useTripContext } from "@/components/trip/TripContext";
 import { updateTrip } from "@/actions/trips";
 import { formatCurrency, getStandardTimeZoneLabel } from "@/lib/utils";
+
+function formatDateChipValue(value: string, emptyLabel: string) {
+  if (!value) return emptyLabel;
+
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return emptyLabel;
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(parsed);
+}
 
 export function OverviewHeroEditor({
   tripId,
@@ -123,48 +137,48 @@ export function OverviewHeroEditor({
 
       <div className="grid gap-2 sm:grid-cols-2">
         <div>
-          <label className="flex items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2 text-sm">
+          <DatePillField
+            value={localStart}
+            ariaLabel="Trip start date"
+            onChange={(next) => {
+              setLocalStart(next);
+              startDatePresence.activate();
+              void (async () => {
+                await updateTrip(tripId, { startDate: next || null });
+                router.refresh();
+              })();
+            }}
+            onFocus={startDatePresence.activate}
+            onBlur={startDatePresence.clear}
+          >
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <input
-              type="date"
-              value={localStart}
-              onChange={(e) => {
-                const next = e.target.value;
-                setLocalStart(next);
-                startDatePresence.activate();
-                void (async () => {
-                  await updateTrip(tripId, { startDate: next || null });
-                  router.refresh();
-                })();
-              }}
-              onFocus={startDatePresence.activate}
-              onBlur={startDatePresence.clear}
-              className="w-full bg-transparent outline-none"
-            />
-          </label>
+            <span className="truncate text-muted-foreground">
+              {formatDateChipValue(localStart, "Start date")}
+            </span>
+          </DatePillField>
           <EditingPresenceNotice editors={startDatePresence.fieldEditors} />
         </div>
         <div>
-          <label className="flex items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2 text-sm">
+          <DatePillField
+            value={localEnd}
+            min={localStart || undefined}
+            ariaLabel="Trip end date"
+            onChange={(next) => {
+              setLocalEnd(next);
+              endDatePresence.activate();
+              void (async () => {
+                await updateTrip(tripId, { endDate: next || null });
+                router.refresh();
+              })();
+            }}
+            onFocus={endDatePresence.activate}
+            onBlur={endDatePresence.clear}
+          >
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <input
-              type="date"
-              value={localEnd}
-              min={localStart || undefined}
-              onChange={(e) => {
-                const next = e.target.value;
-                setLocalEnd(next);
-                endDatePresence.activate();
-                void (async () => {
-                  await updateTrip(tripId, { endDate: next || null });
-                  router.refresh();
-                })();
-              }}
-              onFocus={endDatePresence.activate}
-              onBlur={endDatePresence.clear}
-              className="w-full bg-transparent outline-none"
-            />
-          </label>
+            <span className="truncate text-muted-foreground">
+              {formatDateChipValue(localEnd, "End date")}
+            </span>
+          </DatePillField>
           <EditingPresenceNotice editors={endDatePresence.fieldEditors} />
         </div>
       </div>

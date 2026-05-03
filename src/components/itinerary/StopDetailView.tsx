@@ -27,6 +27,7 @@ import {
 } from "@/components/collaboration/TripEditingPresenceProvider";
 import { EditingPresenceNotice } from "@/components/collaboration/EditingPresenceNotice";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { DatePillField } from "@/components/shared/DatePillField";
 import { toast } from "sonner";
 import { StopLocationSection } from "./StopLocationSection";
 import type { StopDetailTab, StopSerialized } from "./types";
@@ -79,37 +80,31 @@ function StopDateFields({
   return (
     <div className={`mt-2 space-y-1.5 ${labelCls}`}>
       <div className="grid gap-2 sm:grid-cols-2">
-        <label className="flex min-w-0 items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2">
+        <DatePillField
+          value={arrive}
+          ariaLabel="Stop arrival date"
+          className="sm:min-w-[12.5rem]"
+          onChange={(v) => {
+            setArrive(v);
+            void save(v, depart);
+          }}
+        >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="text-muted-foreground">Arrive</span>
-          <input
-            type="date"
-            value={arrive}
-            onChange={(e) => {
-              const v = e.target.value;
-              setArrive(v);
-              void save(v, depart);
-            }}
-            className="min-w-0 flex-1 bg-transparent outline-none"
-            aria-label="Stop arrival date"
-          />
-        </label>
-        <label className="flex min-w-0 items-center gap-2 rounded-xl border border-border/75 bg-card/70 px-3 py-2">
+        </DatePillField>
+        <DatePillField
+          value={depart}
+          min={arrive || undefined}
+          ariaLabel="Stop departure date"
+          className="sm:min-w-[12.5rem]"
+          onChange={(v) => {
+            setDepart(v);
+            void save(arrive, v);
+          }}
+        >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="text-muted-foreground">Depart</span>
-          <input
-            type="date"
-            value={depart}
-            min={arrive || undefined}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDepart(v);
-              void save(arrive, v);
-            }}
-            className="min-w-0 flex-1 bg-transparent outline-none"
-            aria-label="Stop departure date"
-          />
-        </label>
+        </DatePillField>
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         Shown on the route list and used for forecasts. Updates when stays change check-in/out; editable anytime.
