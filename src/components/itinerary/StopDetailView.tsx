@@ -50,6 +50,8 @@ function StopDateFields({
   const [depart, setDepart] = useState(() => departureDate?.slice(0, 10) ?? "");
 
   const labelCls = isPage ? "text-sm" : "text-xs";
+  const fieldsGridCls = isPage ? "grid gap-2 sm:grid-cols-2" : "grid gap-2 xl:grid-cols-2";
+  const fieldWidthCls = isPage ? "sm:min-w-[12.5rem]" : "xl:min-w-[11.5rem] 2xl:min-w-[12.5rem]";
 
   if (!canEdit && !arrivalDate && !departureDate) {
     return null;
@@ -79,11 +81,11 @@ function StopDateFields({
 
   return (
     <div className={`mt-2 space-y-1.5 ${labelCls}`}>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className={fieldsGridCls}>
         <DatePillField
           value={arrive}
           ariaLabel="Stop arrival date"
-          className="sm:min-w-[12.5rem]"
+          className={fieldWidthCls}
           onChange={(v) => {
             setArrive(v);
             void save(v, depart);
@@ -96,7 +98,7 @@ function StopDateFields({
           value={depart}
           min={arrive || undefined}
           ariaLabel="Stop departure date"
-          className="sm:min-w-[12.5rem]"
+          className={fieldWidthCls}
           onChange={(v) => {
             setDepart(v);
             void save(arrive, v);
