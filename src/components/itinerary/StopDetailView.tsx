@@ -50,8 +50,8 @@ function StopDateFields({
   const [depart, setDepart] = useState(() => departureDate?.slice(0, 10) ?? "");
 
   const labelCls = isPage ? "text-sm" : "text-xs";
-  /** Inline-size of parent `@container` (title column); stack below ~360px, two columns when the drawer/page column is wide enough */
-  const fieldsGridCls = "grid grid-cols-1 gap-2 @min-[360px]:grid-cols-2";
+  const fieldsGridCls = isPage ? "grid gap-2 sm:grid-cols-2" : "grid grid-cols-2 gap-2";
+  const fieldCls = isPage ? "min-w-0 w-full" : "min-w-0 w-full px-2.5 text-[13px]";
 
   if (!canEdit && !arrivalDate && !departureDate) {
     return null;
@@ -85,27 +85,27 @@ function StopDateFields({
         <DatePillField
           value={arrive}
           ariaLabel="Stop arrival date"
-          className="min-w-0 w-full"
+          className={fieldCls}
           onChange={(v) => {
             setArrive(v);
             void save(v, depart);
           }}
         >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="text-muted-foreground">Arrive</span>
+          <span className="truncate text-muted-foreground">Arrive</span>
         </DatePillField>
         <DatePillField
           value={depart}
           min={arrive || undefined}
           ariaLabel="Stop departure date"
-          className="min-w-0 w-full"
+          className={fieldCls}
           onChange={(v) => {
             setDepart(v);
             void save(arrive, v);
           }}
         >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="text-muted-foreground">Depart</span>
+          <span className="truncate text-muted-foreground">Depart</span>
         </DatePillField>
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">
